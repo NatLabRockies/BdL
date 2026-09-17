@@ -155,6 +155,10 @@ BdL mechanizes proof rules of André Platzer's differential dynamic logic (dL) i
 
 See [CONTRIBUTORS](CONTRIBUTORS).
 
+## Acknowledgment
+
+This work was supported by the Laboratory Directed Research and Development (LDRD) Program at NLR.
+
 ## License
 
 BdL is released under the BSD 3-Clause License; see [LICENSE](LICENSE).
