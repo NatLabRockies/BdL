@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use BdL, please cite it using the metadata below."
+type: software
+title: "BdL (Biological Differential Dynamic Logic: A Formal Analyzer of Dynamical Systems using Deductive Proofs for Biological Computing and its Applications)"
+abstract: "BdL mechanizes proof rules of differential dynamic logic in Isabelle/HOL on top of the AFP formalization of ordinary differential equations, and applies them to ODE models of biological computers without solving the ODEs."
+authors:
+  - family-names: Nemouchi
+    given-names: Yakoub
+    email: Yakoub.Nemouchi@nlr.gov
+    affiliation: "National Laboratory of the Rockies (NLR)"
+  - family-names: Graf
+    given-names: Peter
+    affiliation: "National Laboratory of the Rockies (NLR)"
+repository-code: "https://github.com/NatLabRockies/BdL"
+license: BSD-3-Clause
+keywords:
+  - Isabelle/HOL
+  - differential dynamic logic
+  - formal verification
+  - ordinary differential equations
+  - biological computing
