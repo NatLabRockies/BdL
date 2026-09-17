@@ -117,9 +117,36 @@ If you use BdL, please cite it. GitHub's "Cite this repository" button uses the 
 }
 ```
 
-BdL builds on:
+## Background and related work
 
-> F. Immler and J. Hölzl, Ordinary Differential Equations. *Archive of Formal Proofs*, April 2012, <https://isa-afp.org/entries/Ordinary_Differential_Equations.html>, Formal proof development.
+BdL mechanizes proof rules of André Platzer's differential dynamic logic (dL) in Isabelle/HOL. It builds on, and relates to, the following work.
+
+**Differential dynamic logic**
+
+- A. Platzer. Differential dynamic logic for hybrid systems. *Journal of Automated Reasoning* 41(2):143–189, 2008. [doi:10.1007/s10817-008-9103-8](https://doi.org/10.1007/s10817-008-9103-8)
+- A. Platzer. *Logical Analysis of Hybrid Systems: Proving Theorems for Complex Dynamics.* Springer, 2010. [doi:10.1007/978-3-642-14509-4](https://doi.org/10.1007/978-3-642-14509-4)
+- A. Platzer. A complete uniform substitution calculus for differential dynamic logic. *Journal of Automated Reasoning* 59(2):219–265, 2017. [doi:10.1007/s10817-016-9385-1](https://doi.org/10.1007/s10817-016-9385-1)
+- A. Platzer. *Logical Foundations of Cyber-Physical Systems.* Springer, 2018. [doi:10.1007/978-3-319-63588-0](https://doi.org/10.1007/978-3-319-63588-0)
+
+**Theorem provers for dL**
+
+- A. Platzer and J.-D. Quesel. KeYmaera: A hybrid theorem prover for hybrid systems (system description). In *IJCAR 2008*, LNCS 5195, pp. 171–178. Springer, 2008. [doi:10.1007/978-3-540-71070-7_15](https://doi.org/10.1007/978-3-540-71070-7_15)
+- N. Fulton, S. Mitsch, J.-D. Quesel, M. Völp, and A. Platzer. KeYmaera X: An axiomatic tactical theorem prover for hybrid systems. In *CADE-25*, LNCS 9195, pp. 527–538. Springer, 2015. [doi:10.1007/978-3-319-21401-6_36](https://doi.org/10.1007/978-3-319-21401-6_36)
+
+**dL in Isabelle/HOL**
+
+- R. Bohrer, V. Rahli, I. Vukotic, M. Völp, and A. Platzer. Formally verified differential dynamic logic. In *CPP 2017*, pp. 208–221. ACM, 2017. [doi:10.1145/3018610.3018616](https://doi.org/10.1145/3018610.3018616). Formalization: AFP entry [Differential_Dynamic_Logic](https://www.isa-afp.org/entries/Differential_Dynamic_Logic.html).
+
+**Differential equations in dL: invariance, stability, liveness, and switched systems**
+
+- A. Platzer and Y. K. Tan. Differential equation invariance axiomatization. *Journal of the ACM* 67(1), Article 6, 2020. [doi:10.1145/3380825](https://doi.org/10.1145/3380825)
+- Y. K. Tan and A. Platzer. Deductive stability proofs for ordinary differential equations. In *TACAS 2021*, LNCS 12652, pp. 181–199. Springer, 2021. [doi:10.1007/978-3-030-72013-1_10](https://doi.org/10.1007/978-3-030-72013-1_10)
+- Y. K. Tan and A. Platzer. An axiomatic approach to existence and liveness for differential equations. *Formal Aspects of Computing* 33(4):461–518, 2021. [doi:10.1007/s00165-020-00525-0](https://doi.org/10.1007/s00165-020-00525-0)
+- Y. K. Tan, S. Mitsch, and A. Platzer. Verifying switched system stability with logic. In *HSCC 2022*, Article 2. ACM, 2022. [doi:10.1145/3501710.3519541](https://doi.org/10.1145/3501710.3519541)
+
+**Ordinary differential equations in Isabelle/HOL**
+
+- F. Immler and J. Hölzl. Ordinary Differential Equations. *Archive of Formal Proofs*, April 2012. <https://isa-afp.org/entries/Ordinary_Differential_Equations.html>
 
 ## Authors
 
