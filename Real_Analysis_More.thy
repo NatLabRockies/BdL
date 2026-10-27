@@ -202,10 +202,10 @@ proof -
     using vderiv unfolding has_vderiv_on_def has_vector_derivative_def by blast
   hence \<open>\<And>x. x \<in> {0..t} \<Longrightarrow> (\<phi> has_derivative (\<lambda>h. 0)) (at x within {0..t})\<close>
     by simp
-  hence \<open>\<phi> \<tau> = \<phi> 0\<close>
-    using \<tau>_in t_nn
-    by (metis Diff_empty finite.intros(1) has_derivative_zero_unique_strong_interval vderiv vderiv_on_continuous_on)
-  thus ?thesis .
+    hence \<open>\<exists>c. \<forall>x\<in>{0..t}. \<phi> x = c\<close>
+    by (rule has_derivative_zero_constant[rotated]) auto
+  thus ?thesis
+    using \<tau>_in t_nn by fastforce
 qed
 
 subsection \<open>Vector component derivatives\<close>
