@@ -5,7 +5,8 @@
 [![License: BSD 3-Clause](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](LICENSE)
 
 - **NLR Software Record:** SWR 26-101
-- **Checked with:** Isabelle2025-2 and the matching release of the [Archive of Formal Proofs](https://www.isa-afp.org/) (AFP)
+- **Checked with:** Isabelle2026 and the matching release of the [Archive of Formal Proofs](https://www.isa-afp.org/) (AFP)
+- **Releases:** `v1.1` is checked with Isabelle2026; `v1.0` with Isabelle2025-2. Each tag needs the matching Isabelle and AFP release.
 
 ## About
 
@@ -40,8 +41,8 @@ Ordinary_Differential_Equations (AFP)
 
 ## Requirements
 
-1. **Isabelle2025-2**, from <https://isabelle.in.tum.de/>
-2. **The AFP release for Isabelle2025-2**, from <https://www.isa-afp.org/>
+1. **Isabelle2026**, from <https://isabelle.in.tum.de/>
+2. **The AFP release for Isabelle2026**, from <https://www.isa-afp.org/>
 
 BdL uses the AFP entry [Ordinary_Differential_Equations](https://www.isa-afp.org/entries/Ordinary_Differential_Equations.html) (HOL-ODE). Each AFP release is built for exactly one Isabelle release, so the two versions must match.
 
@@ -51,11 +52,11 @@ In the commands below, `isabelle` is the `bin/isabelle` executable inside your I
 
 ### 1. Install Isabelle
 
-Download Isabelle2025-2 for your platform and install it as described on the Isabelle website.
+Download Isabelle2026 for your platform and install it as described on the Isabelle website.
 
 ### 2. Install the AFP and register it with Isabelle
 
-Download the AFP release for Isabelle2025-2 and unpack it, for example to `/home/myself/afp`. Then register the AFP's `thys` directory as an Isabelle component, as recommended at <https://www.isa-afp.org/help>:
+Download the AFP release for Isabelle2026 and unpack it, for example to `/home/myself/afp`. Then register the AFP's `thys` directory as an Isabelle component, as recommended at <https://www.isa-afp.org/help>:
 
 ```bash
 # Linux / macOS
@@ -99,7 +100,7 @@ isabelle jedit -d . -R BdL Differential_Dynamic_Logic.thy
 ## Troubleshooting
 
 - **Isabelle cannot find the session `Ordinary_Differential_Equations`:** the AFP is not registered. Repeat step 2 and check that the path ends in `/thys`.
-- **A `### Version mismatch` message, or errors inside AFP theories:** the AFP release does not match your Isabelle version. Download the AFP release for Isabelle2025-2.
+- **A `### Version mismatch` message, or errors inside AFP theories:** the AFP release does not match your Isabelle version. Download the AFP release for Isabelle2026.
 
 ## Citing
 
