@@ -1,11 +1,13 @@
 (***************************************************************)
 (**                                                           **)
-(**                                                           **)
 (** Author(s): Yakoub Nemouchi (NLR, Golden, CO, USA)         **)
 (**            Peter  Graf     (NLR, Golden, CO, USA)         **)
-(** Email: Yakoub.Nemouchi@nlr.gov                            **)
-(**                                                           **) 
-(** See CONTRIBUTORS, LICENSE and CITATION files for details. **)
+(** Email:     Yakoub.Nemouchi@nlr.gov                        **)
+(**            Peter.Graf@nlr.gov                             **)
+(**                                                           **)
+(** Copyright © 2026 Alliance for Energy Innovation, LLC.     **)
+(** License: BSD 3-Clause, see LICENSE.                       **)
+(** See CONTRIBUTORS and CITATION files for details.          **)
 (***************************************************************)
 theory Gardner_Stability_Proof
 
@@ -61,10 +63,10 @@ lemma REACH_lyapunov_sanity_check:
   fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>\<tau> v. vec_lambda ((\<lambda>k. 0)(0 := -2 * vec_nth v 0)))) 
                     {0..T} UNIV\<close>
-      (* ODE: du/dt = -2\<sqdot>u, written in the same vec_lambda + fun_upd form 
-         used throughout the CRN benchmarks. *)
+      \<comment> \<open>ODE: du/dt = -2*u, written in the vec\_lambda and fun\_upd
+         form used throughout the CRN benchmarks\<close>
   assumes iv: \<open>vec_nth (y 0) 0 = 1\<close>
-      (* Initial condition: u(0) = 1. *)
+      \<comment> \<open>Initial condition: u(0) = 1\<close>
   assumes T_nn: \<open>0 \<le> T\<close>
   shows \<open>(vec_nth (y T) 0)^2 \<le> exp (-4 * T)\<close>
 proof -
@@ -253,7 +255,7 @@ locale gardner_pulse_params = gardner_baseline_params +
   assumes v_pulse_equilibrium: \<open>\<alpha>_base / (1 + u_pulse^\<gamma>) = v_pulse\<close>
 begin
 
-(* --- Pulsed equilibrium as a vector --- *)
+text \<open>Pulsed equilibrium as a vector.\<close>
 
 definition E_pulse :: 
   \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close> where
@@ -267,7 +269,7 @@ lemma E_pulse_v_component:
   \<open>vec_nth (E_pulse :: (real, 'p::{finite, linordered_nonzero_semiring}) vec) 1 = v_pulse\<close>
   by (simp add: E_pulse_def fun_upd_def)
 
-(* --- Lyapunov function V_pulse --- *)
+text \<open>Lyapunov function V\_pulse.\<close>
 
 definition V_pulse :: 
   \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec \<Rightarrow> real\<close> where
@@ -314,7 +316,7 @@ lemma V_pulse_zero_at_E_pulse:
   \<open>V_pulse (E_pulse :: (real, 'p::{finite, linordered_nonzero_semiring}) vec) = 0\<close>
   by (simp add: V_pulse_def E_pulse_def fun_upd_def)
 
-(* --- Coupling term Q and the Lie derivative identity --- *)
+text \<open>Coupling term Q and the Lie derivative identity.\<close>
 
 definition coupling_Q :: 
   \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec \<Rightarrow> real\<close> where
@@ -525,7 +527,7 @@ proof -
     by (simp add: V_pulse_def)
   finally show ?thesis .
 qed
-(* --- Crude bound on |Q| --- *)
+text \<open>Crude bound on |Q|.\<close>
 
 definition M_crude :: \<open>real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real\<close> where
   \<open>M_crude u_min u_max v_min v_max = 
@@ -798,7 +800,7 @@ proof -
 qed
 
 
-(* --- The Lyapunov decrease estimate --- *)
+text \<open>The Lyapunov decrease estimate.\<close>
 
 lemma V_pulse_decrease_crude:
   assumes \<beta>_eq: \<open>\<beta> = 2\<close>
@@ -945,7 +947,7 @@ locale gardner_R_A_params = gardner_baseline_params +
   assumes v_A_ordered: \<open>v_A_lo < v_A_hi\<close>
   assumes u_A_positive: \<open>0 < u_A_lo\<close>
   assumes v_A_positive: \<open>0 < v_A_lo\<close>
-  (* Edge conditions: scalar form, no vector quantification *)
+  \<comment> \<open>Edge conditions in scalar form, without vector quantification\<close>
   assumes R_A_left_edge_inward: 
     \<open>\<And>v_val. v_A_lo \<le> v_val \<Longrightarrow> v_val \<le> v_A_hi \<Longrightarrow>
              0 < \<alpha>_base / (1 + v_val^\<beta>) - u_A_lo\<close>
@@ -964,10 +966,6 @@ definition in_R_A ::
   \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec \<Rightarrow> bool\<close> where
   \<open>in_R_A v \<longleftrightarrow> u_A_lo \<le> vec_nth v 0 \<and> vec_nth v 0 \<le> u_A_hi \<and>
                 v_A_lo \<le> vec_nth v 1 \<and> vec_nth v 1 \<le> v_A_hi\<close>
-
-(* ============================================================
-   R_A_forward_invariant  (place inside gardner_R_A_params)
-   ============================================================ *)
 
 lemma R_A_forward_invariant:
   fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
@@ -1235,7 +1233,7 @@ locale gardner_R_B_params = gardner_baseline_params +
   assumes v_B_ordered: \<open>v_B_lo < v_B_hi\<close>
   assumes u_B_positive: \<open>0 < u_B_lo\<close>
   assumes v_B_positive: \<open>0 < v_B_lo\<close>
-  (* Scalar-form edge conditions, matching gardner_R_A_params style *)
+  \<comment> \<open>Edge conditions in scalar form, as in gardner\_R\_A\_params\<close>
   assumes R_B_left_edge_inward: 
     \<open>\<And>v_val. v_B_lo \<le> v_val \<Longrightarrow> v_val \<le> v_B_hi \<Longrightarrow>
              0 < \<alpha>_base / (1 + v_val^\<beta>) - u_B_lo\<close>
@@ -1528,7 +1526,6 @@ lemma pulse_trajectory_exponential_decay:
          v_min \<le> vec_nth (y \<tau>) 1 \<and> vec_nth (y \<tau>) 1 \<le> v_max\<close>
   shows \<open>V_pulse (y \<Delta>t) \<le> V_pulse (y 0) * exp (-\<delta> * \<Delta>t)\<close>
 proof -
-  (* Keep V_vderiv block identical to the original *)
     have rate_bound: \<open>\<And>\<tau>. \<tau> \<in> {0..\<Delta>t} \<Longrightarrow> 
                         (vec_nth (y \<tau>) 0 - u_pulse) * 
                           (\<alpha>_low / (1 + (vec_nth (y \<tau>) 1)^2) - vec_nth (y \<tau>) 0) +
@@ -1679,46 +1676,50 @@ qed
 
 end  (* gardner_induced_switching *)
 
-section \<open>Concrete Gardner instantiation: benchmark\<close>
+subsection \<open>Concrete Gardner instantiation\<close>
 
-subsection \<open>Parameter values\<close>
+subsubsection \<open>Parameter values\<close>
+
+text \<open>
+  The concrete parameter values, in this order: the baseline production
+  rate alpha\_base; the pulse parameters alpha\_low, u\_pulse and v\_pulse;
+  the Hill coefficients beta and gamma; the bounds of the trapping region
+  R\_A (high u, low v) and of R\_B (low u, high v); the bounds and decay
+  rate delta used by the pulse Lyapunov argument; and the sublevel target
+  L\_target for containment in R\_B.  Every definition is collected in
+  gardner\_conc\_defs.
+\<close>
+
 named_theorems gardner_conc_defs
-(* Baseline parameters *)
 definition \<alpha>_base_val :: real where [gardner_conc_defs]: \<open>\<alpha>_base_val = 51/16\<close>
 
-(* Pulse parameters *)
 definition \<alpha>_low_val :: real where [gardner_conc_defs]: \<open>\<alpha>_low_val = 5/2\<close>
 definition u_pulse_val :: real where [gardner_conc_defs]: \<open>u_pulse_val = 1/4\<close>
 definition v_pulse_val :: real where [gardner_conc_defs]: \<open>v_pulse_val = 3\<close>
 
-(* Hill coefficients *)
 definition \<beta>_val :: nat where [gardner_conc_defs]: \<open>\<beta>_val = 2\<close>
 definition \<gamma>_val :: nat where [gardner_conc_defs]: \<open>\<gamma>_val = 2\<close>
 
-(* R_A trapping region: high-u, low-v basin *)
 definition u_A_lo_val :: real where [gardner_conc_defs]: \<open>u_A_lo_val = 2\<close>
 definition u_A_hi_val :: real where [gardner_conc_defs]: \<open>u_A_hi_val = 7/2\<close>
 definition v_A_lo_val :: real where [gardner_conc_defs]: \<open>v_A_lo_val = 1/10 \<close> 
 definition v_A_hi_val :: real where [gardner_conc_defs]: \<open>v_A_hi_val = 7/10\<close>    
 
-(* R_B trapping region: low-u, high-v basin *)
 definition u_B_lo_val :: real where [gardner_conc_defs]: \<open>u_B_lo_val = 1/10\<close>
 definition u_B_hi_val :: real where [gardner_conc_defs]: \<open>u_B_hi_val = 7/10\<close>
 definition v_B_lo_val :: real where [gardner_conc_defs]: \<open>v_B_lo_val = 2\<close>
 definition v_B_hi_val :: real where [gardner_conc_defs]: \<open>v_B_hi_val = 7/2\<close>
 
-(* Pulse Lyapunov parameters *)
 definition u_min_val :: real where [gardner_conc_defs]: \<open>u_min_val = 1/4\<close>
 definition u_max_val :: real where [gardner_conc_defs]: \<open>u_max_val = 5/16\<close>
 definition v_min_val :: real where [gardner_conc_defs]: \<open>v_min_val = 5/2\<close>
 definition v_max_val :: real where [gardner_conc_defs]:\<open>v_max_val = 7/2\<close>
 definition \<delta>_val :: real where [gardner_conc_defs]: \<open>\<delta>_val = 1/8\<close>
 
-(* Sublevel target for R_B containment *)
 definition L_target_val :: real where [gardner_conc_defs]: \<open>L_target_val = 1/100\<close>
 
 
-subsection \<open>Baseline parameters interpretation\<close>
+subsubsection \<open>Baseline parameters interpretation\<close>
 
 interpretation concrete_baseline:
   gardner_baseline_params \<alpha>_base_val \<beta>_val \<gamma>_val
@@ -1732,7 +1733,7 @@ proof
 qed
 
 
-subsection \<open>Pulse parameters interpretation\<close>
+subsubsection \<open>Pulse parameters interpretation\<close>
 
 interpretation concrete_pulse:
   gardner_pulse_params \<alpha>_base_val \<beta>_val \<gamma>_val \<alpha>_low_val u_pulse_val v_pulse_val
@@ -1753,7 +1754,7 @@ proof
     by (simp add: power2_eq_square)
 qed
 
-subsection \<open>R\_A trapping region interpretation\<close>
+subsubsection \<open>R\_A trapping region interpretation\<close>
 
 interpretation concrete_R_A:
   gardner_R_A_params \<alpha>_base_val \<beta>_val \<gamma>_val 
@@ -1865,7 +1866,7 @@ proof
 qed
 
 
-subsection \<open>R\_B trapping region interpretation\<close>
+subsubsection \<open>R\_B trapping region interpretation\<close>
 
 interpretation concrete_R_B:
   gardner_R_B_params \<alpha>_base_val \<beta>_val \<gamma>_val 
@@ -1997,7 +1998,7 @@ text \<open>
 \<close>
 
 
-subsection \<open>Pulse Lyapunov interpretation\<close>
+subsubsection \<open>Pulse Lyapunov interpretation\<close>
 
 interpretation concrete_pulse_lyapunov:
   gardner_pulse_lyapunov \<alpha>_base_val \<beta>_val \<gamma>_val \<alpha>_low_val u_pulse_val v_pulse_val
@@ -2056,7 +2057,7 @@ text \<open>
 \<close>
 
 
-subsection \<open>Induced switching interpretation\<close>
+subsubsection \<open>Induced switching interpretation\<close>
 text \<open>
    Concrete Gardner switching theorem.
 
@@ -2072,9 +2073,9 @@ text \<open>
 \<close>
 
 
-subsection \<open>Concrete switching theorem\<close>
+subsubsection \<open>Concrete switching theorem\<close>
 
-(* --- Helper: sublevel containment for our concrete parameters --- *)
+text \<open>Helper: sublevel containment for the concrete parameters.\<close>
 
 lemma concrete_sublevel_in_R_B:
   fixes v :: \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
@@ -2195,7 +2196,7 @@ proof -
 qed
 
 
-(* --- Top-level concrete switching theorem --- *)
+text \<open>Top-level concrete switching theorem.\<close>
 
 theorem gardner_concrete_switching:
   fixes y1 y2 y3 :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>

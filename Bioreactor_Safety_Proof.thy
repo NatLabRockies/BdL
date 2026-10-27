@@ -1,11 +1,13 @@
 (***************************************************************)
 (**                                                           **)
-(**                                                           **)
 (** Author(s): Yakoub Nemouchi (NLR, Golden, CO, USA)         **)
 (**            Peter  Graf     (NLR, Golden, CO, USA)         **)
-(** Email: Yakoub.Nemouchi@nlr.gov                            **)
-(**                                                           **) 
-(** See CONTRIBUTORS, LICENSE and CITATION files for details. **)
+(** Email:     Yakoub.Nemouchi@nlr.gov                        **)
+(**            Peter.Graf@nlr.gov                             **)
+(**                                                           **)
+(** Copyright © 2026 Alliance for Energy Innovation, LLC.     **)
+(** License: BSD 3-Clause, see LICENSE.                       **)
+(** See CONTRIBUTORS and CITATION files for details.          **)
 (***************************************************************)
 theory Bioreactor_Safety_Proof
 
@@ -1868,9 +1870,7 @@ text \<open>
 \<close>
 
 
-(* ============================================================================
-   PIECE A - Forward-invariance of Z <= Z_max
-   ============================================================================ *)
+subsubsection \<open>Piece A: forward invariance of Z <= Z\_max\<close>
 
 text \<open>
   Upper-bound forward-invariance for Z.  Uses `DI\_rectangle\_box\_partial`
@@ -2744,9 +2744,7 @@ proof -
     by simp
 qed
 
-(* ============================================================================
-   PIECE B - Phase 1 exit-time theorem
-   ============================================================================ *)
+subsubsection \<open>Piece B: Phase 1 exit-time theorem\<close>
 
 text \<open>
   Z drops below Z\_alarm by time T\_clear = (2/delta\_Z)*ln((Z\_max-Z\_eq)/
@@ -3057,7 +3055,8 @@ text \<open>
   the alarm threshold, the engineered degradation pathway clears 
   Z below the alarm level with a half-life of ln(2)/delta\_Z approx 1.4 hr.\<close>
 
-(* --- Parameter definitions --- *)
+subsubsection \<open>Parameter values\<close>
+
 named_theorems metabolic_conc_defs 
 
 definition \<mu>_max_val :: real where [metabolic_conc_defs]:\<open>\<mu>_max_val = 1/2\<close>
@@ -3081,7 +3080,7 @@ definition \<delta>_Z_val :: real where [metabolic_conc_defs]: \<open>\<delta>_Z
 definition Z_min_val :: real where  [metabolic_conc_defs]: \<open>Z_min_val = 1/2000\<close>
 
 
-(* --- Baseline interpretation --- *)
+subsubsection \<open>Baseline parameters interpretation\<close>
 
 interpretation met_baseline:
   metabolic_baseline_params \<mu>_max_val K_S_val Y_val d_val K_I_val \<alpha>_met_val k_met_val K_Z_val
@@ -3098,7 +3097,7 @@ proof
 qed
 
 
-(* --- Z-clearance interpretation --- *)
+subsubsection \<open>Z-clearance interpretation\<close>
 
 interpretation met_z_clearance:
   metabolic_z_clearance_params 
@@ -3172,7 +3171,7 @@ proof
 qed
 
 
-(* --- Top-level locale-satisfaction theorem --- *)
+subsubsection \<open>Concrete Z-clearance theorem\<close>
 
 text \<open>
   The locale metabolic\_z\_clearance\_params is satisfied by our 
@@ -3192,8 +3191,6 @@ text \<open>
 thm met_z_clearance.V_Z_exponential_decay
 thm met_z_clearance.V_Z_reaches_sublevel
 
-
-(* --- Explicit top-level theorem for the paper --- *)
 
 theorem metabolic_z_clearance_concrete:
   \<open>metabolic_z_clearance_params 

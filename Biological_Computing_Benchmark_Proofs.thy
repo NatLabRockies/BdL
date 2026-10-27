@@ -1,11 +1,13 @@
 (***************************************************************)
 (**                                                           **)
-(**                                                           **)
 (** Author(s): Yakoub Nemouchi (NLR, Golden, CO, USA)         **)
 (**            Peter  Graf     (NLR, Golden, CO, USA)         **)
-(** Email: Yakoub.Nemouchi@nlr.gov                            **)
-(**                                                           **) 
-(** See CONTRIBUTORS, LICENSE and CITATION files for details. **)
+(** Email:     Yakoub.Nemouchi@nlr.gov                        **)
+(**            Peter.Graf@nlr.gov                             **)
+(**                                                           **)
+(** Copyright © 2026 Alliance for Energy Innovation, LLC.     **)
+(** License: BSD 3-Clause, see LICENSE.                       **)
+(** See CONTRIBUTORS and CITATION files for details.          **)
 (***************************************************************)
 theory Biological_Computing_Benchmark_Proofs
 
@@ -14,9 +16,9 @@ imports Differential_Dynamic_Logic
 begin
 section \<open>Biological computing examples\<close>
 subsection \<open>CRNs benchmark\<close>
-text \<open>
-  Formally Verified Conservation Law for an Autocatalytic Chemical Oscillator
+subsubsection \<open>Autocatalytic chemical oscillator: conservation law\<close>
 
+text \<open>
   \textbf{BIOLOGICAL CONTEXT}\\
   We consider an autocatalytic oscillator, a chemical reaction network (CRN)
   that exhibits oscillatory behavior - concentrations of chemical species
@@ -129,10 +131,10 @@ text \<open>
 \<close>
 
 
-(* Main theorem: Conservation of total concentration *)
+text \<open>Main theorem: conservation of the total concentration.\<close>
 lemma crn_oscillator_conservation:
   fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
-      (* y(t) = ([A](t), [B](t), [C](t)) *)
+      \<comment> \<open>y(t) = ([A](t), [B](t), [C](t))\<close>
   fixes k1 k2 k3 :: real
   assumes y_sol: 
     \<open>(y solves_ode (\<lambda>t v. 
@@ -141,15 +143,15 @@ lemma crn_oscillator_conservation:
                          1 :=  k1 * vec_nth v 0 * vec_nth v 1 - k2 * vec_nth v 1 * vec_nth v 2,
                          2 :=  k2 * vec_nth v 1 * vec_nth v 2 - k3 * vec_nth v 2 * vec_nth v 0))
                        )) {0..t} UNIV\<close>
-      (* Oscillator ODE system:
-           d[A]/dt = -k1\<cdot>[A]\<cdot>[B] + k3\<cdot>[C]\<cdot>[A]
-           d[B]/dt =  k1\<cdot>[A]\<cdot>[B] - k2\<cdot>[B]\<cdot>[C]
-           d[C]/dt =  k2\<cdot>[B]\<cdot>[C] - k3\<cdot>[C]\<cdot>[A] *)
+      \<comment> \<open>Oscillator ODE:
+           d[A]/dt = -k1*[A]*[B] + k3*[C]*[A];
+           d[B]/dt = k1*[A]*[B] - k2*[B]*[C];
+           d[C]/dt = k2*[B]*[C] - k3*[C]*[A]\<close>
   assumes iv: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 1 + vec_nth (y 0) 2 = total0\<close>
-      (* Initially: [A](0) + [B](0) + [C](0) = total₀ *)
+      \<comment> \<open>Initially: [A](0) + [B](0) + [C](0) = total0\<close>
   assumes t: \<open>0 \<le> t\<close>
   shows \<open>vec_nth (y t) 0 + vec_nth (y t) 1 + vec_nth (y t) 2 = total0\<close>
-      (* Conclusion: [A](t) + [B](t) + [C](t) = total₀ for all t \<ge> 0 *)
+      \<comment> \<open>Conclusion: [A](t) + [B](t) + [C](t) = total0 for all t >= 0\<close>
 proof -
    have sum_deriv:
     \<open>((\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2) has_derivative 
@@ -277,9 +279,9 @@ text \<open>
     (-k1*A*B + k3*C*A) + (k1*A*B - k2*B*C) + (k2*B*C - k3*C*A) = 0
 \<close>
 
-text \<open>
-  Formally Verified Conservation Laws for Michaelis-Menten Enzyme Kinetics
+subsubsection \<open>Michaelis-Menten enzyme kinetics: conservation laws\<close>
 
+text \<open>
   \textbf{BIOLOGICAL CONTEXT}\\
   Michaelis-Menten kinetics is the most fundamental model in enzymology,
   describing how enzymes catalyze biochemical reactions. Proposed by
@@ -367,9 +369,7 @@ text \<open>
 
 
 
-(* ======================================================================== *)
-(* Conservation Law 1: Enzyme Conservation  [E](t) + [ES](t) = E_total     *)
-(* ======================================================================== *)
+paragraph \<open>Conservation law 1: enzyme conservation, [E](t) + [ES](t) = E\_total\<close>
 
 text \<open>
   The enzyme is a catalyst: it is neither created nor destroyed.
@@ -383,9 +383,9 @@ text \<open>
 
 lemma michaelis_menten_enzyme_conservation:
   fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
-      (* y(t) = ([E](t), [S](t), [ES](t), [P](t)) *)
+      \<comment> \<open>y(t) = ([E](t), [S](t), [ES](t), [P](t))\<close>
   fixes k1 km1 k2 :: real
-      (* k1 = binding rate, km1 = unbinding rate, k2 = catalytic rate *)
+      \<comment> \<open>k1: binding rate, km1: unbinding rate, k2: catalytic rate\<close>
   assumes y_sol: 
     \<open>(y solves_ode (\<lambda>t v.
                        vec_lambda ((\<lambda>k. 0)(
@@ -394,16 +394,16 @@ lemma michaelis_menten_enzyme_conservation:
                          2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
                          3 :=  k2 * vec_nth v 2))
                        )) {0..t} UNIV\<close>
-      (* y solves the Michaelis-Menten ODE system:
-           d[E]/dt  = -k1\<cdot>[E]\<cdot>[S] + (k_m1+k2)\<cdot>[ES]    (pos 0)
-           d[S]/dt  = -k1\<cdot>[E]\<cdot>[S] + k_m1\<cdot>[ES]         (pos 1)
-           d[ES]/dt =  k1\<cdot>[E]\<cdot>[S] - (k_m1+k2)\<cdot>[ES]    (pos 2)
-           d[P]/dt  =  k2\<cdot>[ES]                        (pos 3)  *)
+      \<comment> \<open>Michaelis-Menten ODE:
+           d[E]/dt = -k1*[E]*[S] + (km1 + k2)*[ES];
+           d[S]/dt = -k1*[E]*[S] + km1*[ES];
+           d[ES]/dt = k1*[E]*[S] - (km1 + k2)*[ES];
+           d[P]/dt = k2*[ES]\<close>
   assumes iv: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 = E_total\<close>
-      (* Initially: [E](0) + [ES](0) = E_total *)
+      \<comment> \<open>Initially: [E](0) + [ES](0) = E\_total\<close>
   assumes t: \<open>0 \<le> t\<close>
   shows \<open>vec_nth (y t) 0 + vec_nth (y t) 2 = E_total\<close>
-      (* Conclusion: [E](t) + [ES](t) = E_total for all t \<ge> 0 *)
+      \<comment> \<open>Conclusion: [E](t) + [ES](t) = E\_total for all t >= 0\<close>
 proof -
    have enz_deriv:
     \<open>((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative 
@@ -509,10 +509,7 @@ proof -
                              OF iv_ge y_sol induct_step_ge t])
 qed
 
-(* ======================================================================== *)
-(* Conservation Law 2: Substrate Conservation                               *)
-(*   [S](t) + [ES](t) + [P](t) = S_total                                  *)
-(* ======================================================================== *)
+paragraph \<open>Conservation law 2: substrate conservation, [S](t) + [ES](t) + [P](t) = S\_total\<close>
 
 text \<open>
   The substrate is transformed but not destroyed: it is either free [S],
@@ -536,10 +533,10 @@ lemma michaelis_menten_substrate_conservation:
                          3 :=  k2 * vec_nth v 2))
                        )) {0..t} UNIV\<close>
   assumes iv: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 + vec_nth (y 0) 3 = S_total\<close>
-      (* Initially: [S](0) + [ES](0) + [P](0) = S_total *)
+      \<comment> \<open>Initially: [S](0) + [ES](0) + [P](0) = S\_total\<close>
   assumes t: \<open>0 \<le> t\<close>
   shows \<open>vec_nth (y t) 1 + vec_nth (y t) 2 + vec_nth (y t) 3 = S_total\<close>
-      (* Conclusion: [S](t) + [ES](t) + [P](t) = S_total *)
+      \<comment> \<open>Conclusion: [S](t) + [ES](t) + [P](t) = S\_total for all t >= 0\<close>
 proof -
    have sub_deriv:
     \<open>((\<lambda>v. vec_nth v 1 + vec_nth v 2 + vec_nth v 3) has_derivative 
@@ -648,9 +645,9 @@ proof -
                                    g = \<open>\<lambda>v. vec_nth v 1 + vec_nth v 2 + vec_nth v 3\<close>,
                              OF iv_ge y_sol induct_step_ge t])
 qed
-text \<open>
-  Example 6: SIR Epidemic Model , Population Conservation
+subsubsection \<open>SIR epidemic model: population conservation\<close>
 
+text \<open>
   CONTEXT
   The SIR model is one of the most fundamental models in epidemiology,
   proposed by Kermack and McKendrick in 1927. It divides a population
@@ -684,7 +681,7 @@ text \<open>
 lemma sir_population_conservation:
   fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
   fixes beta gamma :: real
-      (* \<beta> = infection rate, \<gamma> = recovery rate *)
+      \<comment> \<open>beta: infection rate, gamma: recovery rate\<close>
   assumes y_sol: 
     \<open>(y solves_ode (\<lambda>t v.
                        vec_lambda ((\<lambda>k. 0)(
@@ -692,7 +689,7 @@ lemma sir_population_conservation:
                          1 :=  beta * vec_nth v 0 * vec_nth v 1 - gamma * vec_nth v 1,
                          2 :=  gamma * vec_nth v 1))
                        )) {0..t} UNIV\<close>
-      (* Position 0: [S], Position 1: [I], Position 2: [R] *)
+      \<comment> \<open>Position 0: [S], position 1: [I], position 2: [R]\<close>
   assumes iv: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 1 + vec_nth (y 0) 2 = N\<close>
   assumes t: \<open>0 \<le> t\<close>
   shows \<open>vec_nth (y t) 0 + vec_nth (y t) 1 + vec_nth (y t) 2 = N\<close>
@@ -793,9 +790,9 @@ proof -
                              OF iv_ge y_sol induct_step_ge t])
 qed
 
-text \<open>
-  Example 7: Reversible Binding , Two Conservation Laws
+subsubsection \<open>Reversible binding: two conservation laws\<close>
 
+text \<open>
   CONTEXT
   Reversible binding is the most basic reaction in chemistry and biology.
   A ligand A binds to a receptor B to form a complex C, and the complex
@@ -829,8 +826,7 @@ text \<open>
   (free vs bound) but are never created or destroyed.
 \<close>
 
-(* Conservation Law 1: [A] + [C] = A_total *)
-(* Conservation Law 1: [A] + [C] = A_total *)
+text \<open>Conservation law 1: [A] + [C] = A\_total.\<close>
 lemma reversible_binding_A_conservation:
   fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
   fixes k1 km1 :: real
@@ -840,7 +836,7 @@ lemma reversible_binding_A_conservation:
                                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
                                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))
                                     )) {0..t} UNIV\<close>
-      (* Position 0: [A], Position 1: [B], Position 2: [C] *)
+      \<comment> \<open>Position 0: [A], position 1: [B], position 2: [C]\<close>
   assumes iv: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 = A_total\<close>
   assumes t: \<open>0 \<le> t\<close>
   shows \<open>vec_nth (y t) 0 + vec_nth (y t) 2 = A_total\<close>
@@ -947,8 +943,7 @@ proof -
                              OF iv_ge y_sol induct_step_ge t])
 qed
 
-(* Conservation Law 2: [B] + [C] = B_total *)
-(* Conservation Law 2: [B] + [C] = B_total *)
+text \<open>Conservation law 2: [B] + [C] = B\_total.\<close>
 lemma reversible_binding_B_conservation:
   fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
   fixes k1 km1 :: real
@@ -958,7 +953,7 @@ lemma reversible_binding_B_conservation:
                                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
                                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))
                                     )) {0..t} UNIV\<close>
-      (* Position 0: [A], Position 1: [B], Position 2: [C] *)
+      \<comment> \<open>Position 0: [A], position 1: [B], position 2: [C]\<close>
   assumes iv: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 = B_total\<close>
   assumes t: \<open>0 \<le> t\<close>
   shows \<open>vec_nth (y t) 1 + vec_nth (y t) 2 = B_total\<close>
@@ -1066,9 +1061,9 @@ proof -
 qed
 
 
-text \<open>
-  Example 8: Dimerization , Weighted Conservation Law
+subsubsection \<open>Dimerization: weighted conservation law\<close>
 
+text \<open>
   CONTEXT
   Dimerization is when two identical molecules combine to form a dimer:
 
@@ -1105,7 +1100,7 @@ lemma dimerization_conservation:
                                       0 := -2 * k1 * (vec_nth v 0)^2 + 2 * km1 * vec_nth v 1,
                                       1 :=      k1 * (vec_nth v 0)^2 -     km1 * vec_nth v 1))
                                     )) {0..t} UNIV\<close>
-      (* Position 0: [A] (monomer), Position 1: [A\<^sub>2] (dimer) *)
+      \<comment> \<open>Position 0: [A] (monomer), position 1: [A2] (dimer)\<close>
   assumes iv: \<open>vec_nth (y 0) 0 + 2 * vec_nth (y 0) 1 = total0\<close>
   assumes t: \<open>0 \<le> t\<close>
   shows \<open>vec_nth (y t) 0 + 2 * vec_nth (y t) 1 = total0\<close>
@@ -1203,9 +1198,9 @@ proof -
 qed
 
 
-text \<open>
-  Example 9: Simple Decay A -> \{\}  , Positivity via DG
+subsubsection \<open>Simple decay: positivity via DG\<close>
 
+text \<open>
   CONTEXT
   The simplest irreversible reaction: a species decays at a rate
   proportional to its concentration.
@@ -1242,11 +1237,9 @@ text \<open>
   of the benchmark suite.
 \<close>
 
-(* This is proved as exponential_decay , included here as reference *)
-
+subsubsection \<open>CRN benchmark summary\<close>
 
 text \<open>
-  \textbf{BENCHMARK SUMMARY}\\
   | \#  | System                | Property              | Method | Species |
   |----|-----------------------|-----------------------|--------|---------|
   | 1  | CRN Oscillator        | A+B+C = const         | DI     | 3       |
@@ -1264,9 +1257,9 @@ text \<open>
   local derivative analysis using differential induction (DI) and
   differential ghosts (DG).
 \<close>
-text \<open>
-  Benchmark: CRN Properties Requiring Differential Ghosts (DG)
+subsubsection \<open>CRN properties requiring differential ghosts\<close>
 
+text \<open>
   These examples demonstrate properties that CANNOT be proved by
   Differential Induction (DI) alone. The Lie derivative has the
   "wrong sign", so a ghost variable must be introduced to create
@@ -1283,9 +1276,9 @@ text \<open>
 \<close>
 
 
-text \<open>
-  Example 10: Simple Decay  A -> \{\}  , Positivity via DG
+paragraph \<open>Simple decay: the DG proof\<close>
 
+text \<open>
   \textbf{THE CRN}\\
     A ->(k) \{\}        (first-order degradation)
 
@@ -1470,8 +1463,9 @@ proof -
   qed
 qed
 
+subsubsection \<open>Computing CRN min(x, y): conservation laws\<close>
+
 text \<open>
-  Formally Verified Properties of a Computing CRN: min(x, y)
   CONTEXT
   This is the first example where we verify a property of a CRN that
   performs COMPUTATION - not just a natural biochemical process, but a
@@ -1536,15 +1530,15 @@ lemma crn_min_X_conservation:
                                                 1 := -k * vec_nth v 0 * vec_nth v 1,
                                                 2 :=  k * vec_nth v 0 * vec_nth v 1))
                                    )) {0..t} UNIV\<close>
-      (* Position 0: [X], Position 1: [Y], Position 2: [Z]
-         d[X]/dt = -k\<sqdot>[X]\<sqdot>[Y]
-         d[Y]/dt = -k\<sqdot>[X]\<sqdot>[Y]
-         d[Z]/dt =  k\<sqdot>[X]\<sqdot>[Y] *)
+      \<comment> \<open>Position 0: [X], position 1: [Y], position 2: [Z].
+         d[X]/dt = -k*[X]*[Y];
+         d[Y]/dt = -k*[X]*[Y];
+         d[Z]/dt = k*[X]*[Y]\<close>
   assumes iv: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 = x0\<close>
-      (* Initially: [X](0) + [Z](0) = x₀ *)
+      \<comment> \<open>Initially: [X](0) + [Z](0) = x0\<close>
   assumes t: \<open>0 \<le> t\<close>
   shows \<open>vec_nth (y t) 0 + vec_nth (y t) 2 = x0\<close>
-      (* Conclusion: [X](t) + [Z](t) = x0 for all t \<ge> 0 *)
+      \<comment> \<open>Conclusion: [X](t) + [Z](t) = x0 for all t >= 0\<close>
 proof -
   (* ==========================================================================
      PROOF STRATEGY: Sandwich [X](t) + [Z](t) at x0 via TWO DI_Vect applications.
@@ -1666,7 +1660,7 @@ proof -
 qed
 
 
-(* Conservation Law 2: [Y](t) + [Z](t) = y0*)
+text \<open>Conservation law 2: [Y](t) + [Z](t) = y0.\<close>
 lemma crn_min_Y_conservation:
   fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
   fixes k :: real
@@ -1677,10 +1671,10 @@ lemma crn_min_Y_conservation:
                                      2 :=  k * vec_nth v 0 * vec_nth v 1))
                                    )) {0..t} UNIV\<close>
   assumes iv: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 = y0\<close>
-      (* Initially: [Y](0) + [Z](0) = y0*)
+      \<comment> \<open>Initially: [Y](0) + [Z](0) = y0\<close>
   assumes t: \<open>0 \<le> t\<close>
   shows \<open>vec_nth (y t) 1 + vec_nth (y t) 2 = y0\<close>
-      (* Conclusion: [Y](t) + [Z](t) = y0 for all t \<ge> 0 *)
+      \<comment> \<open>Conclusion: [Y](t) + [Z](t) = y0 for all t >= 0\<close>
 proof -
   (* ==========================================================================
      PROOF STRATEGY: Sandwich [Y](t) + [Z](t) at y0 via two DI_Vect applications.
@@ -1831,9 +1825,9 @@ qed
 
 subsection \<open>GRN benchmark\<close>
 
-text \<open>
-  Simplified Genetic Toggle Switch , Mass-Action Form
+subsubsection \<open>Simplified genetic toggle switch, mass-action form\<close>
 
+text \<open>
   CONTEXT-------
   The genetic toggle switch was constructed by Gardner, Cantor, and
   Collins in E. coli (Nature, 2000), the first synthetic, bistable
@@ -1922,7 +1916,7 @@ text \<open>
 \<close>
 
 
-(* ---- Toggle Switch , Conservation in degradation-free form ---- *)
+paragraph \<open>Toggle switch: conservation in degradation-free form\<close>
 text \<open>
   ODE:
     du/dt = alpha1 - beta*u*v
@@ -1947,15 +1941,14 @@ lemma toggle_switch_difference_conservation:
                                       0 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1,
                                       1 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1))
                                     )) {0..t} UNIV\<close>
-      (* Symmetric toggle switch (no degradation):
-         du/dt = \<alpha> - \<beta>\<sqdot>u\<sqdot>v
-         dv/dt = \<alpha> - \<beta>\<sqdot>u\<sqdot>v
-         where Position 0 = u, Position 1 = v *)
+      \<comment> \<open>Symmetric toggle switch without degradation, u at position 0 and v at position 1:
+         du/dt = alpha - beta*u*v;
+         dv/dt = alpha - beta*u*v\<close>
   assumes iv: \<open>vec_nth (y 0) 0 - vec_nth (y 0) 1 = c\<close>
-      (* Initial difference c = u(0) - v(0) *)
+      \<comment> \<open>Initial difference: c = u(0) - v(0)\<close>
   assumes t: \<open>0 \<le> t\<close>
   shows \<open>vec_nth (y t) 0 - vec_nth (y t) 1 = c\<close>
-      (* Difference u(t) - v(t) is preserved *)
+      \<comment> \<open>Conclusion: the difference u(t) - v(t) is preserved\<close>
 proof -
   (* ==========================================================================
      PROOF STRATEGY: Sandwich u(t) - v(t) at c via two DI_Vect applications.
@@ -2079,7 +2072,7 @@ text \<open>
   Now we can prove further invariants on this restricted system.
 \<close>
 
-(* DC application: strengthen the domain to include the conservation invariant *)
+text \<open>DC application: strengthen the domain to include the conservation invariant.\<close>
 lemma toggle_switch_DC_strengthened_domain:
   fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
   fixes \<alpha> \<beta> :: real
@@ -2089,7 +2082,7 @@ lemma toggle_switch_DC_strengthened_domain:
                                       1 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1))
                                     )) {0..t} UNIV\<close>
   assumes iv_eq: \<open>vec_nth (y 0) 0 = vec_nth (y 0) 1\<close>
-      (* Symmetric initial condition: u(0) = v(0) *)
+      \<comment> \<open>Symmetric initial condition: u(0) = v(0)\<close>
   assumes t: \<open>0 \<le> t\<close>
   shows \<open>(y solves_ode (\<lambda>t v.
             vec_lambda ((\<lambda>k. 0)(
@@ -2163,9 +2156,9 @@ text \<open>
 \<close>
 
 
-text \<open>
-  The Gardner et al. Genetic Toggle Switch , Formal Verification
+subsubsection \<open>Gardner genetic toggle switch\<close>
 
+text \<open>
   CONTEXT
   The genetic toggle switch (Gardner, Cantor \& Collins, Nature 2000) is a
   landmark device in synthetic biology: the first synthetic, bistable,
@@ -2298,25 +2291,25 @@ lemma gardner_toggle_switch_u_positive:
                                       0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
                                       1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))
                                     )) {0..t} UNIV\<close>
-      (* Position 0: u (Protein 1), Position 1: v (Protein 2) 
-         Gardner et al. ODE:
-           du/dt = \<alpha>\<^sub>1/(1+v^\<beta>) - u
-           dv/dt = \<alpha>\<^sub>2/(1+u^\<gamma>) - v *)
+      \<comment> \<open>Position 0: u (protein 1), position 1: v (protein 2).
+         Gardner toggle switch:
+           du/dt = alpha1/(1 + v\textasciicircum{}beta) - u;
+           dv/dt = alpha2/(1 + u\textasciicircum{}gamma) - v\<close>
   assumes u0_pos: \<open>vec_nth (x 0) 0 > (0::real)\<close>
-      (* Initial condition: u(0) > 0 (Protein 1 is initially present) *)
+      \<comment> \<open>Initial condition: u(0) > 0 (protein 1 is initially present)\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes \<alpha>1_nn: \<open>0 \<le> \<alpha>1\<close>
-      (* Production rate is non-negative , physically natural *)
+      \<comment> \<open>The production rate is non-negative, as is physically natural\<close>
   assumes \<beta>_pos: \<open>1 \<le> \<beta>\<close>
-      (* Hill coefficient is a positive integer *)
-  (* ---- THE CONDITIONAL ASSUMPTION (see documentation above) ---- *)
+      \<comment> \<open>The Hill coefficient is a positive integer\<close>
+  \<comment> \<open>The conditional assumption, explained in the text above the lemma:\<close>
   assumes v_nn: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> vec_nth (x \<tau>) 1\<close>
-      (* Protein v stays non-negative along the trajectory.
-         This assumption is discharged unconditionally in 
-         gardner_toggle_switch_u_positive_unconditional by applying 
-         gardner_toggle_switch_v_nonneg (which uses DI_boundary). *)
+      \<comment> \<open>Protein v stays non-negative along the trajectory.
+         This assumption is discharged in
+         gardner\_toggle\_switch\_u\_positive\_unconditional by applying
+         gardner\_toggle\_switch\_v\_nonneg, which uses DI\_boundary.\<close>
   shows \<open>0 < vec_nth (x t) 0\<close>
-    (* Conclusion: Protein u remains strictly positive at time t. *)
+    \<comment> \<open>Conclusion: protein u remains strictly positive at time t\<close>
 proof -
   (* ==========================================================================
      PROOF STRATEGY
@@ -2798,9 +2791,9 @@ text \<open>
   cleanly via shared trajectory objects.
 \<close>
 
-text \<open>
-  TIME-DEPENDENT GARDNER TOGGLE SWITCH , Option A formalization
+subsubsection \<open>Time-dependent Gardner toggle switch\<close>
 
+text \<open>
   This section generalizes the Gardner toggle switch lemmas to allow
   TIME-DEPENDENT production rates alpha1(tau), alpha2(tau). This captures the
   experimental scenario where an inducer is added to the chemical bath,
@@ -2869,15 +2862,15 @@ lemma gardner_toggle_switch_u_positive_time_dependent:
                                       0 := \<alpha>1 \<tau> / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
                                       1 := \<alpha>2 \<tau> / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))
                                     )) {0..t} UNIV\<close>
-      (* Time-varying Gardner toggle switch:
-           du/dt = \<alpha>1(\<tau>)/(1+v^\<beta>) - u
-           dv/dt = \<alpha>2(\<tau>)/(1+u^\<gamma>) - v  *)
+      \<comment> \<open>Time-varying Gardner toggle switch:
+           du/dt = alpha1(tau)/(1 + v\textasciicircum{}beta) - u;
+           dv/dt = alpha2(tau)/(1 + u\textasciicircum{}gamma) - v\<close>
   assumes u0_pos: \<open>vec_nth (x 0) 0 > (0::real)\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes \<alpha>1_nn_pointwise: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> \<alpha>1 \<tau>\<close>
-      (* Production rate for u is non-negative pointwise along the trajectory *)
+      \<comment> \<open>The production rate for u is non-negative pointwise along the trajectory\<close>
   assumes \<beta>_pos: \<open>1 \<le> \<beta>\<close>
-  (* ---- THE CONDITIONAL ASSUMPTION (v stays non-negative) ---- *)
+  \<comment> \<open>The conditional assumption: v stays non-negative\<close>
   assumes v_nn: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> vec_nth (x \<tau>) 1\<close>
   shows \<open>0 < vec_nth (x t) 0\<close>
 proof -
@@ -3076,9 +3069,9 @@ proof -
   qed
 qed
 
-text \<open>
-  GRN Benchmark: Negative Autoregulation
+subsubsection \<open>Negative autoregulation\<close>
 
+text \<open>
   CONTEXT
   Negative autoregulation is the simplest gene regulatory motif: a gene
   whose protein product represses its own expression. This is the
@@ -3154,7 +3147,7 @@ lemma negative_autoregulation_positive:
                                     vec_lambda ((\<lambda>k. 0)(
                                       0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0))
                                     )) {0..t} UNIV\<close>
-      (* Position 0: protein u. ODE: du/dt = \<alpha>/(1+u^n) - \<beta>\<sqdot>u *)
+      \<comment> \<open>Position 0: protein u. ODE: du/dt = alpha/(1 + u\textasciicircum{}n) - beta*u\<close>
   assumes u0_pos: \<open>vec_nth (x 0) 0 > (0::real)\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes \<alpha>_nn: \<open>0 \<le> \<alpha>\<close>
@@ -3365,9 +3358,9 @@ proof -
 qed
 
 
-text \<open>
-  GRN Benchmark: The Repressilator (Elowitz \& Leibler, Nature 2000)
+subsubsection \<open>The repressilator (Elowitz \& Leibler 2000)\<close>
 
+text \<open>
   CONTEXT
   The repressilator is the first synthetic biological clock , a
   three-gene ring oscillator where each gene represses the next,
@@ -3448,7 +3441,7 @@ text \<open>
   certifies that the ODE model remains physically meaningful forever.
 \<close>
 
-(* ---- Lemma 1: u-positivity (ghost at position 3, witness u\<sqdot>g²) ---- *)
+text \<open>Lemma 1: positivity of u (ghost at position 3, witness u * g\textasciicircum{}2).\<close>
 lemma repressilator_u_positive:
   fixes x :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
   fixes \<alpha> :: real
@@ -3459,8 +3452,8 @@ lemma repressilator_u_positive:
                                       1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
                                       2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))
                                     )) {0..t} UNIV\<close>
-      (* Position 0: u, Position 1: v, Position 2: w
-         Ring: u repressed by w, v repressed by u, w repressed by v *)
+      \<comment> \<open>Position 0: u, position 1: v, position 2: w.
+         Ring: u is repressed by w, v by u, and w by v\<close>
   assumes u0_pos: \<open>vec_nth (x 0) 0 > (0::real)\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes \<alpha>_nn: \<open>0 \<le> \<alpha>\<close>
@@ -3684,7 +3677,7 @@ proof -
   qed
 qed
 
-(* ---- Lemma 2: v-positivity (mirror argument, ghost at position 3) ---- *)
+text \<open>Lemma 2: positivity of v (mirror argument, ghost at position 3).\<close>
 lemma repressilator_v_positive:
   fixes x :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
   fixes \<alpha> :: real
@@ -3915,7 +3908,7 @@ proof -
   qed
 qed
 
-(* ---- Lemma 3: w-positivity (mirror argument, ghost at position 3) ---- *)
+text \<open>Lemma 3: positivity of w (mirror argument, ghost at position 3).\<close>
 lemma repressilator_w_positive:
   fixes x :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
   fixes \<alpha> :: real
@@ -4157,7 +4150,7 @@ proof -
   qed
 qed
 
-(* ---- Main theorem: all three proteins stay strictly positive ---- *)
+text \<open>Main theorem: all three proteins stay strictly positive.\<close>
 theorem repressilator_all_positive:
   fixes x :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
   fixes \<alpha> :: real
@@ -4186,9 +4179,9 @@ proof (intro conjI)
 qed
 
 
-text \<open>
-  GRN Benchmark: Antithetic Integral Feedback (Briat et al. 2016)
+subsubsection \<open>Antithetic integral feedback (Briat et al.\ 2016)\<close>
 
+text \<open>
   CONTEXT
   The antithetic integral feedback (AIF) motif is a biomolecular
   control scheme that implements integral feedback at the molecular
@@ -4298,20 +4291,19 @@ lemma antithetic_integral_feedback_conservation:
                                       1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
                                       2 := 0))
                                     )) {0..t} UNIV\<close>
-      (* Position 0: Z\<^sub>1 (controller species, constant production)
-         Position 1: Z\<^sub>2 (controller species, X-proportional production)
-         Position 2: X (process species, here treated as constant for 
-                        simplicity, a parameter fixed at the setpoint) *)
+      \<comment> \<open>Position 0: Z1 (controller species, constant production);
+         position 1: Z2 (controller species, X-proportional production);
+         position 2: X (process species, held constant at the setpoint for simplicity)\<close>
   assumes iv: \<open>vec_nth (x 0) 0 - vec_nth (x 0) 1 = c\<close>
-      (* Initial integral state: c = Z\<^sub>1(0) - Z\<^sub>2(0) *)
+      \<comment> \<open>Initial integral state: c = Z1(0) - Z2(0)\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes \<theta>_pos: \<open>0 < \<theta>\<close>
   assumes setpoint: \<open>vec_nth (x 0) 2 = \<mu>1 / \<theta>\<close>
-      (* X is held at the setpoint X = \<mu>/\<theta> initially.
-         Since dX/dt = 0 in this simplified model, X stays at \<mu>/\<theta> 
-         throughout, which we verify below as a first conservation. *)
+      \<comment> \<open>X starts at the setpoint mu1/theta. Since dX/dt = 0 in this
+         simplified model, X stays there; the proof establishes this first,
+         as a separate conservation.\<close>
   shows \<open>vec_nth (x t) 0 - vec_nth (x t) 1 = c\<close>
-      (* Conclusion: the integral state Z\<^sub>1 - Z\<^sub>2 is conserved at the setpoint *)
+      \<comment> \<open>Conclusion: the integral state Z1 - Z2 is conserved at the setpoint\<close>
 proof -
   (* ==========================================================================
      PROOF STRATEGY
@@ -4561,8 +4553,9 @@ proof -
 qed
 
 
+subsubsection \<open>GRN benchmark summary\<close>
+
 text \<open>
-  \textbf{GRN BENCHMARK SUITE , COMPLETE}\\
   |  \# | System                       | Property              | Method         |
   |----|------------------------------|-----------------------|----------------|
   |  1 | Gardner toggle switch (cond) | u(t) > 0              | DG + Hill      |
@@ -4680,9 +4673,9 @@ text \<open>
 \<close>
 
 
-text \<open>
-  PROPERTY 1: Monotonic Progress (DIRECT use of DI\_Vect)
+subsubsection \<open>Property 1: monotonic progress (direct use of DI\_Vect)\<close>
 
+text \<open>
   We prove [Z](t) >= [Z](0) by a FRESH DI\_Vect application with:
     h(v) = vec\_nth (y 0) 2     (constant: the initial value of Z)
     g(v) = vec\_nth v 2          (current value of Z)
@@ -4692,6 +4685,11 @@ text \<open>
     Dh(field) = 0
     Dg(field) = field[2] = k*X*Y
   Need: 0 <= k*X*Y, which holds when k >= 0 and X(tau), Y(tau) >= 0.
+
+  Limitation: the non-negativity of X and Y along the trajectory
+  (assumptions X\_nn\_along and Y\_nn\_along) is assumed here.
+  Discharging it requires a non-strict variant of DI\_boundary,
+  which is left for future work.
 \<close>
 
 lemma crn_min_Z_monotonic:
@@ -4705,9 +4703,7 @@ lemma crn_min_Z_monotonic:
                                     )) {0..t} UNIV\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes k_nn: \<open>0 \<le> k\<close>
-    (* Pointwise non-negativity along the trajectory.
-       Currently assumed; to be discharged by a non-strict variant of 
-       DI_boundary in future work. *)
+  \<comment> \<open>Non-negativity of X and Y along the trajectory is assumed; see the limitation stated above.\<close>
   assumes X_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> vec_nth (y \<tau>) 0\<close>
   assumes Y_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> vec_nth (y \<tau>) 1\<close>
   shows \<open>vec_nth (y 0) 2 \<le> vec_nth (y t) 2\<close>
@@ -4861,9 +4857,9 @@ proof -
   (* Translate back: ?y' 0 = y t1 and ?y' t' = y (t1 + (t2 - t1)) = y t2 *)
   thus ?thesis by (simp add: t'_def)
 qed
-text \<open>
-  PROPERTY 2: Bounded Output (uses conservation laws + algebra)
+subsubsection \<open>Property 2: bounded output (conservation laws and algebra)\<close>
 
+text \<open>
   The conservation laws (each proved with DI\_Vect) plus non-negativity
   give the upper bound algebraically.
 \<close>
@@ -4899,9 +4895,9 @@ proof -
 qed
 
 
-text \<open>
-  PROPERTY 3: Commitment (DIRECT use of DC)
+subsubsection \<open>Property 3: commitment (direct use of DC)\<close>
 
+text \<open>
   Once Z(0) >= c, we use DC to strengthen the ODE's domain so that the
   trajectory is constrained to \{v. vec\_nth v 2 >= c\}. This is the
   WRITE-ONCE / COMMITTED property: once the output crosses a threshold,
@@ -4971,9 +4967,9 @@ proof -
     by simp
 qed
 
-text \<open>
-  PROPERTY 4: Equilibrium correctness - at any equilibrium, Z = min(x0, y0)
+subsubsection \<open>Property 4: equilibrium correctness\<close>
 
+text \<open>
   This is the conditional steady-state result. It says: IF the trajectory
   ever reaches a state where no more reactions can fire (i.e., X*Y = 0),
   THEN at that state, the value of Z is exactly min(x0, y0).
@@ -5074,9 +5070,9 @@ text \<open>
   A non-strict variant of DI\_boundary would close this gap.
 \<close>
 
-text \<open>
-  Asymptotic epsilon-Convergence for the min(x,y) CRN
+subsubsection \<open>Property 5: asymptotic epsilon-convergence\<close>
 
+text \<open>
   This example extends our correctness proof for the min(x,y) CRN with an
   epsilon-convergence theorem: for any epsilon > 0, the trajectory becomes epsilon-close
   to the correct answer min(x0, y0) within an explicit, computable time
@@ -5242,9 +5238,9 @@ proof -
     by fastforce
 qed
 
-text \<open>
-  PROPERTY 6: Combined correctness specification (5 properties)
+subsubsection \<open>Property 6: combined correctness specification\<close>
 
+text \<open>
   The min(x,y) CRN is a CORRECT-BY-DESIGN computational primitive in the
   following formal sense:
 

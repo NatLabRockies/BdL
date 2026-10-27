@@ -1,11 +1,13 @@
 (***************************************************************)
 (**                                                           **)
-(**                                                           **)
 (** Author(s): Yakoub Nemouchi (NLR, Golden, CO, USA)         **)
 (**            Peter  Graf     (NLR, Golden, CO, USA)         **)
-(** Email: Yakoub.Nemouchi@nlr.gov                            **)
-(**                                                           **) 
-(** See CONTRIBUTORS, LICENSE and CITATION files for details. **)
+(** Email:     Yakoub.Nemouchi@nlr.gov                        **)
+(**            Peter.Graf@nlr.gov                             **)
+(**                                                           **)
+(** Copyright © 2026 Alliance for Energy Innovation, LLC.     **)
+(** License: BSD 3-Clause, see LICENSE.                       **)
+(** See CONTRIBUTORS and CITATION files for details.          **)
 (***************************************************************)
 theory Real_Analysis_More
 
@@ -265,7 +267,7 @@ proof -
   show ?thesis using fderiv by blast
 qed
 
-(* ---- Helper: derivative of sum of two components ---- *)
+text \<open>Helper: derivative of the sum of two components.\<close>
 lemma sum2_components_has_derivative:
   \<open>((\<lambda>v. vec_nth v i + vec_nth v j) has_derivative 
     (\<lambda>w. vec_nth w i + vec_nth w j)) (at p)\<close>
@@ -273,16 +275,16 @@ lemma sum2_components_has_derivative:
   by (intro has_derivative_add has_derivative_vec_nth)
 
 
-(* Helper lemma: The Fréchet derivative of the sum of three vector 
-   components is itself (since the sum is a linear function).
-   This is the "Dg" we supply to DI_Vect. *)
+text \<open>Helper: the Fr\'{e}chet derivative of the sum of three vector
+  components is the sum itself, since the sum is linear.
+  This is the Dg supplied to DI\_Vect.\<close>
 lemma sum3_components_has_derivative:
   \<open>((\<lambda>v. vec_nth v i + vec_nth v j + vec_nth v k) has_derivative 
     (\<lambda>w. vec_nth w i + vec_nth w j + vec_nth w k)) (at p)\<close>
   for i j k and p :: \<open>(real, 'a::finite) vec\<close>
   by (intro has_derivative_add has_derivative_vec_nth)
 
-(* Helper: derivative of \<lambda>v. vec_nth v 0 + 2 * vec_nth v 1 *)
+text \<open>Helper: derivative of vec\_nth v 0 + 2 * vec\_nth v 1 as a function of v.\<close>
 lemma weighted_sum_has_derivative:
   \<open>((\<lambda>v. vec_nth v 0 + 2 * vec_nth v 1) has_derivative 
     (\<lambda>w. vec_nth w 0 + 2 * vec_nth w 1)) (at p)\<close>
@@ -308,9 +310,7 @@ text \<open>
    or when n is even (any x).
 \<close>
 
-(* ============================================================
-   1. Scalar field derivative general version
-   ============================================================ *)
+subsubsection \<open>Scalar field derivative, general version\<close>
 text \<open>
   Hill function derivatives for EVEN Hill coefficients
 
@@ -361,9 +361,7 @@ proof -
     by argo
 qed
 
-(* ============================================================
-   2. Scalar Fréchet derivative general version
-   ============================================================ *)
+subsubsection \<open>Scalar Fr\'{e}chet derivative, general version\<close>
 
 lemma hill_repressive_scalar_has_frechet_derivative_general:
   fixes x \<alpha> :: real 
@@ -375,9 +373,7 @@ lemma hill_repressive_scalar_has_frechet_derivative_general:
   using hill_repressive_scalar_has_derivative_general[OF denom_pos n_pos]
   by (metis (full_types) has_field_derivative_imp_has_derivative mult_commute_abs)
 
-(* ============================================================
-   3. Vector derivative general version
-   ============================================================ *)
+subsubsection \<open>Vector derivative, general version\<close>
 
 lemma hill_repressive_vector_has_derivative_general:
   fixes p :: \<open>(real, 'a::finite) vec\<close> 
@@ -409,9 +405,7 @@ proof -
 qed
 
 
-(* ============================================================
-   4. Monotonicity bound general version for arbitrary n
-   ============================================================ *)
+subsubsection \<open>Monotonicity bound, general version for arbitrary n\<close>
 
 text \<open>
    Hill-function monotonicity helper.
@@ -475,7 +469,7 @@ text \<open>
    the general versions.
 \<close>
 
-(* --- hill_repressive_scalar_has_derivative as corollary --- *)
+text \<open>hill\_repressive\_scalar\_has\_derivative as a corollary.\<close>
 
 corollary hill_repressive_scalar_has_derivative:
   fixes x \<alpha> :: real 
@@ -493,7 +487,7 @@ proof -
     by blast
 qed
 
-(* --- hill_repressive_scalar_has_derivative_even as corollary --- *)
+text \<open>hill\_repressive\_scalar\_has\_derivative\_even as a corollary.\<close>
 
 corollary hill_repressive_scalar_has_derivative_even:
   fixes x \<alpha> :: real  
@@ -507,7 +501,7 @@ proof -
   thus ?thesis using hill_repressive_scalar_has_derivative_general n_pos by blast
 qed
 
-(* --- hill_monotonic_bound as corollary (n = 2 case) --- *)
+text \<open>hill\_monotonic\_bound as a corollary (case n = 2).\<close>
 
 corollary hill_monotonic_bound:
   fixes a x x_min x_max :: real
@@ -590,7 +584,7 @@ proof -
     by (simp add: comp_def algebra_simps)
 qed
 
-(* ---- Fréchet-derivative version for even Hill coefficients ---- *)
+text \<open>Fr\'{e}chet-derivative version for even Hill coefficients.\<close>
 lemma hill_repressive_scalar_has_frechet_derivative_even:
   fixes x \<alpha> :: real  
   fixes n :: nat
@@ -601,7 +595,7 @@ lemma hill_repressive_scalar_has_frechet_derivative_even:
   using hill_repressive_scalar_has_derivative_even[OF n_even n_pos]
   by (metis (full_types) has_field_derivative_imp_has_derivative mult_commute_abs)
 
-(* ---- Vector version for even Hill coefficients ---- *)
+text \<open>Vector version for even Hill coefficients.\<close>
 lemma hill_repressive_vector_has_derivative_even:
   fixes p :: \<open>(real, 'a::finite) vec\<close> 
   fixes \<alpha> :: real 

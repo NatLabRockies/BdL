@@ -1,11 +1,13 @@
 (***************************************************************)
 (**                                                           **)
-(**                                                           **)
 (** Author(s): Yakoub Nemouchi (NLR, Golden, CO, USA)         **)
 (**            Peter  Graf     (NLR, Golden, CO, USA)         **)
-(** Email: Yakoub.Nemouchi@nlr.gov                            **)
-(**                                                           **) 
-(** See CONTRIBUTORS, LICENSE and CITATION files for details. **)
+(** Email:     Yakoub.Nemouchi@nlr.gov                        **)
+(**            Peter.Graf@nlr.gov                             **)
+(**                                                           **)
+(** Copyright © 2026 Alliance for Energy Innovation, LLC.     **)
+(** License: BSD 3-Clause, see LICENSE.                       **)
+(** See CONTRIBUTORS and CITATION files for details.          **)
 (***************************************************************)
 theory Differential_Dynamic_Logic
 
@@ -292,9 +294,7 @@ qed
 
 subsection \<open>Differential Ghost\<close>
 
-(* ================================================================== *)
-(* Part 1: Explicit solution for linear scalar ODE y' = \<alpha>(\<tau>)\<sqdot>y + \<beta>(\<tau>) *)
-(* ================================================================== *)
+subsubsection \<open>Explicit solution of linear scalar ODEs\<close>
 
 lemma linear_ode_solution:
   fixes a b :: \<open>real \<Rightarrow> real\<close>
@@ -511,9 +511,7 @@ proof -
       by simp
   qed
 qed
-(* ================================================================== *)
-(* Part 2: The Differential Ghost (DG) lemma                          *)
-(* ================================================================== *)
+subsubsection \<open>The differential ghost lemma\<close>
 
 text \<open>
   DG says: given a solution x of the original ODE on \{0..t\},
@@ -851,14 +849,14 @@ lemma DI_boundary:
   assumes iv: \<open>0 \<le> invar (y 0)\<close>
   assumes ODE: \<open>(y solves_ode f) {0..t} Q\<close>
   assumes t: \<open>0 \<le> t\<close>
-  (* Differentiability of the certificate function "invar" everywhere along the trajectory.
-     This gives us continuity of invar \<circ> y, which is essential for 
-     the first-hit-time argument. *)
+  \<comment> \<open>Differentiability of the certificate function invar everywhere along
+     the trajectory. This gives continuity of invar o y, which the
+     first-hit-time argument needs.\<close>
   assumes invar_diff: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 
         \<exists> Dinvar. (invar has_derivative Dinvar) (at (y \<tau>))\<close>
-  (* Boundary condition: at every point where invar = 0, the Lie
-     derivative is STRICTLY positive (the trajectory points 
-     strictly into the safe region). *)
+  \<comment> \<open>Boundary condition: wherever invar = 0, the Lie derivative is
+     strictly positive, so the trajectory points strictly into the
+     safe region.\<close>
   assumes boundary_step: 
      \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> invar (y \<tau>) = 0 \<Longrightarrow>
         \<exists> Dinvar. (invar has_derivative Dinvar) (at (y \<tau>)) \<and>

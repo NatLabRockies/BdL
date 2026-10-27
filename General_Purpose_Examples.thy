@@ -1,11 +1,13 @@
 (***************************************************************)
 (**                                                           **)
-(**                                                           **)
 (** Author(s): Yakoub Nemouchi (NLR, Golden, CO, USA)         **)
 (**            Peter  Graf     (NLR, Golden, CO, USA)         **)
-(** Email: Yakoub.Nemouchi@nlr.gov                            **)
-(**                                                           **) 
-(** See CONTRIBUTORS, LICENSE and CITATION files for details. **)
+(** Email:     Yakoub.Nemouchi@nlr.gov                        **)
+(**            Peter.Graf@nlr.gov                             **)
+(**                                                           **)
+(** Copyright © 2026 Alliance for Energy Innovation, LLC.     **)
+(** License: BSD 3-Clause, see LICENSE.                       **)
+(** See CONTRIBUTORS and CITATION files for details.          **)
 (***************************************************************)
 theory General_Purpose_Examples
 
@@ -147,9 +149,7 @@ qed
 
 subsection \<open>Examples for application of DG\<close>
 
-(* ================================================================== *)
-(*  Example : Exponential Decay via DG + DI_Vect                      *)
-(* ================================================================== *)
+subsubsection \<open>Example: exponential decay via DG and DI\_Vect\<close>
 
 text \<open>
   ODE:        x' = -x  (at position 0)
