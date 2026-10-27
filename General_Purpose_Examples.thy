@@ -37,7 +37,7 @@ lemma Example1_via_DI:
   done
 
 lemma circular_invariant:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 2) vec\<close>
   assumes y_sol: \<open>(y solves_ode 
                     (\<lambda>t v. vec_lambda 
                            ((\<lambda>i. 0)(0 := -(\<omega>::real) * (vec_nth v 1), 
@@ -50,7 +50,7 @@ proof -
   (* Helper: Fréchet derivative of the squared-sum (v1² + v2²) *)
   have g_has_derivative:
    \<open>((\<lambda>v. (vec_nth v i)^2 + (vec_nth v j)^2) has_derivative 
-    (\<lambda>v. 2 * (vec_nth (p::(real,'p) vec) i) * (vec_nth v i) + 
+    (\<lambda>v. 2 * (vec_nth (p::(real,2) vec) i) * (vec_nth v i) + 
          2 * (vec_nth p j) * (vec_nth v j))) (at p)\<close>
    for i j p
     apply (rule has_derivative_add)
@@ -158,7 +158,7 @@ text \<open>
   Invariant:  x*g\textasciicircum{}2 >= 1  (using DI\_Vect with h = lambdav. 1, g = lambdav. v?*v?\textasciicircum{}2)
 \<close>
 lemma exponential_decay:
-  fixes x :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 2) vec\<close>
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(0 := -((vec_nth v 0)::real))))) {0..t} UNIV\<close>
   assumes iv: \<open>vec_nth (x 0) 0 > (0::real)\<close>
   assumes t: \<open>0 \<le> t\<close>
@@ -181,15 +181,15 @@ proof -
 
   (* PROOF OBLIGATION DG.4 (gi_zero): the velocity vector's component at index 1 is zero *)
   have gi_zero: \<open>\<And>\<tau> v. vec_nth ((\<lambda>t v.
-      vec_lambda ((\<lambda>k::'p. 0)(0 := -((vec_nth v 0)::real)))) \<tau> v) 1 = 0\<close>
+      vec_lambda ((\<lambda>k::2. 0)(0 := -((vec_nth v 0)::real)))) \<tau> v) 1 = 0\<close>
     by (auto simp add: fun_upd_def)
 
   (* PROOF OBLIGATION DG.5 (gi_fresh): the vector field doesn't depend on the ghost index *)
-  have gi_fresh: \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> 1 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
+  have gi_fresh: \<open>\<And>\<tau> v w::(real, 2) vec. (\<forall>i. i \<noteq> 1 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
                             (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(0 := -((vec_nth v 0)::real)))) \<tau> v =
                             (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(0 := -((vec_nth v 0)::real)))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    fix \<tau> :: real and v w :: \<open>(real, 2) vec\<close>
     assume eq: \<open>\<forall>i. i \<noteq> 1 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
     have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
     show \<open>(\<lambda>t v. vec_lambda ((\<lambda>k. 0)(0 := -((vec_nth v 0)::real)))) \<tau> v =
@@ -222,7 +222,7 @@ proof -
     \<open>((\<lambda>v. vec_nth v 0 * (vec_nth v 1)^2) has_derivative 
       (\<lambda>v. vec_nth v 0 * (vec_nth p 1)^2 + 
            vec_nth p 0 * (2 * vec_nth p 1 * vec_nth v 1))) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 2) vec\<close>
   proof -
     have f: \<open>((\<lambda>v. vec_nth v 0) has_derivative (\<lambda>v. vec_nth v 0)) (at p)\<close>
       by (rule has_derivative_vec_nth)

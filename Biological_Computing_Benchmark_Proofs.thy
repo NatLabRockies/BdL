@@ -133,7 +133,7 @@ text \<open>
 
 text \<open>Main theorem: conservation of the total concentration.\<close>
 lemma crn_oscillator_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
       \<comment> \<open>y(t) = ([A](t), [B](t), [C](t))\<close>
   fixes k1 k2 k3 :: real
   assumes y_sol: 
@@ -156,7 +156,7 @@ proof -
    have sum_deriv:
     \<open>((\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2) has_derivative 
       (\<lambda>w. vec_nth w 0 + vec_nth w 1 + vec_nth w 2)) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
@@ -382,7 +382,7 @@ text \<open>
 \<close>
 
 lemma michaelis_menten_enzyme_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
       \<comment> \<open>y(t) = ([E](t), [S](t), [ES](t), [P](t))\<close>
   fixes k1 km1 k2 :: real
       \<comment> \<open>k1: binding rate, km1: unbinding rate, k2: catalytic rate\<close>
@@ -408,7 +408,7 @@ proof -
    have enz_deriv:
     \<open>((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative 
       (\<lambda>w. vec_nth w 0 + vec_nth w 2)) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
@@ -522,7 +522,7 @@ text \<open>
       = 0
 \<close>
 lemma michaelis_menten_substrate_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes k1 km1 k2 :: real
   assumes y_sol: 
     \<open>(y solves_ode (\<lambda>t v.
@@ -541,7 +541,7 @@ proof -
    have sub_deriv:
     \<open>((\<lambda>v. vec_nth v 1 + vec_nth v 2 + vec_nth v 3) has_derivative 
       (\<lambda>w. vec_nth w 1 + vec_nth w 2 + vec_nth w 3)) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
@@ -679,7 +679,7 @@ text \<open>
                       = 0
 \<close>
 lemma sir_population_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes beta gamma :: real
       \<comment> \<open>beta: infection rate, gamma: recovery rate\<close>
   assumes y_sol: 
@@ -697,7 +697,7 @@ proof -
    have sum_deriv:
     \<open>((\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2) has_derivative 
       (\<lambda>w. vec_nth w 0 + vec_nth w 1 + vec_nth w 2)) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
@@ -828,7 +828,7 @@ text \<open>
 
 text \<open>Conservation law 1: [A] + [C] = A\_total.\<close>
 lemma reversible_binding_A_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes k1 km1 :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
@@ -852,7 +852,7 @@ proof -
   have deriv:
     \<open>((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative 
       (\<lambda>w. vec_nth w 0 + vec_nth w 2)) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
@@ -945,7 +945,7 @@ qed
 
 text \<open>Conservation law 2: [B] + [C] = B\_total.\<close>
 lemma reversible_binding_B_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes k1 km1 :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
@@ -969,7 +969,7 @@ proof -
   have deriv:
     \<open>((\<lambda>v. vec_nth v 1 + vec_nth v 2) has_derivative 
       (\<lambda>w. vec_nth w 1 + vec_nth w 2)) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
@@ -1093,7 +1093,7 @@ text \<open>
 \<close>
 
 lemma dimerization_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes k1 km1 :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
@@ -1301,7 +1301,7 @@ text \<open>
     Conclude: A*g\textasciicircum{}2 >= 1 and g\textasciicircum{}2 >= 0 ==> A > 0
 \<close>
 lemma crn_simple_decay_positivity:
-  fixes x :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes k :: real
   assumes x_sol: \<open>(x solves_ode 
                     (\<lambda>t v. 
@@ -1348,16 +1348,16 @@ proof -
 
   (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at index 1 is zero *)
   have gi_zero: \<open>\<And>\<tau> v. vec_nth ((\<lambda>t v.
-      vec_lambda ((\<lambda>k::'p. 0)(0 := -k * (vec_nth v 0)))) \<tau> v) 1 = 0\<close>
+      vec_lambda ((\<lambda>k::4. 0)(0 := -k * (vec_nth v 0)))) \<tau> v) 1 = 0\<close>
     by (auto simp add: fun_upd_def)
 
   (* PROOF OBLIGATION DG.5 (gi_fresh): the vector field doesn't depend on the ghost index *)
   have gi_fresh: 
-    \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> 1 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
+    \<open>\<And>\<tau> v w::(real, 4) vec. (\<forall>i. i \<noteq> 1 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
                              (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(0 := -k * (vec_nth v 0)))) \<tau> v = 
                              (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(0 := -k * (vec_nth v 0)))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    fix \<tau> :: real and v w :: \<open>(real, 4) vec\<close>
     assume eq: \<open>\<forall>i. i \<noteq> 1 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
     have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
     show \<open>(\<lambda>t v. vec_lambda ((\<lambda>k. 0)(0 := -k * (vec_nth v 0)))) \<tau> v =
@@ -1391,7 +1391,7 @@ proof -
     \<open>((\<lambda>v. vec_nth v 0 * (vec_nth v 1)^2) has_derivative 
       (\<lambda>v. vec_nth v 0 * (vec_nth p 1)^2 + 
            vec_nth p 0 * (2 * vec_nth p 1 * vec_nth v 1))) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
   proof -
     have f: \<open>((\<lambda>v. vec_nth v 0) has_derivative (\<lambda>v. vec_nth v 0)) (at p)\<close>
       by (rule has_derivative_vec_nth)
@@ -1522,7 +1522,7 @@ text \<open>
 
 
 lemma crn_min_X_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes k :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                    vec_lambda ((\<lambda>i. 0)
@@ -1560,7 +1560,7 @@ proof -
   have sum_deriv:
     \<open>((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative 
       (\<lambda>w. vec_nth w 0 + vec_nth w 2)) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
@@ -1662,7 +1662,7 @@ qed
 
 text \<open>Conservation law 2: [Y](t) + [Z](t) = y0.\<close>
 lemma crn_min_Y_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes k :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                    vec_lambda ((\<lambda>i. 0)(
@@ -1690,7 +1690,7 @@ proof -
   have sum_deriv:
     \<open>((\<lambda>v. vec_nth v 1 + vec_nth v 2) has_derivative 
       (\<lambda>w. vec_nth w 1 + vec_nth w 2)) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
@@ -1789,7 +1789,7 @@ proof -
 qed
 
 lemma crn_min_difference_preserved:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p:: {finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes k :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                    vec_lambda ((\<lambda>i. 0)(
@@ -1934,7 +1934,7 @@ text \<open>
 \<close>
 
 lemma toggle_switch_difference_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes \<alpha> \<beta> :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
@@ -1964,7 +1964,7 @@ proof -
   have diff_deriv:
     \<open>((\<lambda>v. vec_nth v 0 - vec_nth v 1) has_derivative 
       (\<lambda>w. vec_nth w 0 - vec_nth w 1)) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
     by (intro has_derivative_diff has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
@@ -2074,7 +2074,7 @@ text \<open>
 
 text \<open>DC application: strengthen the domain to include the conservation invariant.\<close>
 lemma toggle_switch_DC_strengthened_domain:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes \<alpha> \<beta> :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
@@ -2283,7 +2283,7 @@ text \<open>
   not a defect of our formalization.
 \<close>
 lemma gardner_toggle_switch_u_positive:
-  fixes x :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes \<alpha>1 \<alpha>2 :: real
   fixes \<beta> \<gamma> :: nat
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
@@ -2356,14 +2356,14 @@ proof -
   (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at index 2 is zero *)
   have gi_zero: 
    \<open>\<And>\<tau> v. vec_nth ((\<lambda>t v.
-          vec_lambda ((\<lambda>k::'p. 0)(
+          vec_lambda ((\<lambda>k::4. 0)(
                        0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
                        1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> v) 2 = 0\<close>
     by (auto simp add: fun_upd_def)
 
   (* PROOF OBLIGATION DG.5 (gi_fresh): the vector field doesn't depend on the ghost index *)
   have gi_fresh: 
-    \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> 2 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
+    \<open>\<And>\<tau> v w::(real, 4) vec. (\<forall>i. i \<noteq> 2 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
                              (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
                                   0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
                                   1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> v =
@@ -2371,7 +2371,7 @@ proof -
                                   0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
                                   1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    fix \<tau> :: real and v w :: \<open>(real, 4) vec\<close>
     assume eq: \<open>\<forall>i. i \<noteq> 2 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
     (* The vector field reads indices 0 and 1; neither is 2 *)
     have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
@@ -2420,7 +2420,7 @@ proof -
     \<open>((\<lambda>v. vec_nth v 0 * (vec_nth v 2)^2) has_derivative 
       (\<lambda>v. vec_nth v 0 * (vec_nth p 2)^2 + 
            vec_nth p 0 * (2 * vec_nth p 2 * vec_nth v 2))) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
   proof -
     have f: \<open>((\<lambda>v. vec_nth v 0) has_derivative (\<lambda>v. vec_nth v 0)) (at p)\<close>
       by (rule has_derivative_vec_nth)
@@ -2559,7 +2559,7 @@ text \<open>
 \<close>
 
 lemma gardner_toggle_switch_v_nonneg:
-  fixes x :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes \<alpha>1 \<alpha>2 :: real
   fixes \<beta> \<gamma> :: nat
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
@@ -2714,7 +2714,7 @@ text \<open>
   non-negativity.
 \<close>
 lemma gardner_toggle_switch_u_positive_unconditional:
-  fixes x :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes \<alpha>1 \<alpha>2 :: real
   fixes \<beta> \<gamma> :: nat
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
@@ -2854,7 +2854,7 @@ text \<open>
 \<close>
 
 lemma gardner_toggle_switch_u_positive_time_dependent:
-  fixes x :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes \<alpha>1 \<alpha>2 :: \<open>real \<Rightarrow> real\<close>
   fixes \<beta> \<gamma> :: nat
   assumes x_sol: \<open>(x solves_ode (\<lambda>\<tau> v.
@@ -2901,7 +2901,7 @@ proof -
 
   (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at index 2 is zero *)
   have gi_zero: \<open>\<And>\<tau> v. vec_nth ((\<lambda>\<tau> v.
-      vec_lambda ((\<lambda>k::'p. 0)(
+      vec_lambda ((\<lambda>k::4. 0)(
         0 := \<alpha>1 \<tau> / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
         1 := \<alpha>2 \<tau> / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> v) 2 = 0\<close>
     by (auto simp add: fun_upd_def)
@@ -2910,7 +2910,7 @@ proof -
      Note: even though \<alpha>1, \<alpha>2 are functions of \<tau>, they depend only on \<tau> 
      (not on v), so the gi_fresh argument is unchanged: the vector field reads 
      vec_nth v 0 and vec_nth v 1 but not vec_nth v 2. *)
-  have gi_fresh: \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> 2 \<longrightarrow> vec_nth v i = vec_nth w i) 
+  have gi_fresh: \<open>\<And>\<tau> v w::(real, 4) vec. (\<forall>i. i \<noteq> 2 \<longrightarrow> vec_nth v i = vec_nth w i) 
                            \<Longrightarrow> (\<lambda>\<tau> v. vec_lambda ((\<lambda>k. 0)(
                                  0 := \<alpha>1 \<tau> / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
                                  1 := \<alpha>2 \<tau> / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> v 
@@ -2918,7 +2918,7 @@ proof -
                                  0 := \<alpha>1 \<tau> / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
                                  1 := \<alpha>2 \<tau> / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    fix \<tau> :: real and v w :: \<open>(real, 4) vec\<close>
     assume eq: \<open>\<forall>i. i \<noteq> 2 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
     have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
     have v1: \<open>vec_nth v 1 = vec_nth w 1\<close> using eq by simp
@@ -2969,7 +2969,7 @@ proof -
     \<open>((\<lambda>v. vec_nth v 0 * (vec_nth v 2)^2) has_derivative 
       (\<lambda>v. vec_nth v 0 * (vec_nth p 2)^2 + 
            vec_nth p 0 * (2 * vec_nth p 2 * vec_nth v 2))) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
   proof -
     have f: \<open>((\<lambda>v. vec_nth v 0) has_derivative (\<lambda>v. vec_nth v 0)) (at p)\<close>
       by (rule has_derivative_vec_nth)
@@ -3140,7 +3140,7 @@ text \<open>
 \<close>
 
 lemma negative_autoregulation_positive:
-  fixes x :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes \<alpha> \<beta> :: real
   fixes n :: nat
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
@@ -3201,18 +3201,18 @@ proof -
 
   (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at index 1 is zero *)
   have gi_zero: \<open>\<And>\<tau> v. vec_nth ((\<lambda>t v.
-      vec_lambda ((\<lambda>k::'p. 0)(
+      vec_lambda ((\<lambda>k::4. 0)(
         0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0))) \<tau> v) 1 = 0\<close>
     by (auto simp add: fun_upd_def)
 
   (* PROOF OBLIGATION DG.5 (gi_fresh): the vector field doesn't depend on the ghost index *)
-  have gi_fresh: \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> 1 \<longrightarrow> vec_nth v i = vec_nth w i) 
+  have gi_fresh: \<open>\<And>\<tau> v w::(real, 4) vec. (\<forall>i. i \<noteq> 1 \<longrightarrow> vec_nth v i = vec_nth w i) 
                            \<Longrightarrow> (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
                                  0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0))) \<tau> v 
                               = (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
                                  0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    fix \<tau> :: real and v w :: \<open>(real, 4) vec\<close>
     assume eq: \<open>\<forall>i. i \<noteq> 1 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
     (* The field only reads index 0; not index 1 *)
     have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
@@ -3256,7 +3256,7 @@ proof -
     \<open>((\<lambda>v. vec_nth v 0 * (vec_nth v 1)^2) has_derivative 
       (\<lambda>v. vec_nth v 0 * (vec_nth p 1)^2 + 
            vec_nth p 0 * (2 * vec_nth p 1 * vec_nth v 1))) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
   proof -
     have f: \<open>((\<lambda>v. vec_nth v 0) has_derivative (\<lambda>v. vec_nth v 0)) (at p)\<close>
       by (rule has_derivative_vec_nth)
@@ -3443,7 +3443,7 @@ text \<open>
 
 text \<open>Lemma 1: positivity of u (ghost at position 3, witness u * g\textasciicircum{}2).\<close>
 lemma repressilator_u_positive:
-  fixes x :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes \<alpha> :: real
   fixes n :: nat
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
@@ -3501,7 +3501,7 @@ proof -
 
   (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at index 3 is zero *)
   have gi_zero: \<open>\<And>\<tau> v. vec_nth ((\<lambda>t v.
-      vec_lambda ((\<lambda>k::'p. 0)(
+      vec_lambda ((\<lambda>k::4. 0)(
         0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
         1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
         2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> v) 3 = 0\<close>
@@ -3509,7 +3509,7 @@ proof -
 
   (* PROOF OBLIGATION DG.5 (gi_fresh): the vector field doesn't depend on the ghost index *)
   have gi_fresh: 
-    \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
+    \<open>\<And>\<tau> v w::(real, 4) vec. (\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
                             (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
                                  0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
                                  1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
@@ -3519,7 +3519,7 @@ proof -
                                  1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
                                  2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    fix \<tau> :: real and v w :: \<open>(real, 4) vec\<close>
     assume eq: \<open>\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
     have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
     have v1: \<open>vec_nth v 1 = vec_nth w 1\<close> using eq by simp
@@ -3570,7 +3570,7 @@ proof -
     \<open>((\<lambda>v. vec_nth v 0 * (vec_nth v 3)^2) has_derivative 
       (\<lambda>v. vec_nth v 0 * (vec_nth p 3)^2 + 
            vec_nth p 0 * (2 * vec_nth p 3 * vec_nth v 3))) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
   proof -
     have f: \<open>((\<lambda>v. vec_nth v 0) has_derivative (\<lambda>v. vec_nth v 0)) (at p)\<close>
       by (rule has_derivative_vec_nth)
@@ -3679,7 +3679,7 @@ qed
 
 text \<open>Lemma 2: positivity of v (mirror argument, ghost at position 3).\<close>
 lemma repressilator_v_positive:
-  fixes x :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes \<alpha> :: real
   fixes n :: nat
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
@@ -3730,14 +3730,14 @@ proof -
 
   (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at index 3 is zero *)
   have gi_zero: \<open>\<And>\<tau> v. vec_nth ((\<lambda>t v.
-      vec_lambda ((\<lambda>k::'p. 0)(
+      vec_lambda ((\<lambda>k::4. 0)(
         0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
         1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
         2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> v) 3 = 0\<close>
     by (auto simp add: fun_upd_def)
 
   (* PROOF OBLIGATION DG.5 (gi_fresh): the vector field doesn't depend on the ghost index *)
-  have gi_fresh: \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
+  have gi_fresh: \<open>\<And>\<tau> v w::(real, 4) vec. (\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
                             (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
                                  0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
                                  1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
@@ -3747,7 +3747,7 @@ proof -
                                  1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
                                  2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    fix \<tau> :: real and v w :: \<open>(real, 4) vec\<close>
     assume eq: \<open>\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
     have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
     have v1: \<open>vec_nth v 1 = vec_nth w 1\<close> using eq by simp
@@ -3801,7 +3801,7 @@ proof -
     \<open>((\<lambda>v. vec_nth v 1 * (vec_nth v 3)^2) has_derivative 
       (\<lambda>v. vec_nth v 1 * (vec_nth p 3)^2 + 
            vec_nth p 1 * (2 * vec_nth p 3 * vec_nth v 3))) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
   proof -
     have f: \<open>((\<lambda>v. vec_nth v 1) has_derivative (\<lambda>v. vec_nth v 1)) (at p)\<close>
       by (rule has_derivative_vec_nth)
@@ -3910,7 +3910,7 @@ qed
 
 text \<open>Lemma 3: positivity of w (mirror argument, ghost at position 3).\<close>
 lemma repressilator_w_positive:
-  fixes x :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes \<alpha> :: real
   fixes n :: nat
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
@@ -3966,7 +3966,7 @@ proof -
 
   (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at index 3 is zero *)
   have gi_zero: \<open>\<And>\<tau> v. vec_nth ((\<lambda>t v.
-      vec_lambda ((\<lambda>k::'p. 0)(
+      vec_lambda ((\<lambda>k::4. 0)(
         0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
         1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
         2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> v) 3 = 0\<close>
@@ -3974,7 +3974,7 @@ proof -
 
   (* PROOF OBLIGATION DG.5 (gi_fresh): the vector field doesn't depend on the ghost index *)
   have gi_fresh: 
-    \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
+    \<open>\<And>\<tau> v w::(real, 4) vec. (\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
                              (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
                                   0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
                                   1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
@@ -3984,7 +3984,7 @@ proof -
                                   1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
                                   2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    fix \<tau> :: real and v w :: \<open>(real, 4) vec\<close>
     assume eq: \<open>\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
     (* The field only reads indices 0, 1, 2; none of these is 3 *)
     have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
@@ -4042,7 +4042,7 @@ proof -
     \<open>((\<lambda>v. vec_nth v 2 * (vec_nth v 3)^2) has_derivative 
       (\<lambda>v. vec_nth v 2 * (vec_nth p 3)^2 + 
            vec_nth p 2 * (2 * vec_nth p 3 * vec_nth v 3))) (at p)\<close>
-    for p :: \<open>(real, 'p) vec\<close>
+    for p :: \<open>(real, 4) vec\<close>
   proof -
     have f: \<open>((\<lambda>v. vec_nth v 2) has_derivative (\<lambda>v. vec_nth v 2)) (at p)\<close>
       by (rule has_derivative_vec_nth)
@@ -4152,7 +4152,7 @@ qed
 
 text \<open>Main theorem: all three proteins stay strictly positive.\<close>
 theorem repressilator_all_positive:
-  fixes x :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes \<alpha> :: real
   fixes n :: nat
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
@@ -4283,7 +4283,7 @@ text \<open>
 \<close>
 
 lemma antithetic_integral_feedback_conservation:
-  fixes x :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes \<mu>1 \<theta> \<eta> :: real
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
@@ -4693,7 +4693,7 @@ text \<open>
 \<close>
 
 lemma crn_min_Z_monotonic:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes k :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>i. 0)(
@@ -4778,7 +4778,7 @@ text \<open>
 \<close>
 
 lemma crn_min_Z_monotonic_general:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
     and k :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
       vec_lambda ((\<lambda>i. 0)(
@@ -4865,7 +4865,7 @@ text \<open>
 \<close>
 
 lemma crn_min_Z_upper_bound_via_DI:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
     and k x0 y0 :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
       vec_lambda ((\<lambda>i. 0)(
@@ -4922,7 +4922,7 @@ text \<open>
 \<close>
 
 lemma crn_min_Z_committed_via_DC:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
     and k c :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
       vec_lambda ((\<lambda>i. 0)(
@@ -4999,7 +4999,7 @@ text \<open>
 \<close>
 
 lemma crn_min_Z_equilibrium_correct:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
     and k x0 y0 :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
       vec_lambda ((\<lambda>i. 0)(
@@ -5133,7 +5133,7 @@ text \<open>
 
 
 lemma crn_min_Z_epsilon_convergence_via_axiom:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes k x0 y0 \<epsilon> T :: real
   assumes y_sol: 
          \<open>(y solves_ode (\<lambda>t v.
@@ -5162,7 +5162,7 @@ proof -
 
  \<comment> \<open>The vector field, bound once so it need not be repeated.
       Must match y\_sol's inline lambda EXACTLY.\<close>
-  let ?F = \<open>\<lambda>(t::real) (v::(real,'p) vec). vec_lambda ((\<lambda>i. 0)(
+  let ?F = \<open>\<lambda>(t::real) (v::(real,4) vec). vec_lambda ((\<lambda>i. 0)(
               0 := -k * vec_nth v 0 * vec_nth v 1,
               1 := -k * vec_nth v 0 * vec_nth v 1,
               2 :=  k * vec_nth v 0 * vec_nth v 1))\<close>
@@ -5200,13 +5200,13 @@ proof -
       Frechet derivative is itself (has\_derivative\_vec\_nth); the Lie
       derivative is then just the field's 2-component, namely k*X*Y.\<close>
   have induct_step: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow>
-      \<exists> Dquant. ((\<lambda>v::(real,'p) vec. vec_nth v 2) has_derivative Dquant) (at (y \<tau>)) \<and>
+      \<exists> Dquant. ((\<lambda>v::(real,4) vec. vec_nth v 2) has_derivative Dquant) (at (y \<tau>)) \<and>
                 (vec_nth (y \<tau>) 2 \<le> min x0 y0 - \<epsilon> \<longrightarrow>
                  k * \<epsilon>^2 \<le> Dquant (?F \<tau> (y \<tau>)))\<close>
   proof -
     fix \<tau> assume h\<tau>: \<open>\<tau> \<in> {0..T}\<close>
 
-    have deriv: \<open>((\<lambda>v::(real,'p) vec. vec_nth v 2)
+    have deriv: \<open>((\<lambda>v::(real,4) vec. vec_nth v 2)
                    has_derivative (\<lambda>w. vec_nth w 2)) (at (y \<tau>))\<close>
       by (rule has_derivative_vec_nth)
 
@@ -5221,7 +5221,7 @@ proof -
         using rate_below_target[OF h\<tau> below] field_2 
         by simp
     qed
-    show \<open>\<exists> Dquant. ((\<lambda>v::(real,'p) vec. vec_nth v 2) has_derivative Dquant) (at (y \<tau>)) \<and>
+    show \<open>\<exists> Dquant. ((\<lambda>v::(real,4) vec. vec_nth v 2) has_derivative Dquant) (at (y \<tau>)) \<and>
                 (vec_nth (y \<tau>) 2 \<le> min x0 y0 - \<epsilon> \<longrightarrow>
                  k * \<epsilon>^2 \<le> Dquant (?F \<tau> (y \<tau>)))\<close>
       using deriv rate 
@@ -5230,7 +5230,7 @@ proof -
 
   show ?thesis
     using DI_convergence_rate[where
-            quant  = \<open>\<lambda>v::(real,'p) vec. vec_nth v 2\<close> and
+            quant  = \<open>\<lambda>v::(real,4) vec. vec_nth v 2\<close> and
             Ltarget = \<open>min x0 y0 - \<epsilon>\<close> and
             \<delta>      = \<open>k * \<epsilon>^2\<close> and
             T      = T,
@@ -5262,7 +5262,7 @@ text \<open>
 \<close>
 
 lemma crn_min_correctness_specification:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes k x0 y0 \<epsilon> T :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
       vec_lambda ((\<lambda>i. 0)(
@@ -5328,7 +5328,7 @@ text \<open>
 \<close>
 
 theorem crn_min_correctness_full:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
   fixes k x0 y0 \<epsilon> T :: real
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                     vec_lambda 

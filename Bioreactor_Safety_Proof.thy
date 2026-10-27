@@ -43,8 +43,8 @@ text \<open>
 
 definition metabolic_field ::
   \<open>real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow>
-   real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec \<Rightarrow>
-   (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+   real \<Rightarrow> (real, 3) vec \<Rightarrow>
+   (real, 3) vec\<close>
 where
   \<open>metabolic_field u \<mu>_max K_S Y d K_I \<alpha> k K_Z =
     (\<lambda>t v.
@@ -292,12 +292,11 @@ locale metabolic_safety_region_params = metabolic_baseline_params +
     \<open>\<alpha> * (\<mu>_max * S_max / (K_S + S_max)) * X_max < k * Z_max / (K_Z + Z_max)\<close>
 begin
 
-text \<open> Predicate for the safety region.  The locale interprets the 
-  index type 'p so that we can speak of the (S, X, Z) components 
-  as vec\_nth v 0, 1, 2.\<close>
+text \<open> Predicate for the safety region.  The state space is (real, 3) vec,
+  so the (S, X, Z) components are vec\_nth v 0, 1, 2.\<close>
 
 definition in_safety_region :: 
-  \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec \<Rightarrow> bool\<close> where
+  \<open>(real, 3) vec \<Rightarrow> bool\<close> where
   \<open>in_safety_region v \<longleftrightarrow> 
      S_min \<le> vec_nth v 0 \<and> vec_nth v 0 \<le> S_max \<and>
      X_min \<le> vec_nth v 1 \<and> vec_nth v 1 \<le> X_max \<and>
@@ -313,7 +312,7 @@ text \<open>
   stays in the safety region.\<close>
 
 lemma safety_region_forward_invariant:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 3) vec\<close>
   fixes t :: real
   assumes y_sol: \<open>(y solves_ode 
                    (metabolic_field u \<mu>_max K_S Y d K_I \<alpha> k K_Z)) 
@@ -322,23 +321,23 @@ lemma safety_region_forward_invariant:
   assumes y0_in_safety: \<open>in_safety_region (y 0)\<close>
   shows \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> in_safety_region (y \<tau>)\<close>
 proof -
-  define lo :: \<open>'p \<Rightarrow> real\<close> where
+  define lo :: \<open>3 \<Rightarrow> real\<close> where
     \<open>lo = (\<lambda>i. if i = 0 then S_min 
                else if i = 1 then X_min
                else if i = 2 then Z_min
                else vec_nth (y 0) i)\<close>
-  define hi :: \<open>'p \<Rightarrow> real\<close> where
+  define hi :: \<open>3 \<Rightarrow> real\<close> where
     \<open>hi = (\<lambda>i. if i = 0 then S_max 
                else if i = 1 then X_max
                else if i = 2 then Z_max
                else vec_nth (y 0) i)\<close>
-  define active :: \<open>'p set\<close> where
+  define active :: \<open>3 set\<close> where
     \<open>active = {0, 1, 2}\<close>
 
   \<comment> \<open>Initial values lie in [lo, hi].\<close>
   have iv: \<open>\<And>i. lo i \<le> vec_nth (y 0) i \<and> vec_nth (y 0) i \<le> hi i\<close>
   proof -
-    fix i :: 'p
+    fix i :: 3
     show \<open>lo i \<le> vec_nth (y 0) i \<and> vec_nth (y 0) i \<le> hi i\<close>
     proof (cases \<open>i = 0\<close>)
       case True
@@ -370,7 +369,7 @@ proof -
   \<comment> \<open>Active components have lo < hi.\<close>
   have active_ord: \<open>\<And>i. i \<in> active \<Longrightarrow> lo i < hi i\<close>
   proof -
-    fix i :: 'p assume \<open>i \<in> active\<close>
+    fix i :: 3 assume \<open>i \<in> active\<close>
     hence \<open>i = 0 \<or> i = 1 \<or> i = 2\<close> unfolding active_def by blast
     thus \<open>lo i < hi i\<close>
     proof (elim disjE)
@@ -393,7 +392,7 @@ proof -
              vec_nth v i = lo i \<Longrightarrow> 
              0 < vec_nth (metabolic_field u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) i\<close>
   proof -
-    fix i :: 'p and v :: \<open>(real, 'p) vec\<close> and \<tau> :: real
+    fix i :: 3 and v :: \<open>(real, 3) vec\<close> and \<tau> :: real
     assume i_act: \<open>i \<in> active\<close>
     assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
     assume bounds: \<open>\<And>j. lo j \<le> vec_nth v j \<and> vec_nth v j \<le> hi j\<close>
@@ -627,7 +626,7 @@ proof -
              vec_nth v i = hi i \<Longrightarrow> 
              vec_nth (metabolic_field u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) i < 0\<close>
   proof -
-    fix i :: 'p and v :: \<open>(real, 'p) vec\<close> and \<tau> :: real
+    fix i :: 3 and v :: \<open>(real, 3) vec\<close> and \<tau> :: real
     assume i_act: \<open>i \<in> active\<close>
     assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
     assume bounds: \<open>\<And>j. lo j \<le> vec_nth v j \<and> vec_nth v j \<le> hi j\<close>
@@ -859,7 +858,7 @@ proof -
     \<open>\<And>i \<tau>. i \<notin> active \<Longrightarrow> \<tau> \<in> {0..t} \<Longrightarrow> 
            lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
   proof -
-    fix i :: 'p and \<tau> :: real
+    fix i :: 3 and \<tau> :: real
     assume i_inact: \<open>i \<notin> active\<close>
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
     from i_inact 
@@ -870,7 +869,7 @@ proof -
     have field_zero: \<open>\<And>\<tau>' v. vec_nth 
                      (metabolic_field u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau>' v) i = 0\<close>
     proof -
-      fix \<tau>' :: real and v :: \<open>(real, 'p) vec\<close>
+      fix \<tau>' :: real and v :: \<open>(real, 3) vec\<close>
       show \<open>vec_nth (metabolic_field u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau>' v) i = 0\<close>
         unfolding metabolic_field_def 
         using i_ne 
@@ -1047,14 +1046,14 @@ qed
 text \<open>The Lyapunov function for Z-clearance.\<close>
  
 definition V_Z :: 
-  \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec \<Rightarrow> real\<close> where
+  \<open>(real, 3) vec \<Rightarrow> real\<close> where
   \<open>V_Z v = (vec_nth v 2 - Z_eq)^2 / 2\<close>
 
 lemma V_Z_has_derivative:
-  fixes p :: \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes p :: \<open>(real, 3) vec\<close>
   shows \<open>(V_Z has_derivative (\<lambda>w. (vec_nth p 2 - Z_eq) * vec_nth w 2)) (at p)\<close>
 proof -
-  have proj: \<open>((\<lambda>v::(real,'p) vec. vec_nth v 2)
+  have proj: \<open>((\<lambda>v::(real,3) vec. vec_nth v 2)
                  has_derivative (\<lambda>w. vec_nth w 2)) (at p)\<close>
     by (rule has_derivative_vec_nth)
   have sq: \<open>((\<lambda>z::real. (z - Z_eq)^2 / 2)
@@ -1068,7 +1067,7 @@ proof -
 qed
 
 lemma V_Z_induct_step:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 3) vec\<close>
   fixes T u :: real
   assumes rate_bound:
     \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow>
@@ -1098,7 +1097,7 @@ proof -
 qed
 
 lemma V_Z_nn:
-  fixes v :: \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes v :: \<open>(real, 3) vec\<close>
   shows \<open>0 \<le> V_Z v\<close>
   unfolding V_Z_def 
   by simp
@@ -1116,7 +1115,7 @@ text \<open>
         (Z - Z\_eq)\textasciicircum{}2 / 2 <= (Z - Z\_eq) * (Z\_alarm - Z\_eq).\<close>
 
 lemma V_Z_Lie_decrease:
-  fixes v :: \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes v :: \<open>(real, 3) vec\<close>
   assumes S_bounds: \<open>S_lo \<le> vec_nth v 0\<close> \<open>vec_nth v 0 \<le> S_hi\<close>
   assumes X_bounds: \<open>X_lo \<le> vec_nth v 1\<close> \<open>vec_nth v 1 \<le> X_hi\<close>
   assumes Z_above_alarm: \<open>Z_alarm \<le> vec_nth v 2\<close>
@@ -1293,7 +1292,7 @@ text \<open>
   alarm zone.  This is the main REACH\_lyapunov application.\<close>
 
 lemma V_Z_exponential_decay:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 3) vec\<close>
   fixes T :: real
   assumes y_sol: \<open>(y solves_ode 
                    (metabolic_field u \<mu>_max K_S Y d K_I \<alpha> k K_Z)) 
@@ -1356,7 +1355,7 @@ text \<open>
   wait T >= ln(V\_0 / (epsilon\textasciicircum{}2/2)) / delta\_Z hours."\<close>
 
 lemma V_Z_reaches_sublevel:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 3) vec\<close>
   fixes T L :: real
   assumes y_sol: \<open>(y solves_ode 
                    (metabolic_field u \<mu>_max K_S Y d K_I \<alpha> k K_Z)) 
@@ -1415,7 +1414,7 @@ text \<open>
   of formal verification over simulation.\<close>
 
 theorem bioreactor_safety:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 3) vec\<close>
   fixes T L :: real
   fixes u_feed :: real
   \<comment> \<open>The trajectory solves the metabolic ODE with some feed rate.\<close>
@@ -1464,7 +1463,7 @@ text \<open>
   gives delta\_Z <= 2*beta.\<close>
 
 lemma V_Z_Lie_decrease_lower:
-  fixes v :: \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes v :: \<open>(real, 3) vec\<close>
   assumes S_bounds: \<open>S_lo \<le> vec_nth v 0\<close> \<open>vec_nth v 0 \<le> S_hi\<close>
   assumes X_bounds: \<open>X_lo \<le> vec_nth v 1\<close> \<open>vec_nth v 1 \<le> X_hi\<close>
   assumes Z_above_eq:    \<open>Z_eq \<le> vec_nth v 2\<close>
@@ -1696,7 +1695,7 @@ text \<open>
   Z <= Z\_alarm (lower band, V\_Z\_Lie\_decrease\_lower).\<close>
 
 lemma V_Z_Lie_decrease_full:
-  fixes v :: \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes v :: \<open>(real, 3) vec\<close>
   assumes S_bounds: \<open>S_lo \<le> vec_nth v 0\<close> \<open>vec_nth v 0 \<le> S_hi\<close>
   assumes X_bounds: \<open>X_lo \<le> vec_nth v 1\<close> \<open>vec_nth v 1 \<le> X_hi\<close>
   assumes Z_above_eq:  \<open>Z_eq \<le> vec_nth v 2\<close>
@@ -1727,7 +1726,7 @@ text \<open>
   (safe) without case-splitting on the trajectory.\<close>
 
 lemma V_Z_exponential_decay_full:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 3) vec\<close>
   fixes T :: real
   assumes y_sol: \<open>(y solves_ode
                    (metabolic_field u \<mu>_max K_S Y d K_I \<alpha> k K_Z))
@@ -1788,7 +1787,7 @@ text \<open>Full-band corollary: V\_Z reaches any prescribed sublevel L within
   time T provided the design budget is met.\<close>
 
 lemma V_Z_reaches_sublevel_full:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 3) vec\<close>
   fixes T L :: real
   assumes y_sol: \<open>(y solves_ode
                    (metabolic_field u \<mu>_max K_S Y d K_I \<alpha> k K_Z))
@@ -1816,7 +1815,7 @@ text \<open>
   -- the single exponential envelope from the figure.\<close>
 
 theorem bioreactor_safety_full:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 3) vec\<close>
   fixes T L :: real
   fixes u_feed :: real
   assumes y_sol: \<open>(y solves_ode
@@ -1884,7 +1883,7 @@ text \<open>
   unconditional theorem below this is derived from `Z0\_in\_alarm`.\<close>
 
 lemma Z_upper_bound_invariant:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 3) vec\<close>
   fixes T u_feed :: real
   assumes y_sol: \<open>(y solves_ode
                    (metabolic_field u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z))
@@ -1902,18 +1901,18 @@ lemma Z_upper_bound_invariant:
   shows \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) 2 \<le> Z_max\<close>
 proof -
   define lo where
-    \<open>lo = (\<lambda>i::'p.
+    \<open>lo = (\<lambda>i::3.
       if i = 0 then S_lo
       else if i = 1 then X_lo
       else if i = 2 then (0::real)
       else vec_nth (y 0) i)\<close>
   define hi where
-    \<open>hi = (\<lambda>i::'p.
+    \<open>hi = (\<lambda>i::3.
       if i = 0 then S_hi
       else if i = 1 then X_hi
       else if i = 2 then Z_max
       else vec_nth (y 0) i)\<close>
-  define active :: \<open>'p set\<close> where \<open>active = {2}\<close>
+  define active :: \<open>3 set\<close> where \<open>active = {2}\<close>
 
   have lo_S: \<open>lo 0 = S_lo\<close> unfolding lo_def by simp
   have lo_X: \<open>lo 1 = X_lo\<close> unfolding lo_def by simp
@@ -1927,7 +1926,7 @@ proof -
   \<comment> \<open>Initial-value condition.\<close>
   have iv: \<open>\<And>i. lo i \<le> vec_nth (y 0) i \<and> vec_nth (y 0) i \<le> hi i\<close>
   proof -
-    fix i :: 'p
+    fix i :: 3
     consider (S) \<open>i = 0\<close> | (X) \<open>i = 1\<close> | (Z) \<open>i = 2\<close>
       | (other) \<open>i \<noteq> 0\<close> \<open>i \<noteq> 1\<close> \<open>i \<noteq> 2\<close>
       by blast
@@ -1956,7 +1955,7 @@ proof -
   \<comment> \<open>The single active component has lo < hi (Z\_max > 0).\<close>
   have active_ord: \<open>\<And>i. i \<in> active \<Longrightarrow> lo i < hi i\<close>
   proof -
-    fix i :: 'p
+    fix i :: 3
     assume \<open>i \<in> active\<close>
     hence i_2: \<open>i = 2\<close> unfolding active_def 
       by simp
@@ -1974,7 +1973,7 @@ proof -
             vec_nth v i = lo i \<Longrightarrow>
             0 < vec_nth (metabolic_field u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) i\<close>
   proof -
-    fix i :: 'p and v :: \<open>(real, 'p) vec\<close> and \<tau> :: real
+    fix i :: 3 and v :: \<open>(real, 3) vec\<close> and \<tau> :: real
     assume i_act: \<open>i \<in> active\<close>
     assume \<tau>_in: \<open>\<tau> \<in> {0..T}\<close>
     assume v_box: \<open>\<And>j. lo j \<le> vec_nth v j \<and> vec_nth v j \<le> hi j\<close>
@@ -2028,7 +2027,7 @@ proof -
             vec_nth v i = hi i \<Longrightarrow>
             vec_nth (metabolic_field u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) i < 0\<close>
   proof -
-    fix i :: 'p and v :: \<open>(real, 'p) vec\<close> and \<tau> :: real
+    fix i :: 3 and v :: \<open>(real, 3) vec\<close> and \<tau> :: real
     assume i_act: \<open>i \<in> active\<close>
     assume \<tau>_in: \<open>\<tau> \<in> {0..T}\<close>
     assume v_box: \<open>\<And>j. lo j \<le> vec_nth v j \<and> vec_nth v j \<le> hi j\<close>
@@ -2152,7 +2151,7 @@ proof -
     \<open>\<And>i \<tau>. i \<notin> active \<Longrightarrow> \<tau> \<in> {0..T} \<Longrightarrow>
            lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
   proof -
-    fix i :: 'p and \<tau> :: real
+    fix i :: 3 and \<tau> :: real
     assume i_inact: \<open>i \<notin> active\<close>
     assume \<tau>_in: \<open>\<tau> \<in> {0..T}\<close>
     from i_inact 
@@ -2181,7 +2180,7 @@ proof -
       have field_zero:
         \<open>\<And>\<tau>' v. vec_nth (metabolic_field u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau>' v) i = 0\<close>
       proof -
-        fix \<tau>' :: real and v :: \<open>(real, 'p) vec\<close>
+        fix \<tau>' :: real and v :: \<open>(real, 3) vec\<close>
         show \<open>vec_nth (metabolic_field u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau>' v) i = 0\<close>
           unfolding metabolic_field_def 
           using other 
@@ -2273,7 +2272,7 @@ text \<open>
   same argument as in Z\_upper\_bound\_invariant.\<close>
 
 lemma Z_lower_bound_invariant:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 3) vec\<close>
   fixes T u_feed :: real
   assumes y_sol: \<open>(y solves_ode
                    (metabolic_field u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z))
@@ -2291,18 +2290,18 @@ lemma Z_lower_bound_invariant:
   shows \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> Z_min \<le> vec_nth (y \<tau>) 2\<close>
 proof -
   define lo where
-    \<open>lo = (\<lambda>i::'p.
+    \<open>lo = (\<lambda>i::3.
       if i = 0 then S_lo
       else if i = 1 then X_lo
       else if i = 2 then Z_min
       else vec_nth (y 0) i)\<close>
   define hi where
-    \<open>hi = (\<lambda>i::'p.
+    \<open>hi = (\<lambda>i::3.
       if i = 0 then S_hi
       else if i = 1 then X_hi
       else if i = 2 then Z_max
       else vec_nth (y 0) i)\<close>
-  define active :: \<open>'p set\<close> where \<open>active = {2}\<close>
+  define active :: \<open>3 set\<close> where \<open>active = {2}\<close>
 
   have lo_S: \<open>lo 0 = S_lo\<close>  unfolding lo_def by simp
   have lo_X: \<open>lo 1 = X_lo\<close>  unfolding lo_def by simp
@@ -2316,7 +2315,7 @@ proof -
   \<comment> \<open>iv obligation: initial state in [lo, hi] componentwise.\<close>
   have iv: \<open>\<And>i. lo i \<le> vec_nth (y 0) i \<and> vec_nth (y 0) i \<le> hi i\<close>
   proof -
-    fix i :: 'p
+    fix i :: 3
     consider (S) \<open>i = 0\<close> | (X) \<open>i = 1\<close> | (Z) \<open>i = 2\<close>
       | (other) \<open>i \<noteq> 0\<close> \<open>i \<noteq> 1\<close> \<open>i \<noteq> 2\<close>
       by blast
@@ -2339,7 +2338,7 @@ proof -
   \<comment> \<open>active\_ordered: Z\_min < Z\_max.  From Z\_min <= Z\_eq < Z\_alarm <= Z\_max.\<close>
   have active_ord: \<open>\<And>i. i \<in> active \<Longrightarrow> lo i < hi i\<close>
   proof -
-    fix i :: 'p
+    fix i :: 3
     assume \<open>i \<in> active\<close>
     hence i_2: \<open>i = 2\<close> 
       unfolding active_def 
@@ -2360,7 +2359,7 @@ proof -
             vec_nth v i = lo i \<Longrightarrow>
             0 < vec_nth (metabolic_field u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) i\<close>
   proof -
-    fix i :: 'p and v :: \<open>(real, 'p) vec\<close> and \<tau> :: real
+    fix i :: 3 and v :: \<open>(real, 3) vec\<close> and \<tau> :: real
     assume i_act: \<open>i \<in> active\<close>
     assume \<tau>_in: \<open>\<tau> \<in> {0..T}\<close>
     assume v_box: \<open>\<And>j. lo j \<le> vec_nth v j \<and> vec_nth v j \<le> hi j\<close>
@@ -2468,7 +2467,7 @@ proof -
             vec_nth v i = hi i \<Longrightarrow>
             vec_nth (metabolic_field u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) i < 0\<close>
   proof -
-    fix i :: 'p and v :: \<open>(real, 'p) vec\<close> and \<tau> :: real
+    fix i :: 3 and v :: \<open>(real, 3) vec\<close> and \<tau> :: real
     assume i_act: \<open>i \<in> active\<close>
     assume \<tau>_in: \<open>\<tau> \<in> {0..T}\<close>
     assume v_box: \<open>\<And>j. lo j \<le> vec_nth v j \<and> vec_nth v j \<le> hi j\<close>
@@ -2586,7 +2585,7 @@ proof -
     \<open>\<And>i \<tau>. i \<notin> active \<Longrightarrow> \<tau> \<in> {0..T} \<Longrightarrow>
            lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
   proof -
-    fix i :: 'p and \<tau> :: real
+    fix i :: 3 and \<tau> :: real
     assume i_inact: \<open>i \<notin> active\<close>
     assume \<tau>_in: \<open>\<tau> \<in> {0..T}\<close>
     from i_inact 
@@ -2613,7 +2612,7 @@ proof -
       have field_zero:
         \<open>\<And>\<tau>' v. vec_nth (metabolic_field u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau>' v) i = 0\<close>
       proof -
-        fix \<tau>' :: real and v :: \<open>(real, 'p) vec\<close>
+        fix \<tau>' :: real and v :: \<open>(real, 3) vec\<close>
         show \<open>vec_nth (metabolic_field u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau>' v) i = 0\<close>
           unfolding metabolic_field_def 
           using other 
@@ -2702,7 +2701,7 @@ text \<open>
   Z(0) >= 0 follows from Z\_min\_pos + Z0\_above\_min.\<close>
 
 lemma Z_in_box_invariant:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 3) vec\<close>
   fixes T u_feed :: real
   assumes y_sol: \<open>(y solves_ode
                    (metabolic_field u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z))
@@ -2757,7 +2756,7 @@ text \<open>
   We leave it as a controller-supplied invariant.\<close>
 
 theorem Z_exits_alarm_zone:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 3) vec\<close>
   fixes T_cl u_feed :: real
   assumes y_sol: \<open>(y solves_ode
                    (metabolic_field u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z))
@@ -2917,7 +2916,7 @@ text \<open>
     - exists t* in [0,T] with Z(t*) <= Z\_alarm  (alarm-zone exit by T\_clear).\<close>
 
 theorem bioreactor_safety_unconditional:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 3) vec\<close>
   fixes T u_feed :: real
   assumes y_sol: \<open>(y solves_ode
                    (metabolic_field u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z))

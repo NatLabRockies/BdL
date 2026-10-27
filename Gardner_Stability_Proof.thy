@@ -5,7 +5,7 @@
 (** Email:     Yakoub.Nemouchi@nlr.gov                        **)
 (**            Peter.Graf@nlr.gov                             **)
 (**                                                           **)
-(** Copyright © 2026 Alliance for Energy Innovation, LLC.     **)
+(** Copyright \<copyright> 2026 Alliance for Energy Innovation, LLC.     **)
 (** License: BSD 3-Clause, see LICENSE.                       **)
 (** See CONTRIBUTORS and CITATION files for details.          **)
 (***************************************************************)
@@ -60,7 +60,7 @@ text \<open>
 \<close>
 
 lemma REACH_lyapunov_sanity_check:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 2) vec\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>\<tau> v. vec_lambda ((\<lambda>k. 0)(0 := -2 * vec_nth v 0)))) 
                     {0..T} UNIV\<close>
       \<comment> \<open>ODE: du/dt = -2*u, written in the vec\_lambda and fun\_upd
@@ -143,24 +143,24 @@ proof -
   \<comment> \<open>Pointwise derivative of V = (lambdav. (vec\_nth v 0)\textasciicircum{}2) at a state p:
       the linear map w |-> 2 * (vec\_nth p 0) * (vec\_nth w 0).\<close>
   have V_deriv:
-    \<open>\<And>p::(real,'p) vec. ((\<lambda>v::(real,'p) vec. (vec_nth v 0)^2) has_derivative
+    \<open>\<And>p::(real,2) vec. ((\<lambda>v::(real,2) vec. (vec_nth v 0)^2) has_derivative
             (\<lambda>w. 2 * vec_nth p 0 * vec_nth w 0)) (at p)\<close>
   proof -
-    fix p :: \<open>(real,'p) vec\<close>
-    have proj: \<open>((\<lambda>v::(real,'p) vec. vec_nth v 0)
+    fix p :: \<open>(real,2) vec\<close>
+    have proj: \<open>((\<lambda>v::(real,2) vec. vec_nth v 0)
                    has_derivative (\<lambda>w. vec_nth w 0)) (at p)\<close>
       by (rule has_derivative_vec_nth)
     have sq: \<open>((\<lambda>z::real. z^2)
                  has_derivative (\<lambda>h. 2 * vec_nth p 0 * h)) (at (vec_nth p 0))\<close>
       by (auto intro!: derivative_eq_intros)
-    show \<open>((\<lambda>v::(real,'p) vec. (vec_nth v 0)^2)
+    show \<open>((\<lambda>v::(real,2) vec. (vec_nth v 0)^2)
              has_derivative (\<lambda>w. 2 * vec_nth p 0 * vec_nth w 0)) (at p)\<close>
       using has_derivative_compose[OF proj sq] 
       by (simp add: comp_def)
   qed
 
   have induct_step: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow>
-      \<exists>DV. ((\<lambda>v::(real,'p) vec. (vec_nth v 0)^2) has_derivative DV) (at (y \<tau>)) \<and>
+      \<exists>DV. ((\<lambda>v::(real,2) vec. (vec_nth v 0)^2) has_derivative DV) (at (y \<tau>)) \<and>
            DV (vec_lambda ((\<lambda>k. 0)(0 := -2 * vec_nth (y \<tau>) 0))) \<le>
               -4 * (vec_nth (y \<tau>) 0)^2\<close>
   proof -
@@ -169,14 +169,14 @@ proof -
                  (vec_lambda ((\<lambda>k. 0)(0 := -2 * vec_nth (y \<tau>) 0)))
                = -4 * (vec_nth (y \<tau>) 0)^2\<close>
       by (simp add: fun_upd_def power2_eq_square)
-    show \<open>\<exists>DV. ((\<lambda>v::(real,'p) vec. (vec_nth v 0)^2) has_derivative DV) (at (y \<tau>)) \<and>
+    show \<open>\<exists>DV. ((\<lambda>v::(real,2) vec. (vec_nth v 0)^2) has_derivative DV) (at (y \<tau>)) \<and>
                DV (vec_lambda ((\<lambda>k. 0)(0 := -2 * vec_nth (y \<tau>) 0))) \<le>
                   -4 * (vec_nth (y \<tau>) 0)^2\<close>
       using V_deriv[of \<open>y \<tau>\<close>] lie by auto
   qed
 
   have bound: \<open>(vec_nth (y T) 0)^2 \<le> (vec_nth (y 0) 0)^2 * exp (-4 * T)\<close>
-    using REACH_lyapunov[where V = \<open>\<lambda>v::(real,'p) vec. (vec_nth v 0)^2\<close> and \<delta> = 4,
+    using REACH_lyapunov[where V = \<open>\<lambda>v::(real,2) vec. (vec_nth v 0)^2\<close> and \<delta> = 4,
                          OF y_sol T_nn induct_step]
     by simp
 
@@ -203,19 +203,19 @@ subsection \<open>Baseline and pulsed vector fields\<close>
 
 definition gardner_baseline_field :: 
   \<open>real \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> real \<Rightarrow> 
-   (real, 'p::{finite, linordered_nonzero_semiring}) vec \<Rightarrow> 
-   (real, 'p) vec\<close> where
+   (real, 2) vec \<Rightarrow> 
+   (real, 2) vec\<close> where
   \<open>gardner_baseline_field \<alpha>_base \<beta> \<gamma> \<tau> v = 
-     vec_lambda ((\<lambda>k::'p. 0)(
+     vec_lambda ((\<lambda>k::2. 0)(
        0 := \<alpha>_base / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
        1 := \<alpha>_base / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))\<close>
 
 definition gardner_pulse_field :: 
   \<open>real \<Rightarrow> real \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> real \<Rightarrow> 
-   (real, 'p::{finite, linordered_nonzero_semiring}) vec \<Rightarrow> 
-   (real, 'p) vec\<close> where
+   (real, 2) vec \<Rightarrow> 
+   (real, 2) vec\<close> where
   \<open>gardner_pulse_field \<alpha>_base \<alpha>_low \<beta> \<gamma> \<tau> v = 
-     vec_lambda ((\<lambda>k::'p. 0)(
+     vec_lambda ((\<lambda>k::2. 0)(
        0 := \<alpha>_low / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
        1 := \<alpha>_base / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))\<close>
 
@@ -258,36 +258,36 @@ begin
 text \<open>Pulsed equilibrium as a vector.\<close>
 
 definition E_pulse :: 
-  \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close> where
-  \<open>E_pulse = vec_lambda ((\<lambda>k::'p. 0)(0 := u_pulse, 1 := v_pulse))\<close>
+  \<open>(real, 2) vec\<close> where
+  \<open>E_pulse = vec_lambda ((\<lambda>k::2. 0)(0 := u_pulse, 1 := v_pulse))\<close>
 
 lemma E_pulse_u_component: 
-  \<open>vec_nth (E_pulse :: (real, 'p::{finite, linordered_nonzero_semiring}) vec) 0 = u_pulse\<close>
+  \<open>vec_nth (E_pulse :: (real, 2) vec) 0 = u_pulse\<close>
   by (simp add: E_pulse_def fun_upd_def)
 
 lemma E_pulse_v_component: 
-  \<open>vec_nth (E_pulse :: (real, 'p::{finite, linordered_nonzero_semiring}) vec) 1 = v_pulse\<close>
+  \<open>vec_nth (E_pulse :: (real, 2) vec) 1 = v_pulse\<close>
   by (simp add: E_pulse_def fun_upd_def)
 
 text \<open>Lyapunov function V\_pulse.\<close>
 
 definition V_pulse :: 
-  \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec \<Rightarrow> real\<close> where
+  \<open>(real, 2) vec \<Rightarrow> real\<close> where
   \<open>V_pulse v = (vec_nth v 0 - u_pulse)^2 / 2 + (vec_nth v 1 - v_pulse)^2 / 2\<close>
 
 lemma V_pulse_nn: \<open>0 \<le> V_pulse v\<close>
   by (simp add: V_pulse_def)
 
 lemma V_pulse_has_derivative:
-  fixes p :: \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes p :: \<open>(real, 2) vec\<close>
   shows \<open>(V_pulse has_derivative
            (\<lambda>w. (vec_nth p 0 - u_pulse) * vec_nth w 0
               + (vec_nth p 1 - v_pulse) * vec_nth w 1)) (at p)\<close>
 proof -
-  have proj0: \<open>((\<lambda>v::(real,'p) vec. vec_nth v 0)
+  have proj0: \<open>((\<lambda>v::(real,2) vec. vec_nth v 0)
                   has_derivative (\<lambda>w. vec_nth w 0)) (at p)\<close>
     by (rule has_derivative_vec_nth)
-  have proj1: \<open>((\<lambda>v::(real,'p) vec. vec_nth v 1)
+  have proj1: \<open>((\<lambda>v::(real,2) vec. vec_nth v 1)
                   has_derivative (\<lambda>w. vec_nth w 1)) (at p)\<close>
     by (rule has_derivative_vec_nth)
   have sq0: \<open>((\<lambda>z::real. (z - u_pulse)^2 / 2)
@@ -298,11 +298,11 @@ proof -
                has_derivative (\<lambda>h. (vec_nth p 1 - v_pulse) * h))
              (at (vec_nth p 1))\<close>
     by (auto intro!: derivative_eq_intros)
-  have c0: \<open>((\<lambda>v::(real,'p) vec. (vec_nth v 0 - u_pulse)^2 / 2)
+  have c0: \<open>((\<lambda>v::(real,2) vec. (vec_nth v 0 - u_pulse)^2 / 2)
                has_derivative (\<lambda>w. (vec_nth p 0 - u_pulse) * vec_nth w 0)) (at p)\<close>
     using has_derivative_compose[OF proj0 sq0] 
     by (simp add: comp_def)
-  have c1: \<open>((\<lambda>v::(real,'p) vec. (vec_nth v 1 - v_pulse)^2 / 2)
+  have c1: \<open>((\<lambda>v::(real,2) vec. (vec_nth v 1 - v_pulse)^2 / 2)
                has_derivative (\<lambda>w. (vec_nth p 1 - v_pulse) * vec_nth w 1)) (at p)\<close>
     using has_derivative_compose[OF proj1 sq1] 
     by (simp add: comp_def)
@@ -313,13 +313,13 @@ proof -
 qed
 
 lemma V_pulse_zero_at_E_pulse: 
-  \<open>V_pulse (E_pulse :: (real, 'p::{finite, linordered_nonzero_semiring}) vec) = 0\<close>
+  \<open>V_pulse (E_pulse :: (real, 2) vec) = 0\<close>
   by (simp add: V_pulse_def E_pulse_def fun_upd_def)
 
 text \<open>Coupling term Q and the Lie derivative identity.\<close>
 
 definition coupling_Q :: 
-  \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec \<Rightarrow> real\<close> where
+  \<open>(real, 2) vec \<Rightarrow> real\<close> where
   \<open>coupling_Q v = 
      \<alpha>_low  * (vec_nth v 1 + v_pulse) / ((1 + (vec_nth v 1)^2) * (1 + v_pulse^2)) +
      \<alpha>_base * (vec_nth v 0 + u_pulse) / ((1 + (vec_nth v 0)^2) * (1 + u_pulse^2))\<close>
@@ -328,7 +328,7 @@ definition coupling_Q ::
 lemma V_pulse_lie_derivative_symbolic:
   assumes \<beta>_eq: \<open>\<beta> = 2\<close>
   assumes \<gamma>_eq: \<open>\<gamma> = 2\<close>
-  fixes v :: \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes v :: \<open>(real, 2) vec\<close>
   shows \<open>(vec_nth v 0 - u_pulse) * (\<alpha>_low / (1 + (vec_nth v 1)^2) - vec_nth v 0) +
          (vec_nth v 1 - v_pulse) * (\<alpha>_base / (1 + (vec_nth v 0)^2) - vec_nth v 1) =
          -2 * V_pulse v - 
@@ -535,7 +535,7 @@ definition M_crude :: \<open>real \<Rightarrow> real \<Rightarrow> real \<Righta
      \<alpha>_base * (max \<bar>u_min\<bar> \<bar>u_max\<bar> + u_pulse)\<close>
 
 lemma coupling_Q_bound_crude:
-  fixes v :: \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes v :: \<open>(real, 2) vec\<close>
   fixes u_min u_max v_min v_max :: real
   assumes u_bounds: \<open>u_min \<le> vec_nth v 0\<close> \<open>vec_nth v 0 \<le> u_max\<close>
   assumes v_bounds: \<open>v_min \<le> vec_nth v 1\<close> \<open>vec_nth v 1 \<le> v_max\<close>
@@ -679,7 +679,7 @@ proof -
 qed
 
 lemma coupling_Q_bound_sharp:
-  fixes v :: \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes v :: \<open>(real, 2) vec\<close>
   fixes u_min u_max v_min v_max :: real
   assumes \<beta>_eq: \<open>\<beta> = 2\<close>
   assumes \<gamma>_eq: \<open>\<gamma> = 2\<close>
@@ -805,7 +805,7 @@ text \<open>The Lyapunov decrease estimate.\<close>
 lemma V_pulse_decrease_crude:
   assumes \<beta>_eq: \<open>\<beta> = 2\<close>
   assumes \<gamma>_eq: \<open>\<gamma> = 2\<close>
-  fixes v :: \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes v :: \<open>(real, 2) vec\<close>
   fixes u_min u_max v_min v_max \<delta> :: real
   assumes u_bounds: \<open>u_min \<le> vec_nth v 0\<close> \<open>vec_nth v 0 \<le> u_max\<close>
   assumes v_bounds: \<open>v_min \<le> vec_nth v 1\<close> \<open>vec_nth v 1 \<le> v_max\<close>
@@ -871,7 +871,7 @@ qed
 lemma V_pulse_decrease_sharp:
   assumes \<beta>_eq: \<open>\<beta> = 2\<close>
   assumes \<gamma>_eq: \<open>\<gamma> = 2\<close>
-  fixes v :: \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes v :: \<open>(real, 2) vec\<close>
   fixes u_min u_max v_min v_max \<delta> :: real
   assumes u_min_nn: \<open>0 \<le> u_min\<close>
   assumes v_min_nn: \<open>0 \<le> v_min\<close>
@@ -963,12 +963,12 @@ locale gardner_R_A_params = gardner_baseline_params +
 begin
 
 definition in_R_A :: 
-  \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec \<Rightarrow> bool\<close> where
+  \<open>(real, 2) vec \<Rightarrow> bool\<close> where
   \<open>in_R_A v \<longleftrightarrow> u_A_lo \<le> vec_nth v 0 \<and> vec_nth v 0 \<le> u_A_hi \<and>
                 v_A_lo \<le> vec_nth v 1 \<and> vec_nth v 1 \<le> v_A_hi\<close>
 
 lemma R_A_forward_invariant:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 2) vec\<close>
   fixes t :: real
   assumes y_sol: \<open>(y solves_ode (gardner_baseline_field \<alpha>_base \<beta> \<gamma>)) {0..t} UNIV\<close>
   assumes t_nn: \<open>0 \<le> t\<close>
@@ -976,21 +976,21 @@ lemma R_A_forward_invariant:
   shows \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> in_R_A (y \<tau>)\<close>
 proof -
   (* We define lo and hi functions for DI_rectangle_box_partial *)
-  define lo :: \<open>'p \<Rightarrow> real\<close> where
+  define lo :: \<open>2 \<Rightarrow> real\<close> where
     \<open>lo = (\<lambda>i. if i = 0 then u_A_lo 
                else if i = 1 then v_A_lo 
                else vec_nth (y 0) i)\<close>
-  define hi :: \<open>'p \<Rightarrow> real\<close> where
+  define hi :: \<open>2 \<Rightarrow> real\<close> where
     \<open>hi = (\<lambda>i. if i = 0 then u_A_hi 
                else if i = 1 then v_A_hi 
                else vec_nth (y 0) i)\<close>
-  define active :: \<open>'p set\<close> where
+  define active :: \<open>2 set\<close> where
     \<open>active = {0, 1}\<close>
 
   (* Initial condition: y 0 respects lo and hi *)
   have iv: \<open>\<And>i. lo i \<le> vec_nth (y 0) i \<and> vec_nth (y 0) i \<le> hi i\<close>
   proof -
-    fix i :: 'p
+    fix i :: 2
     show \<open>lo i \<le> vec_nth (y 0) i \<and> vec_nth (y 0) i \<le> hi i\<close>
     proof (cases \<open>i = 0\<close>)
       case True
@@ -1014,7 +1014,7 @@ proof -
   (* active coordinates are strictly ordered *)
   have active_ord: \<open>\<And>i. i \<in> active \<Longrightarrow> lo i < hi i\<close>
   proof -
-    fix i :: 'p assume \<open>i \<in> active\<close>
+    fix i :: 2 assume \<open>i \<in> active\<close>
     hence \<open>i = 0 \<or> i = 1\<close> unfolding active_def by blast
     thus \<open>lo i < hi i\<close>
     proof
@@ -1035,7 +1035,7 @@ proof -
              vec_nth v i = lo i \<Longrightarrow> 
              0 < vec_nth (gardner_baseline_field \<alpha>_base \<beta> \<gamma> \<tau> v) i\<close>
   proof -
-    fix i :: 'p and v :: \<open>(real, 'p) vec\<close> and \<tau> :: real
+    fix i :: 2 and v :: \<open>(real, 2) vec\<close> and \<tau> :: real
     assume i_act: \<open>i \<in> active\<close>
     assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
     assume bounds: \<open>\<And>j. lo j \<le> vec_nth v j \<and> vec_nth v j \<le> hi j\<close>
@@ -1089,7 +1089,7 @@ proof -
              vec_nth v i = hi i \<Longrightarrow> 
              vec_nth (gardner_baseline_field \<alpha>_base \<beta> \<gamma> \<tau> v) i < 0\<close>
   proof -
-    fix i :: 'p and v :: \<open>(real, 'p) vec\<close> and \<tau> :: real
+    fix i :: 2 and v :: \<open>(real, 2) vec\<close> and \<tau> :: real
     assume i_act: \<open>i \<in> active\<close>
     assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
     assume bounds: \<open>\<And>j. lo j \<le> vec_nth v j \<and> vec_nth v j \<le> hi j\<close>
@@ -1141,7 +1141,7 @@ proof -
     \<open>\<And>i \<tau>. i \<notin> active \<Longrightarrow> \<tau> \<in> {0..t} \<Longrightarrow> 
            lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
   proof -
-    fix i :: 'p and \<tau> :: real
+    fix i :: 2 and \<tau> :: real
     assume i_inact: \<open>i \<notin> active\<close>
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
     from i_inact have i_ne: \<open>i \<noteq> 0\<close> \<open>i \<noteq> 1\<close> unfolding active_def by auto
@@ -1149,7 +1149,7 @@ proof -
     (* The i-th component of the field is 0 for this i *)
     have field_zero: \<open>\<And>\<tau>' v. vec_nth (gardner_baseline_field \<alpha>_base \<beta> \<gamma> \<tau>' v) i = 0\<close>
     proof -
-      fix \<tau>' :: real and v :: \<open>(real, 'p) vec\<close>
+      fix \<tau>' :: real and v :: \<open>(real, 2) vec\<close>
       show \<open>vec_nth (gardner_baseline_field \<alpha>_base \<beta> \<gamma> \<tau>' v) i = 0\<close>
         unfolding gardner_baseline_field_def 
         using i_ne by (simp add: fun_upd_def)
@@ -1249,32 +1249,32 @@ locale gardner_R_B_params = gardner_baseline_params +
 begin
 
 definition in_R_B :: 
-  \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec \<Rightarrow> bool\<close> where
+  \<open>(real, 2) vec \<Rightarrow> bool\<close> where
   \<open>in_R_B v \<longleftrightarrow> u_B_lo \<le> vec_nth v 0 \<and> vec_nth v 0 \<le> u_B_hi \<and>
                 v_B_lo \<le> vec_nth v 1 \<and> vec_nth v 1 \<le> v_B_hi\<close>
 
 lemma R_B_forward_invariant:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 2) vec\<close>
   fixes t :: real
   assumes y_sol: \<open>(y solves_ode (gardner_baseline_field \<alpha>_base \<beta> \<gamma>)) {0..t} UNIV\<close>
   assumes t_nn: \<open>0 \<le> t\<close>
   assumes y0_in_R_B: \<open>in_R_B (y 0)\<close>
   shows \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> in_R_B (y \<tau>)\<close>
 proof -
-  define lo :: \<open>'p \<Rightarrow> real\<close> where
+  define lo :: \<open>2 \<Rightarrow> real\<close> where
     \<open>lo = (\<lambda>i. if i = 0 then u_B_lo 
                else if i = 1 then v_B_lo 
                else vec_nth (y 0) i)\<close>
-  define hi :: \<open>'p \<Rightarrow> real\<close> where
+  define hi :: \<open>2 \<Rightarrow> real\<close> where
     \<open>hi = (\<lambda>i. if i = 0 then u_B_hi 
                else if i = 1 then v_B_hi 
                else vec_nth (y 0) i)\<close>
-  define active :: \<open>'p set\<close> where
+  define active :: \<open>2 set\<close> where
     \<open>active = {0, 1}\<close>
 
   have iv: \<open>\<And>i. lo i \<le> vec_nth (y 0) i \<and> vec_nth (y 0) i \<le> hi i\<close>
   proof -
-    fix i :: 'p
+    fix i :: 2
     show \<open>lo i \<le> vec_nth (y 0) i \<and> vec_nth (y 0) i \<le> hi i\<close>
     proof (cases \<open>i = 0\<close>)
       case True
@@ -1300,7 +1300,7 @@ proof -
 
   have active_ord: \<open>\<And>i. i \<in> active \<Longrightarrow> lo i < hi i\<close>
   proof -
-    fix i :: 'p assume \<open>i \<in> active\<close>
+    fix i :: 2 assume \<open>i \<in> active\<close>
     hence \<open>i = 0 \<or> i = 1\<close> unfolding active_def by blast
     thus \<open>lo i < hi i\<close>
     proof
@@ -1318,7 +1318,7 @@ proof -
              vec_nth v i = lo i \<Longrightarrow> 
              0 < vec_nth (gardner_baseline_field \<alpha>_base \<beta> \<gamma> \<tau> v) i\<close>
   proof -
-    fix i :: 'p and v :: \<open>(real, 'p) vec\<close> and \<tau> :: real
+    fix i :: 2 and v :: \<open>(real, 2) vec\<close> and \<tau> :: real
     assume i_act: \<open>i \<in> active\<close>
     assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
     assume bounds: \<open>\<And>j. lo j \<le> vec_nth v j \<and> vec_nth v j \<le> hi j\<close>
@@ -1371,7 +1371,7 @@ proof -
              vec_nth v i = hi i \<Longrightarrow> 
              vec_nth (gardner_baseline_field \<alpha>_base \<beta> \<gamma> \<tau> v) i < 0\<close>
   proof -
-    fix i :: 'p and v :: \<open>(real, 'p) vec\<close> and \<tau> :: real
+    fix i :: 2 and v :: \<open>(real, 2) vec\<close> and \<tau> :: real
     assume i_act: \<open>i \<in> active\<close>
     assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
     assume bounds: \<open>\<And>j. lo j \<le> vec_nth v j \<and> vec_nth v j \<le> hi j\<close>
@@ -1421,14 +1421,14 @@ proof -
     \<open>\<And>i \<tau>. i \<notin> active \<Longrightarrow> \<tau> \<in> {0..t} \<Longrightarrow> 
            lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
   proof -
-    fix i :: 'p and \<tau> :: real
+    fix i :: 2 and \<tau> :: real
     assume i_inact: \<open>i \<notin> active\<close>
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
     from i_inact have i_ne: \<open>i \<noteq> 0\<close> \<open>i \<noteq> 1\<close> unfolding active_def by auto
 
     have field_zero: \<open>\<And>\<tau>' v. vec_nth (gardner_baseline_field \<alpha>_base \<beta> \<gamma> \<tau>' v) i = 0\<close>
     proof -
-      fix \<tau>' :: real and v :: \<open>(real, 'p) vec\<close>
+      fix \<tau>' :: real and v :: \<open>(real, 2) vec\<close>
       show \<open>vec_nth (gardner_baseline_field \<alpha>_base \<beta> \<gamma> \<tau>' v) i = 0\<close>
         unfolding gardner_baseline_field_def 
         using i_ne by (simp add: fun_upd_def)
@@ -1516,7 +1516,7 @@ locale gardner_pulse_lyapunov = gardner_pulse_params +
 begin
 
 lemma pulse_trajectory_exponential_decay:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 2) vec\<close>
   fixes \<Delta>t :: real
   assumes y_sol: \<open>(y solves_ode (gardner_pulse_field \<alpha>_base \<alpha>_low \<beta> \<gamma>)) {0..\<Delta>t} UNIV\<close>
   assumes \<Delta>t_nn: \<open>0 \<le> \<Delta>t\<close>
@@ -1590,7 +1590,7 @@ proof -
 qed
 
 lemma pulse_trajectory_reaches_sublevel:
-  fixes y :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 2) vec\<close>
   fixes \<Delta>t L :: real
   assumes y_sol: \<open>(y solves_ode (gardner_pulse_field \<alpha>_base \<alpha>_low \<beta> \<gamma>)) {0..\<Delta>t} UNIV\<close>
   assumes \<Delta>t_nn: \<open>0 \<le> \<Delta>t\<close>
@@ -1615,14 +1615,13 @@ subsection \<open>Final induced switching theorem\<close>
 
 locale gardner_induced_switching = 
   gardner_R_A_params + gardner_R_B_params + gardner_pulse_lyapunov +
-  fixes type1_witness :: \<open>'p::{finite, linordered_nonzero_semiring} itself\<close>
   fixes L_target :: real
   assumes sublevel_in_R_B: 
-    \<open>\<And>v :: (real, 'p) vec. V_pulse v \<le> L_target \<Longrightarrow> in_R_B v\<close>
+    \<open>\<And>v :: (real, 2) vec. V_pulse v \<le> L_target \<Longrightarrow> in_R_B v\<close>
 begin
 
 theorem induced_switching:
-  fixes y1 y2 y3 :: \<open>real \<Rightarrow> (real, 'p) vec\<close>
+  fixes y1 y2 y3 :: \<open>real \<Rightarrow> (real, 2) vec\<close>
   fixes t_start t_end T :: real
   assumes y1_sol: \<open>(y1 solves_ode (gardner_baseline_field \<alpha>_base \<beta> \<gamma>)) 
                      {0..t_start} UNIV\<close>
@@ -2061,10 +2060,8 @@ subsubsection \<open>Induced switching interpretation\<close>
 text \<open>
    Concrete Gardner switching theorem.
 
-   Rather than interpreting gardner\_induced\_switching (which would
-   require a concrete finite type satisfying linordered\_nonzero\_semiring,
-   which no standard type does), we prove the switching property
-   directly as a top-level theorem, staying polymorphic in 'p.
+   We prove the switching property for the concrete parameter values
+   directly as a top-level theorem, over the state space (real, 2) vec.
 
    The theorem uses the already-proven concrete interpretations
    (concrete\_baseline, concrete\_pulse, concrete\_R\_A, concrete\_R\_B,
@@ -2078,7 +2075,7 @@ subsubsection \<open>Concrete switching theorem\<close>
 text \<open>Helper: sublevel containment for the concrete parameters.\<close>
 
 lemma concrete_sublevel_in_R_B:
-  fixes v :: \<open>(real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes v :: \<open>(real, 2) vec\<close>
   assumes V_le: \<open>concrete_pulse.V_pulse v \<le> L_target_val\<close>
   shows \<open>concrete_R_B.in_R_B v\<close>
 proof -
@@ -2199,7 +2196,7 @@ qed
 text \<open>Top-level concrete switching theorem.\<close>
 
 theorem gardner_concrete_switching:
-  fixes y1 y2 y3 :: \<open>real \<Rightarrow> (real, 'p::{finite, linordered_nonzero_semiring}) vec\<close>
+  fixes y1 y2 y3 :: \<open>real \<Rightarrow> (real, 2) vec\<close>
   fixes t_start t_end T :: real
   assumes y1_sol: \<open>(y1 solves_ode (gardner_baseline_field \<alpha>_base_val \<beta>_val \<gamma>_val)) 
                      {0..t_start} UNIV\<close>
@@ -2259,7 +2256,6 @@ text \<open>
    Direct lemma proving gardner\_induced\_switching for concrete values.
 
    Parameter order (from thm gardner\_induced\_switching\_def):
-     TYPE('p)
      alpha\_base beta gamma
      u\_A\_lo u\_A\_hi v\_A\_lo v\_A\_hi
      u\_B\_lo u\_B\_hi v\_B\_lo v\_B\_hi
@@ -2271,7 +2267,6 @@ text \<open>
 
 theorem gardner_induced_switching_concrete:
   \<open>gardner_induced_switching 
-     TYPE('p::{finite, linordered_nonzero_semiring})
      \<alpha>_base_val \<beta>_val \<gamma>_val
      u_A_lo_val u_A_hi_val v_A_lo_val v_A_hi_val
      u_B_lo_val u_B_hi_val v_B_lo_val v_B_hi_val
@@ -2279,7 +2274,7 @@ theorem gardner_induced_switching_concrete:
      u_min_val u_max_val v_min_val v_max_val \<delta>_val
      L_target_val\<close>
 proof (unfold_locales)
-  fix v :: \<open>(real, 'p) vec\<close>                                            
+  fix v :: \<open>(real, 2) vec\<close>                                            
   assume \<open>concrete_pulse.V_pulse v \<le> L_target_val\<close>
   then show \<open>concrete_R_B.in_R_B v\<close>
   by (simp add: concrete_sublevel_in_R_B)

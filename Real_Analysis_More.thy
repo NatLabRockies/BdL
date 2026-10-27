@@ -11,10 +11,33 @@
 (***************************************************************)
 theory Real_Analysis_More
 
-imports "Ordinary_Differential_Equations.ODE_Analysis"
+imports "Ordinary_Differential_Equations.ODE_Analysis" "HOL-Library.Numeral_Type"
 begin
 
 section \<open>Algebraic and Calculus Helpers\<close>
+
+subsection \<open>State spaces of the models\<close>
+
+text \<open>
+  Every model in this development is a system of ODEs over a state space
+  R\textasciicircum{}n, written (real, n) vec, where the index type n is one of
+  the numeral types 2, 3 or 4 of HOL-Library.Numeral\_Type.  Coordinate i of a
+  state v is vec\_nth v i.  A model uses the smallest numeral type that has an
+  index for each of its species and for each differential ghost its proof
+  introduces.  The vector fields are written by function update at the numerals
+  0, 1, 2 and 3, so their proofs need these numerals to denote distinct
+  indices.  The two lemmas below give the simplifier that fact.
+\<close>
+
+lemma state_index_3_distinct [simp]:
+  \<open>(0::3) \<noteq> 2\<close> \<open>(2::3) \<noteq> 0\<close> \<open>(1::3) \<noteq> 2\<close> \<open>(2::3) \<noteq> 1\<close>
+  by simp_all
+
+lemma state_index_4_distinct [simp]:
+  \<open>(0::4) \<noteq> 2\<close> \<open>(2::4) \<noteq> 0\<close> \<open>(0::4) \<noteq> 3\<close> \<open>(3::4) \<noteq> 0\<close>
+  \<open>(1::4) \<noteq> 2\<close> \<open>(2::4) \<noteq> 1\<close> \<open>(1::4) \<noteq> 3\<close> \<open>(3::4) \<noteq> 1\<close>
+  \<open>(2::4) \<noteq> 3\<close> \<open>(3::4) \<noteq> 2\<close>
+  by simp_all
 
 subsection \<open>Vectors Algebra\<close>
 
