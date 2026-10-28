@@ -1,6 +1,6 @@
 # BdL: Biological Differential Dynamic Logic
 
-**A Formal Analyzer of Dynamical Systems using Deductive Proofs for Biological Computing and its Applications**
+**A Formal Verifier of Dynamical Systems using Deductive Proofs for Biological Computing and its Applications**
 
 [![License: BSD 3-Clause](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](LICENSE)
 
@@ -109,7 +109,7 @@ If you use BdL, please cite it. GitHub's "Cite this repository" button uses the 
 ```bibtex
 @misc{BdL2026,
   author       = {Yakoub Nemouchi and Peter Graf},
-  title        = {{BdL} (Biological Differential Dynamic Logic: A Formal Analyzer of
+  title        = {{BdL} (Biological Differential Dynamic Logic: A Formal Verifier of
                   Dynamical Systems using Deductive Proofs for Biological Computing
                   and its Applications)},
   howpublished = {National Laboratory of the Rockies (NLR), Software Record SWR 26-101},

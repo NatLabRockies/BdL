@@ -3,7 +3,7 @@
 session "BdL" = "Ordinary_Differential_Equations" +
   description "
     BdL: Biological Differential Dynamic Logic.
-    A formal analyzer of dynamical systems using deductive proofs,
+    A formal verifier of dynamical systems using deductive proofs,
     with applications to biological computing.
   "
   options [document = false]
