@@ -5,7 +5,7 @@
 (** Email:     Yakoub.Nemouchi@nlr.gov                        **)
 (**            Peter.Graf@nlr.gov                             **)
 (**                                                           **)
-(** Copyright © 2026 Alliance for Energy Innovation, LLC.     **)
+(** Copyright \<copyright> 2026 Alliance for Energy Innovation, LLC.     **)
 (** License: BSD 3-Clause, see LICENSE.                       **)
 (** See CONTRIBUTORS and CITATION files for details.          **)
 (***************************************************************)
@@ -259,18 +259,36 @@ qed
 end  (* metabolic_baseline_params *)
 
 
-subsection \<open>Safety region with design constraints\<close>
+subsection \<open>Safety region with design constraints (a failed attempt)\<close>
 
 text \<open>
-  The safety region is a axis aligned bounded box in (S, X, Z) space.  For the box to 
-  be forward-invariant, the vector field must point strictly 
-  inward at each face.  This imposes design constraints on the 
-  feed rate u, the degradation rate k, and the box boundaries.
-  
-  We use strictly positive lower bounds on all three components 
-  because DI\_rectangle\_box\_partial requires strict inequalities 
-  at the edges; Z cannot touch 0 because then dZ/dt could become 
-  non-strictly positive.\<close>
+  This section records a first attempt at a safety guarantee.  It fails,
+  and we keep it to document why.  The safety region is an axis-aligned
+  bounded box in (S, X, Z) space.  For the box to be forward-invariant,
+  the vector field must point strictly inward at each face.  This imposes
+  design constraints on the feed rate u, the degradation rate k, and the
+  box boundaries.
+
+  We use strictly positive lower bounds on all three components because
+  DI\_Frame\_Rule\_partial requires strict inequalities at the edges; Z
+  cannot touch 0 because then dZ/dt could become non-strictly positive.
+
+  The attempt fails at the two X faces.  The X equation has the form
+  dX/dt = X * r(S, Z), where the net growth rate
+  r(S, Z) = Y * (mu\_max * S / (K\_S + S)) * (K\_I / (K\_I + Z)) - d
+  does not depend on X.  For given S and Z, the field therefore points the
+  same way on both X faces, so it cannot point inward on both.  In the
+  locale below this shows up as two design constraints that contradict
+  each other: X\_lower\_growth\_exceeds\_decay asks for r > 0 at the
+  slowest growth in the box (S = S\_min, Z = Z\_max), and
+  X\_upper\_growth\_below\_decay asks for r < 0 at the fastest growth
+  (S = S\_max, Z = Z\_min).  Growth increases with S and decreases with Z,
+  so the slowest growth is at most the fastest one, and the two
+  constraints together would give d < d.  No parameter values satisfy the
+  locale, so its invariance theorem holds only vacuously.  The locale
+  metabolic\_z\_clearance\_params replaces this attempt: it takes the
+  bounds on S and X from the bioreactor's controllers and proves that Z is
+  cleared.\<close>
 
 locale metabolic_safety_region_params = metabolic_baseline_params +
   fixes u :: real                          \<comment> \<open>constant feed rate\<close>
@@ -314,10 +332,13 @@ definition in_safety_region ::
 subsection \<open>Forward invariance of the safety region\<close>
 
 text \<open>
-  The central safety theorem.  For any trajectory starting in the 
-  safety region and evolving under the metabolic ODE with constant 
-  feed rate u (satisfying the design constraints), the trajectory 
-  stays in the safety region.\<close>
+  Forward invariance of the box under the design constraints: a
+  trajectory that starts in the safety region and evolves under the
+  metabolic ODE with constant feed rate u stays in the safety region.
+  The derivation is correct, but its premises include the two
+  contradictory X-face constraints explained above, so the theorem says
+  nothing about any actual bioreactor.  It is kept to document the
+  attempt.\<close>
 
 lemma safety_region_forward_invariant:
   fixes y :: \<open>real \<Rightarrow> (real, 'a) vec\<close>
@@ -972,7 +993,8 @@ subsection \<open>Z-clearance under operational bounds\<close>
 text \<open>
   The bioreactor operator maintains substrate S and biomass X 
   within known operational limits.  We do not require these 
-  limits to arise from box invariance , they come from 
+  limits to arise from box invariance (the attempt above shows that a
+  box cannot point inward on both X faces); they come from 
   the bioreactor's feed controller and dilution rate management.
   
   Given these operational bounds, we prove the engineered 
@@ -1117,10 +1139,12 @@ text \<open>
   derivative of V\_Z is bounded by -delta\_Z * V\_Z.
   
   The proof combines three ingredients:
-  (i)   Production is bounded above by its value at (S\_hi, X\_hi).
-  (ii)  Degradation is bounded below by its value at Z\_alarm.
-  (iii) The engineering band-width constraint gives 
-        (Z - Z\_eq)\textasciicircum{}2 / 2 <= (Z - Z\_eq) * (Z\_alarm - Z\_eq).\<close>
+\begin{enumerate}
+\item Production is bounded above by its value at (S\_hi, X\_hi).
+\item Degradation is bounded below by its value at Z\_alarm.
+\item The engineering band-width constraint gives
+  (Z - Z\_eq)\textasciicircum{}2 / 2 <= (Z - Z\_eq) * (Z\_alarm - Z\_eq).
+\end{enumerate}\<close>
 
 lemma V_Z_Lie_decrease:
   fixes v :: \<open>(real, 'a) vec\<close>
@@ -1386,7 +1410,7 @@ proof -
 qed
 
 text \<open>
-   BIOREACTOR SAFETY THEOREM , inside metabolic\_z\_clearance\_params
+   BIOREACTOR SAFETY THEOREM (inside metabolic\_z\_clearance\_params)
 
    This theorem is the paper-facing statement that separates the
    bioreactor controller's responsibility (maintaining S and X)
@@ -1399,25 +1423,24 @@ text \<open>
   metabolic case study, stated in terms a bio-engineer would use.
   
   The theorem separates two concerns:
-  
-  (1) Controller guarantees , the bioreactor operator maintains 
-      substrate S in [S\_lo, S\_hi] via feed pump control, and 
-      biomass X in [X\_lo, X\_hi] via dilution rate management.  
-      These are standard operating practices in modern bioreactors 
-      and require routine instrumentation (flow meters, OD sensors).
-  
-  (2) Pathway guarantee , the engineered enzymatic degradation 
-      pathway clears the toxic intermediate Z exponentially, 
-      from any initial level in the alarm zone [Z\_alarm, Z\_max] 
-      toward the designed operating point Z\_eq.
-  
+\begin{enumerate}
+\item Controller guarantees: the bioreactor operator maintains
+  substrate S in [S\_lo, S\_hi] via feed pump control, and
+  biomass X in [X\_lo, X\_hi] via dilution rate management.
+  These are standard operating practices in modern bioreactors
+  and require routine instrumentation (flow meters, OD sensors).
+\item Pathway guarantee: the engineered enzymatic degradation
+  pathway clears the toxic intermediate Z exponentially,
+  from any initial level in the alarm zone [Z\_alarm, Z\_max]
+  toward the designed operating point Z\_eq.
+\end{enumerate}
   The bio-engineer controls (1); the theorem formally verifies (2).
   This separation mirrors how real bioprocess engineering works: 
   the operator manages macroscopic variables (feed, dilution); 
   the genetic design determines internal metabolic behavior.
   
   The formal guarantee covers ALL trajectories consistent with 
-  the controller bounds , an uncountable family of scenarios that 
+  the controller bounds, an uncountable family of scenarios that 
   no finite simulation campaign can exhaust.  This is the value 
   of formal verification over simulation.\<close>
 
@@ -1862,7 +1885,7 @@ text \<open>
    Three new results:
 \begin{enumerate}
 \item `Z\_upper\_bound\_invariant` -- forward-invariance of Z <= Z\_max
-  (using DI\_rectangle\_box\_partial with active = \{iZ\}, lo iZ = 0).
+  (using DI\_Frame\_Rule\_partial with active = \{iZ\}, lo iZ = 0).
 \item `Z\_exits\_alarm\_zone`     -- Z drops below Z\_alarm by T\_clear
   (using V\_Z\_exponential\_decay\_full + arithmetic on T\_clear).
 \item `bioreactor\_safety\_unconditional` -- composes (1) and (2).
@@ -1880,7 +1903,7 @@ text \<open>
 subsubsection \<open>Piece A: forward invariance of Z <= Z\_max\<close>
 
 text \<open>
-  Upper-bound forward-invariance for Z.  Uses `DI\_rectangle\_box\_partial`
+  Upper-bound forward-invariance for Z.  Uses `DI\_Frame\_Rule\_partial`
   with active = \{iZ\}, lo iZ = 0, hi iZ = Z\_max.  At the lower face Z = 0:
   the field reduces to P(S, X) > 0 (production with S, X strictly
   positive from the controllers).  At the upper face Z = Z\_max:

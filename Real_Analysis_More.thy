@@ -5,7 +5,7 @@
 (** Email:     Yakoub.Nemouchi@nlr.gov                        **)
 (**            Peter.Graf@nlr.gov                             **)
 (**                                                           **)
-(** Copyright © 2026 Alliance for Energy Innovation, LLC.     **)
+(** Copyright \<copyright> 2026 Alliance for Energy Innovation, LLC.     **)
 (** License: BSD 3-Clause, see LICENSE.                       **)
 (** See CONTRIBUTORS and CITATION files for details.          **)
 (***************************************************************)
@@ -53,7 +53,7 @@ text \<open>
   stated for [0..t]) to the shifted trajectory.
 
   TIME-INVARIANCE: most CRN/GRN ODEs in our development have the form
-  lambdat v. <expression in v alone>, with no dependence on t. The hypothesis
+  lambda t v. <expression in v alone>, with no dependence on t. The hypothesis
   `time\_inv` captures this property.
 \<close>
 
@@ -169,13 +169,13 @@ proof -
 qed
 
 text \<open>
-  Part 1: Auxiliary lemma , strict positive derivative implies right neighborhood
+  Part 1: Auxiliary lemma -- strict positive derivative implies right neighborhood
 
   This is the key real-analysis fact: if g'(tau*) > 0, then g is strictly
   greater than g(tau*) on a right neighborhood of tau*.
 
   HOL provides DERIV\_left\_inc which states:
-    DERIV f x :> l ==> 0 < l ==> EXd > 0. ALLh > 0. h < d --> f(x) < f(x + h)
+    DERIV f x :> l ==> 0 < l ==> EX d > 0. ALL h > 0. h < d --> f(x) < f(x + h)
 
   We restate it in the modern has\_real\_derivative form for convenience.
 \<close>
@@ -248,8 +248,8 @@ text \<open>
 
    textbook: f(x) = x\textasciicircum{}2, f'(x) = 2x.
    Our formalism:
-   (lambdav. 2*(vec\_nth x i)*(vec\_nth v i))
-   is the Fr?chet derivative of (lambdav. (vec\_nth v i)\textasciicircum{}2) at x.
+   (lambda v. 2*(vec\_nth x i)*(vec\_nth v i))
+   is the Fr\'{e}chet derivative of (lambda v. (vec\_nth v i)\textasciicircum{}2) at x.
 \<close>
 
 
@@ -515,14 +515,13 @@ corollary hill_monotonic_bound:
 
 
 text \<open>
-          Convert to has\_derivative form (Fr?chet derivative)
+          Convert to has\_derivative form (Fr\'{e}chet derivative)
 
-  DI\_Vect uses `has\_derivative` (Fr?chet) rather than `has\_field\_derivative`.
-  We use `has\_field\_derivative\_imp\_has\_derivative` (or whatever the actual
-  conversion lemma is called) to bridge.
+  DI\_Vect uses `has\_derivative` (Fr\'{e}chet) rather than `has\_field\_derivative`.
+  We use `has\_field\_derivative\_imp\_has\_derivative` to bridge.
 
-  For real-valued functions of a real variable, the Fr?chet derivative
-  Df at x is the linear map (lambdah. h * f'(x)).
+  For real-valued functions of a real variable, the Fr\'{e}chet derivative
+  Df at x is the linear map (lambda h. h * f'(x)).
 \<close>
 
 lemma hill_repressive_scalar_has_frechet_derivative:
@@ -542,7 +541,7 @@ text \<open>
   For DI\_Vect we need the function over vectors:
     H\_i(v) = alpha / (1 + (vec\_nth v i)\textasciicircum{}n)
 
-  Strategy: compose the scalar Hill function with `(lambdav. vec\_nth v i)`.
+  Strategy: compose the scalar Hill function with `(lambda v. vec\_nth v i)`.
 
   The chain rule gives us:
     DH\_i(v)(w) = (-alpha * n * (vec\_nth v i)\textasciicircum{}\{n-1\} / (1 + (vec\_nth v i)\textasciicircum{}n)\textasciicircum{}2) * vec\_nth w i

@@ -5,7 +5,7 @@
 (** Email:     Yakoub.Nemouchi@nlr.gov                        **)
 (**            Peter.Graf@nlr.gov                             **)
 (**                                                           **)
-(** Copyright © 2026 Alliance for Energy Innovation, LLC.     **)
+(** Copyright \<copyright> 2026 Alliance for Energy Innovation, LLC.     **)
 (** License: BSD 3-Clause, see LICENSE.                       **)
 (** See CONTRIBUTORS and CITATION files for details.          **)
 (***************************************************************)
@@ -108,7 +108,7 @@ proof -
     by linarith
 qed
 
-text \<open>Domain-aware @\{thm DI\_Generic\} inspied by textbook differemtial induction \cite{Platzer2018}.  The induction step may assume
+text \<open>Domain-aware @\{thm DI\_Generic\} inspired by textbook differential induction \cite{Platzer2018}.  The induction step may assume
   @\{term \<open>y tau in Q\<close>\}; the conclusion additionally yields @\{term \<open>y t in Q\<close>\}.\<close>
 
 lemma DI_Generic_dom:
@@ -715,8 +715,10 @@ text \<open>
 \item DI fails directly: when u is small, du/dt may not be <= 0
 \item But if we KNOW u, v >= 0, then for u close to M we can show du/dt <= 0
 \item DC strategy:
-  1. First prove u >= 0 is invariant (cut-formula C)
-  2. Then prove u <= M is invariant FROM u >= 0
+\begin{enumerate}
+\item First prove u >= 0 is invariant (cut-formula C)
+\item Then prove u <= M is invariant FROM u >= 0
+\end{enumerate}
 \end{itemize}
 
   \textbf{ISABELLE FORMALIZATION}\\
@@ -756,7 +758,7 @@ qed
 subsection \<open>DI boundary\<close>
 
 text \<open>
-  DI\_boundary , Boundary-Aware Differential Induction.\\
+  DI\_boundary: Boundary-Aware Differential Induction.\\
 
   \textbf{RESEARCH CONTRIBUTION}\\
   This file formalizes a STRENGTHENED variant of differential induction
@@ -794,7 +796,7 @@ text \<open>
   Hence, to prove `g(tau) >= 0` is invariant, it suffices to ensure that
   whenever `g(tau) = 0`, the trajectory cannot "exit" into negative values.
   This is enforced by requiring the time-derivative of `g` to be STRICTLY
-  POSITIVE at every boundary point , strictly positive derivatives
+  POSITIVE at every boundary point: strictly positive derivatives
   guarantee a right-neighborhood where the function is strictly positive.
 
   \textbf{RELATIONSHIP TO PRIOR WORK}\\
@@ -816,7 +818,7 @@ text \<open>
   Part 2: The main DI\_boundary lemma
 
   STATEMENT:
-    Given an ODE solution y : [0,t] -> vec and a Fr?chet-differentiable
+    Given an ODE solution y : [0,t] -> vec and a Fr\'{e}chet-differentiable
     certificate function invar : vec -> real, whose non-negative region
     \{v. 0 <= invar v\} is the invariant to be established, IF:
 \begin{enumerate}
@@ -1103,7 +1105,7 @@ proof (rule ccontr)
 
   (* ---- Step 6: Right neighborhood of \<tau>_star where g > 0 ---- *)
   (* We need this to be at the unrestricted (at \<tau>_star), not just within {0..t}.
-     This works as long as \<tau>_star is in (\<tau>_star < t). *)
+     This works as long as \<tau>_star < t. *)
   (* CASE: \<tau>_star < t *)
   (* CASE: \<tau>_star = t, but then S has only the point t itself,
            and continuity gives g(t) = lim_{\<tau>\<rightarrow>t-} g(\<tau>) \<ge> 0
@@ -1353,7 +1355,7 @@ proof (rule ccontr)
 qed
 
 text \<open>
-  DI\_convergence\_rate , Finite-Time Convergence Axiom
+  DI\_convergence\_rate: Finite-Time Convergence Axiom
 
   \textbf{RESEARCH CONTRIBUTION}\\
   This subsection formalizes a NEW dDL axiom for finite-time convergence of
@@ -1401,7 +1403,7 @@ text \<open>
   quant(y(tau)) <= Ltarget for all tau in [0..T]. By the rate hypothesis,
   the time derivative is >= delta throughout [0..T]. By FTC,
 
-    quant(y(T)) - quant(y(0)) = integral0T (d/dtau quant(y(tau))) dtau >= delta*T.
+    quant(y(T)) - quant(y(0)) = (integral over [0..T] of d/dtau quant(y(tau))) >= delta*T.
 
   So quant(y(T)) >= quant(y(0)) + delta*T > L - epsilon (using T > (Ltarget-quant(y(0)))/delta).
   Contradiction.
@@ -1701,7 +1703,7 @@ proof -
 qed
 
 text \<open>
-  REACH\_lyapunov , Lyapunov-based exponential decay reachability
+  REACH\_lyapunov: Lyapunov-based exponential decay reachability
 
   CONTEXT
   The other formalized dDL proof rules (DI\_Vect, DI\_boundary, DC, DG) handle invariance-style
@@ -1714,7 +1716,7 @@ text \<open>
   sublevel set in bounded time."
 
   This proof rule is specifically motivated by biological computing properties
-  that involve "behavior outside the steady state" , induced switching in
+  that involve "behavior outside the steady state": induced switching in
   toggle switches, convergence after perturbation, feedback loop settling
   after a disturbance.  Classical Lyapunov stability theorems have exactly
   this shape, and REACH\_lyapunov is the finite-horizon, dDL-compatible
@@ -1729,7 +1731,7 @@ text \<open>
   Define g(tau) = V(y(tau)) * exp(delta*tau).  Compute g's vderiv via the product
   rule: g'(tau) = (phi(tau) + delta*V(y(tau))) * exp(delta*tau).  From the rate hypothesis
   phi(tau) + delta*V(y(tau)) <= 0, and since exp(delta*tau) > 0, we have g'(tau) <= 0 on
-  [0..T].  Integrating: g(T) - g(0) = integral0T g' <= 0, so g(T) <= g(0).
+  [0..T].  Integrating g' over [0..T] gives g(T) - g(0) <= 0, so g(T) <= g(0).
   Since g(0) = V(y(0)) and g(T) = V(y(T))*exp(delta*T), dividing yields
   V(y(T)) <= V(y(0))*exp(-delta*T).
 

@@ -44,18 +44,18 @@ text \<open>
 
   PURPOSE
   This sanity check validates two things:
-
-1. The REACH\_lyapunov axiom's obligations (ODE, T\_nn, delta\_pos, V\_vderiv,
+\begin{enumerate}
+\item The REACH\_lyapunov axiom's obligations (ODE, T\_nn, delta\_pos, V\_vderiv,
   V\_nn, rate\_proportional) are ergonomic to discharge in a concrete
   setting.  Each obligation becomes a named `have` statement in the
   proof, following the "obligations on top, axiom on bottom" template.
-
-1. The obligation shapes generalize to higher-dimensional cases.  The
+\item The obligation shapes generalize to higher-dimensional cases.  The
   same template will be used for the Gardner toggle switch proof, just
   with a 2D state space, a time-varying field, and a quadratic
   Lyapunov function centered at the pulse equilibrium.
+\end{enumerate}
 
-  This lemma also serves as a pedagogical example for the paper , the
+  This lemma also serves as a pedagogical example for the paper: the
   simplest possible demonstration of REACH\_lyapunov in action.
 \<close>
 
@@ -142,7 +142,7 @@ proof -
     qed
   qed
 
-  \<comment> \<open>Pointwise derivative of V = (lambdav. (vec\_nth v iU)\textasciicircum{}2) at a state p:
+  \<comment> \<open>Pointwise derivative of V = (lambda v. (vec\_nth v iU)\textasciicircum{}2) at a state p:
       the linear map w |-> 2 * (vec\_nth p iU) * (vec\_nth w iU).\<close>
   have V_deriv:
     \<open>\<And>p::(real,'a) vec. ((\<lambda>v::(real,'a) vec. (vec_nth v iU)^2) has_derivative
@@ -188,7 +188,7 @@ proof -
 qed
 
 text \<open>
-  \textbf{GARDNER TOGGLE SWITCH , INDUCED SWITCHING VIA PULSED DYNAMICS}\\
+  \textbf{GARDNER TOGGLE SWITCH: INDUCED SWITCHING VIA PULSED DYNAMICS}\\
   This example formalizes "induced switching" for the symmetric Gardner
   toggle switch.  Three-interval structure:
     Interval 1: [0, t\_start]     baseline dynamics, trajectory in R\_A
@@ -641,7 +641,7 @@ proof -
       by linarith
   qed
 
-  (* u-term bound , symmetric *)
+  (* u-term bound, symmetric *)
   have u_term_bound: 
     \<open>\<bar>\<alpha>_base * (vec_nth v iU + u_pulse) / ((1 + (vec_nth v iU)^2) * (1 + u_pulse^2))\<bar> \<le>
       \<alpha>_base * (max \<bar>u_min\<bar> \<bar>u_max\<bar> + u_pulse)\<close>
@@ -991,7 +991,7 @@ lemma R_A_forward_invariant:
   assumes y0_in_R_A: \<open>in_R_A (y 0)\<close>
   shows \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> in_R_A (y \<tau>)\<close>
 proof -
-  (* We define lo and hi functions for DI_rectangle_box_partial *)
+  (* We define lo and hi functions for DI_Frame_Rule_partial *)
   define lo :: \<open>'a \<Rightarrow> real\<close> where
     \<open>lo = (\<lambda>i. if i = iU then u_A_lo 
                else if i = iV then v_A_lo 
@@ -1219,7 +1219,7 @@ proof -
       using i_ne const unfolding lo_def hi_def by simp
   qed
 
-  (* We apply DI_rectangle_box_partial *)
+  (* We apply DI_Frame_Rule_partial *)
   have main: \<open>\<And>\<tau> i. \<tau> \<in> {0..t} \<Longrightarrow> 
                      lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
     using DI_Frame_Rule_partial[OF t_nn y_sol iv active_ord 
@@ -2826,39 +2826,17 @@ text \<open>
 
    Outline of proof:
 \begin{itemize}
-\item V\_pulse v = (1/2)((u - 1/4)\textasciicircum{}2 + (v? - 3)\textasciicircum{}2) <= 1/100
-  gives (u - 1/4)\textasciicircum{}2 <= 1/50 and (v? - 3)\textasciicircum{}2 <= 1/50.
+\item V\_pulse v = (1/2)((u - 1/4)\textasciicircum{}2 + (v - 3)\textasciicircum{}2) <= 1/100
+  gives (u - 1/4)\textasciicircum{}2 <= 1/50 and (v - 3)\textasciicircum{}2 <= 1/50.
 \item From x\textasciicircum{}2 <= 1/50, deduce |x| <= 1/7 (since (1/7)\textasciicircum{}2 = 1/49 > 1/50;
   if |x| > 1/7 then x\textasciicircum{}2 > 1/49 > 1/50, contradiction).
 \item So u in [1/4 - 1/7, 1/4 + 1/7] = [3/28, 11/28] <= [1/10, 7/10].
-\item And v? in [3 - 1/7, 3 + 1/7] = [20/7, 22/7] <= [2, 7/2].
+\item And v in [3 - 1/7, 3 + 1/7] = [20/7, 22/7] <= [2, 7/2].
 \end{itemize}
 \<close>
 
 
 subsubsection \<open>Induced switching interpretation\<close>
-text \<open>
-   Concrete Gardner switching theorem.
-
-   We prove the switching property for the concrete parameter values
-   as a top-level theorem.  It is polymorphic in the index type 'a
-   and holds at any two distinct coordinates iU and iV.  The corollary at
-   the end of this theory instantiates it in R\textasciicircum{}2.
-
-   The theorem uses the already-proven concrete interpretations
-   (concrete\_baseline, concrete\_pulse, concrete\_R\_A, concrete\_R\_B,
-   concrete\_pulse\_lyapunov) and a proof of sublevel\_in\_R\_B
-   specialized to our concrete numerical values.  With these, the
-   parameters satisfy the locale gardner\_induced\_switching, and the
-   theorem instantiates induced\_switching.  It discharges the two pulse
-   hypotheses of induced\_switching itself: the approach phase with a chain
-   of shrinking boxes, and the Lyapunov phase with a bound on V\_pulse at
-   the end of the chain.  Its only hypothesis on the pulse is the length
-   t\_end - t\_start >= T\_pulse = 57.
-\<close>
-
-
-subsubsection \<open>Concrete switching theorem\<close>
 
 text \<open>Helper: sublevel containment for the concrete parameters.\<close>
 
@@ -2981,8 +2959,25 @@ proof -
 qed
 
 
+interpretation concrete_switching:
+  gardner_induced_switching iU iV \<alpha>_base_val \<beta>_val \<gamma>_val
+                            u_A_lo_val u_A_hi_val v_A_lo_val v_A_hi_val
+                            u_B_lo_val u_B_hi_val v_B_lo_val v_B_hi_val
+                            \<alpha>_low_val u_pulse_val v_pulse_val
+                            u_min_val u_max_val v_min_val v_max_val \<delta>_val
+                            L_target_val
+proof
+  fix v :: \<open>(real, 'a) vec\<close>
+  assume \<open>concrete_pulse.V_pulse v \<le> L_target_val\<close>
+  then show \<open>concrete_R_B.in_R_B v\<close>
+    by (simp add: concrete_sublevel_in_R_B)
+qed
+
 text \<open>
-   Direct lemma proving gardner\_induced\_switching for concrete values.
+   The concrete parameters satisfy the top locale gardner\_induced\_switching.
+   The theorem below states this with the concrete values as arguments; its
+   proof is the locale predicate established by the interpretation
+   concrete\_switching.
 
    Parameter order (from thm gardner\_induced\_switching\_def):
      iU iV
@@ -2994,9 +2989,8 @@ text \<open>
      L\_target
 \<close>
 
-
 theorem gardner_induced_switching_concrete:
-  \<open>gardner_induced_switching 
+  \<open>gardner_induced_switching
      iU iV
      \<alpha>_base_val \<beta>_val \<gamma>_val
      u_A_lo_val u_A_hi_val v_A_lo_val v_A_hi_val
@@ -3004,12 +2998,29 @@ theorem gardner_induced_switching_concrete:
      \<alpha>_low_val u_pulse_val v_pulse_val
      u_min_val u_max_val v_min_val v_max_val \<delta>_val
      L_target_val\<close>
-proof (unfold_locales)
-  fix v :: \<open>(real, 'a) vec\<close>                                            
-  assume \<open>concrete_pulse.V_pulse v \<le> L_target_val\<close>
-  then show \<open>concrete_R_B.in_R_B v\<close>
-  by (simp add: concrete_sublevel_in_R_B)
-qed
+  using concrete_switching.gardner_induced_switching_axioms .
+
+
+subsubsection \<open>Concrete switching theorem\<close>
+
+text \<open>
+   Concrete Gardner switching theorem.
+
+   We prove the switching property for the concrete parameter values
+   as a top-level theorem.  It is polymorphic in the index type 'a
+   and holds at any two distinct coordinates iU and iV.  The corollary at
+   the end of this theory instantiates it in R\textasciicircum{}2.
+
+   The theorem instantiates induced\_switching through the interpretation
+   concrete\_switching, which rests on the concrete interpretations
+   (concrete\_baseline, concrete\_pulse, concrete\_R\_A, concrete\_R\_B,
+   concrete\_pulse\_lyapunov) and on concrete\_sublevel\_in\_R\_B, the proof
+   of sublevel\_in\_R\_B for our concrete numerical values.  It discharges
+   the two pulse hypotheses of induced\_switching itself: the approach phase
+   with a chain of shrinking boxes, and the Lyapunov phase with a bound on
+   V\_pulse at the end of the chain.  Its only hypothesis on the pulse is
+   the length t\_end - t\_start >= T\_pulse = 57.
+\<close>
 
 
 text \<open>
@@ -3345,9 +3356,8 @@ proof -
     using \<Delta>_ge by linarith
 
   show \<open>\<And>\<tau>. \<tau> \<in> {0..(T - t_end)} \<Longrightarrow> concrete_R_B.in_R_B (y3 \<tau>)\<close>
-    using gardner_induced_switching.induced_switching[OF gardner_induced_switching_concrete
-            y1_sol y2_sol y3_sol glue1 glue2 t_start_nn T_app_nn T_app_le T_after_end
-            y1_starts_in_R_A approach pulse_long] .
+    using concrete_switching.induced_switching[OF y1_sol y2_sol y3_sol glue1 glue2
+            t_start_nn T_app_nn T_app_le T_after_end y1_starts_in_R_A approach pulse_long] .
 qed
 
 end

@@ -25,7 +25,7 @@ The case studies cover induced switching in the Gardner genetic toggle switch, s
 | `Bioreactor_Safety_Proof.thy` | Case study: forward invariance of a safety region and Z-clearance under operational bounds for a bioreactor model, with a concrete metabolic instantiation |
 | `Biological_Computing_Benchmark_Proofs.thy` | Benchmark proofs for CRNs, GRNs, and a programmable biological circuit |
 | `ROOT` | Isabelle session specification (session `BdL`) |
-| `CONTRIBUTORS`, `CITATION.cff`, `LICENSE` | Authors, citation metadata, and license |
+| `CONTRIBUTORS`, `CITATION.cff`, `LICENSE` | Authors and contributors, citation metadata, and license |
 
 Theory dependencies:
 

@@ -36,6 +36,15 @@ lemma Example1_via_DI:
   apply (rule t)
   done
 
+subsubsection \<open>Example: harmonic oscillator via DI\_Vect\<close>
+
+text \<open>
+  ODE:        x' = -omega*y,  y' = omega*x  (at coordinates iX and iY, distinct)
+  Proof Goal: x(t)\textasciicircum{}2 + y(t)\textasciicircum{}2 = r0\textasciicircum{}2 given x(0)\textasciicircum{}2 + y(0)\textasciicircum{}2 = r0\textasciicircum{}2
+  Split:      antisym turns the equality into two inequalities, each proved by DI\_Vect
+  Invariant:  r0\textasciicircum{}2 <= x\textasciicircum{}2 + y\textasciicircum{}2  (using DI\_Vect with h = lambda v. r0\textasciicircum{}2, g = lambda v. x\textasciicircum{}2 + y\textasciicircum{}2)
+  Invariant:  x\textasciicircum{}2 + y\textasciicircum{}2 <= r0\textasciicircum{}2  (using DI\_Vect with h = lambda v. x\textasciicircum{}2 + y\textasciicircum{}2, g = lambda v. r0\textasciicircum{}2)
+\<close>
 lemma circular_invariant:
   fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes iX iY :: 'p
@@ -158,7 +167,7 @@ text \<open>
   ODE:        x' = -x  (at coordinate iX)
   Proof Goal: x(t) > 0 given x(0) > 0
   Ghost:      g' = 1/2*g  (at coordinate iG, distinct from iX)
-  Invariant:  x*g\textasciicircum{}2 >= 1  (using DI\_Vect with h = lambdav. 1, g = lambdav. x*g\textasciicircum{}2)
+  Invariant:  x*g\textasciicircum{}2 >= 1  (using DI\_Vect with h = lambda v. 1, g = lambda v. x*g\textasciicircum{}2)
 \<close>
 lemma exponential_decay:
   fixes x :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
