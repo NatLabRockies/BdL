@@ -116,15 +116,16 @@ text \<open>
 \end{enumerate}
 
   FORMALIZATION
-  We represent the three species as components of a 3-dimensional vector:
+  We represent the three species as components of a state vector over an
+  arbitrary finite index type 'p, at three pairwise distinct coordinates:
 \begin{itemize}
-\item Position 0: concentration of A, i.e., [A]
-\item Position 1: concentration of B, i.e., [B]
-\item Position 2: concentration of C, i.e., [C]
+\item Coordinate iA: concentration of A, i.e., [A]
+\item Coordinate iB: concentration of B, i.e., [B]
+\item Coordinate iC: concentration of C, i.e., [C]
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambdak. 0)(0 := d[A]/dt, 1 := d[B]/dt, 2 := d[C]/dt))
+    vec\_lambda ((lambdak. 0)(iA := d[A]/dt, iB := d[B]/dt, iC := d[C]/dt))
 
   The proof uses DI\_Vect (Differential Induction for vector-valued ODEs)
   applied twice (via antisymmetry) to establish the equality.
@@ -133,70 +134,73 @@ text \<open>
 
 text \<open>Main theorem: conservation of the total concentration.\<close>
 lemma crn_oscillator_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
       \<comment> \<open>y(t) = ([A](t), [B](t), [C](t))\<close>
   fixes k1 k2 k3 :: real
+  fixes iA iB iC :: 'p
+  assumes coords: \<open>iA \<noteq> iB\<close> \<open>iA \<noteq> iC\<close> \<open>iB \<noteq> iC\<close>
   assumes y_sol: 
     \<open>(y solves_ode (\<lambda>t v. 
                        vec_lambda ((\<lambda>k. 0)(
-                         0 := -k1 * vec_nth v 0 * vec_nth v 1 + k3 * vec_nth v 2 * vec_nth v 0,
-                         1 :=  k1 * vec_nth v 0 * vec_nth v 1 - k2 * vec_nth v 1 * vec_nth v 2,
-                         2 :=  k2 * vec_nth v 1 * vec_nth v 2 - k3 * vec_nth v 2 * vec_nth v 0))
+                         iA := -k1 * vec_nth v iA * vec_nth v iB + k3 * vec_nth v iC * vec_nth v iA,
+                         iB :=  k1 * vec_nth v iA * vec_nth v iB - k2 * vec_nth v iB * vec_nth v iC,
+                         iC :=  k2 * vec_nth v iB * vec_nth v iC - k3 * vec_nth v iC * vec_nth v iA))
                        )) {0..t} UNIV\<close>
       \<comment> \<open>Oscillator ODE:
            d[A]/dt = -k1*[A]*[B] + k3*[C]*[A];
            d[B]/dt = k1*[A]*[B] - k2*[B]*[C];
            d[C]/dt = k2*[B]*[C] - k3*[C]*[A]\<close>
-  assumes iv: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 1 + vec_nth (y 0) 2 = total0\<close>
+  assumes iv: \<open>vec_nth (y 0) iA + vec_nth (y 0) iB + vec_nth (y 0) iC = total0\<close>
       \<comment> \<open>Initially: [A](0) + [B](0) + [C](0) = total0\<close>
   assumes t: \<open>0 \<le> t\<close>
-  shows \<open>vec_nth (y t) 0 + vec_nth (y t) 1 + vec_nth (y t) 2 = total0\<close>
+  shows \<open>vec_nth (y t) iA + vec_nth (y t) iB + vec_nth (y t) iC = total0\<close>
       \<comment> \<open>Conclusion: [A](t) + [B](t) + [C](t) = total0 for all t >= 0\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
    have sum_deriv:
-    \<open>((\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2) has_derivative 
-      (\<lambda>w. vec_nth w 0 + vec_nth w 1 + vec_nth w 2)) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iA + vec_nth v iB + vec_nth v iC) has_derivative 
+      (\<lambda>w. vec_nth w iA + vec_nth w iB + vec_nth w iC)) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
      SUB-PART 1: total0 \<le> [A](t) + [B](t) + [C](t)
      ------------------------------------------------------------------------ *)
 
-  have iv_ge: \<open>total0 \<le> vec_nth (y 0) 0 + vec_nth (y 0) 1 + vec_nth (y 0) 2\<close>
+  have iv_ge: \<open>total0 \<le> vec_nth (y 0) iA + vec_nth (y 0) iB + vec_nth (y 0) iC\<close>
     using iv by simp
 
   have induct_step_ge:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. total0) has_derivative Dh) (at (y \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iA + vec_nth v iB + vec_nth v iC) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + k3 * vec_nth v 2 * vec_nth v 0,
-                       1 :=  k1 * vec_nth v 0 * vec_nth v 1 - k2 * vec_nth v 1 * vec_nth v 2,
-                       2 :=  k2 * vec_nth v 1 * vec_nth v 2 - k3 * vec_nth v 2 * vec_nth v 0))) 
+                       iA := -k1 * vec_nth v iA * vec_nth v iB + k3 * vec_nth v iC * vec_nth v iA,
+                       iB :=  k1 * vec_nth v iA * vec_nth v iB - k2 * vec_nth v iB * vec_nth v iC,
+                       iC :=  k2 * vec_nth v iB * vec_nth v iC - k3 * vec_nth v iC * vec_nth v iA))) 
                       \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + k3 * vec_nth v 2 * vec_nth v 0,
-                       1 :=  k1 * vec_nth v 0 * vec_nth v 1 - k2 * vec_nth v 1 * vec_nth v 2,
-                       2 :=  k2 * vec_nth v 1 * vec_nth v 2 - k3 * vec_nth v 2 * vec_nth v 0))) 
+                       iA := -k1 * vec_nth v iA * vec_nth v iB + k3 * vec_nth v iC * vec_nth v iA,
+                       iB :=  k1 * vec_nth v iA * vec_nth v iB - k2 * vec_nth v iB * vec_nth v iC,
+                       iC :=  k2 * vec_nth v iB * vec_nth v iC - k3 * vec_nth v iC * vec_nth v iA))) 
                       \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
     show \<open>\<exists>Dh Dg. ((\<lambda>v. total0) has_derivative Dh) (at (y \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iA + vec_nth v iB + vec_nth v iC) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + k3 * vec_nth v 2 * vec_nth v 0,
-                        1 :=  k1 * vec_nth v 0 * vec_nth v 1 - k2 * vec_nth v 1 * vec_nth v 2,
-                        2 :=  k2 * vec_nth v 1 * vec_nth v 2 - k3 * vec_nth v 2 * vec_nth v 0))) 
+                        iA := -k1 * vec_nth v iA * vec_nth v iB + k3 * vec_nth v iC * vec_nth v iA,
+                        iB :=  k1 * vec_nth v iA * vec_nth v iB - k2 * vec_nth v iB * vec_nth v iC,
+                        iC :=  k2 * vec_nth v iB * vec_nth v iC - k3 * vec_nth v iC * vec_nth v iA))) 
                       \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + k3 * vec_nth v 2 * vec_nth v 0,
-                        1 :=  k1 * vec_nth v 0 * vec_nth v 1 - k2 * vec_nth v 1 * vec_nth v 2,
-                        2 :=  k2 * vec_nth v 1 * vec_nth v 2 - k3 * vec_nth v 2 * vec_nth v 0))) 
+                        iA := -k1 * vec_nth v iA * vec_nth v iB + k3 * vec_nth v iC * vec_nth v iA,
+                        iB :=  k1 * vec_nth v iA * vec_nth v iB - k2 * vec_nth v iB * vec_nth v iC,
+                        iC :=  k2 * vec_nth v iB * vec_nth v iC - k3 * vec_nth v iC * vec_nth v iA))) 
                       \<tau> (y \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iA + vec_nth v iB + vec_nth v iC\<close>])
       apply (rule conjI, rule has_derivative_const)
       apply (rule conjI, rule sum_deriv)
       apply (auto simp: fun_upd_def)
@@ -207,39 +211,39 @@ proof -
      SUB-PART 2: [A](t) + [B](t) + [C](t) \<le> total0₀
      ------------------------------------------------------------------------ *)
 
-  have iv_le: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 1 + vec_nth (y 0) 2 \<le> total0\<close>
+  have iv_le: \<open>vec_nth (y 0) iA + vec_nth (y 0) iB + vec_nth (y 0) iC \<le> total0\<close>
     using iv by simp
 
   have induct_step_le:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
-         \<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2) has_derivative Dh) (at (y \<tau>)) \<and>
+         \<exists>Dh Dg. ((\<lambda>v. vec_nth v iA + vec_nth v iB + vec_nth v iC) has_derivative Dh) (at (y \<tau>)) \<and>
                  ((\<lambda>v. total0) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + k3 * vec_nth v 2 * vec_nth v 0,
-                       1 :=  k1 * vec_nth v 0 * vec_nth v 1 - k2 * vec_nth v 1 * vec_nth v 2,
-                       2 :=  k2 * vec_nth v 1 * vec_nth v 2 - k3 * vec_nth v 2 * vec_nth v 0))) 
+                       iA := -k1 * vec_nth v iA * vec_nth v iB + k3 * vec_nth v iC * vec_nth v iA,
+                       iB :=  k1 * vec_nth v iA * vec_nth v iB - k2 * vec_nth v iB * vec_nth v iC,
+                       iC :=  k2 * vec_nth v iB * vec_nth v iC - k3 * vec_nth v iC * vec_nth v iA))) 
                      \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + k3 * vec_nth v 2 * vec_nth v 0,
-                        1 :=  k1 * vec_nth v 0 * vec_nth v 1 - k2 * vec_nth v 1 * vec_nth v 2,
-                        2 :=  k2 * vec_nth v 1 * vec_nth v 2 - k3 * vec_nth v 2 * vec_nth v 0))) 
+                        iA := -k1 * vec_nth v iA * vec_nth v iB + k3 * vec_nth v iC * vec_nth v iA,
+                        iB :=  k1 * vec_nth v iA * vec_nth v iB - k2 * vec_nth v iB * vec_nth v iC,
+                        iC :=  k2 * vec_nth v iB * vec_nth v iC - k3 * vec_nth v iC * vec_nth v iA))) 
                        \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close> 
-    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2) has_derivative Dh) (at (y \<tau>)) \<and>
+    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v iA + vec_nth v iB + vec_nth v iC) has_derivative Dh) (at (y \<tau>)) \<and>
                   ((\<lambda>v. total0) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + k3 * vec_nth v 2 * vec_nth v 0,
-                        1 :=  k1 * vec_nth v 0 * vec_nth v 1 - k2 * vec_nth v 1 * vec_nth v 2,
-                        2 :=  k2 * vec_nth v 1 * vec_nth v 2 - k3 * vec_nth v 2 * vec_nth v 0))) 
+                        iA := -k1 * vec_nth v iA * vec_nth v iB + k3 * vec_nth v iC * vec_nth v iA,
+                        iB :=  k1 * vec_nth v iA * vec_nth v iB - k2 * vec_nth v iB * vec_nth v iC,
+                        iC :=  k2 * vec_nth v iB * vec_nth v iC - k3 * vec_nth v iC * vec_nth v iA))) 
                        \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + k3 * vec_nth v 2 * vec_nth v 0,
-                        1 :=  k1 * vec_nth v 0 * vec_nth v 1 - k2 * vec_nth v 1 * vec_nth v 2,
-                        2 :=  k2 * vec_nth v 1 * vec_nth v 2 - k3 * vec_nth v 2 * vec_nth v 0))) 
+                        iA := -k1 * vec_nth v iA * vec_nth v iB + k3 * vec_nth v iC * vec_nth v iA,
+                        iB :=  k1 * vec_nth v iA * vec_nth v iB - k2 * vec_nth v iB * vec_nth v iC,
+                        iC :=  k2 * vec_nth v iB * vec_nth v iC - k3 * vec_nth v iC * vec_nth v iA))) 
                        \<tau> (y \<tau>))\<close>
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iA + vec_nth v iB + vec_nth v iC\<close>])
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
       apply (rule conjI, rule sum_deriv)
       apply (rule conjI, rule has_derivative_const)
@@ -249,11 +253,11 @@ proof -
 
   show ?thesis
     by (auto intro!: antisym 
-                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2\<close> and 
+                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v iA + vec_nth v iB + vec_nth v iC\<close> and 
                                    g = \<open>\<lambda>v. total0\<close>,
                              OF iv_le y_sol induct_step_le t]
                      DI_Vect[where h = \<open>\<lambda>v. total0\<close> and 
-                                   g = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2\<close>,
+                                   g = \<open>\<lambda>v. vec_nth v iA + vec_nth v iB + vec_nth v iC\<close>,
                              OF iv_ge y_sol induct_step_ge t])
 qed
 
@@ -360,11 +364,12 @@ text \<open>
                        = 0
 
   FORMALIZATION
-  We represent the four species as components of a 4-dimensional vector:
-    Position 0: [E]   (free enzyme)
-    Position 1: [S]   (free substrate)
-    Position 2: [ES]  (enzyme-substrate complex)
-    Position 3: [P]   (product)
+  We represent the four species as components of a state vector over an
+  arbitrary finite index type 'p, at four pairwise distinct coordinates:
+    Coordinate iE:  [E]   (free enzyme)
+    Coordinate iS:  [S]   (free substrate)
+    Coordinate iES: [ES]  (enzyme-substrate complex)
+    Coordinate iP:  [P]   (product)
 \<close>
 
 
@@ -382,33 +387,37 @@ text \<open>
 \<close>
 
 lemma michaelis_menten_enzyme_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
       \<comment> \<open>y(t) = ([E](t), [S](t), [ES](t), [P](t))\<close>
   fixes k1 km1 k2 :: real
       \<comment> \<open>k1: binding rate, km1: unbinding rate, k2: catalytic rate\<close>
+  fixes iE iS iES iP :: 'p
+  assumes coords: \<open>iE \<noteq> iS\<close> \<open>iE \<noteq> iES\<close> \<open>iE \<noteq> iP\<close>
+                  \<open>iS \<noteq> iES\<close> \<open>iS \<noteq> iP\<close> \<open>iES \<noteq> iP\<close>
   assumes y_sol: 
     \<open>(y solves_ode (\<lambda>t v.
                        vec_lambda ((\<lambda>k. 0)(
-                         0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                         1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                         2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                         3 :=  k2 * vec_nth v 2))
+                         iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                         iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                         iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                         iP :=  k2 * vec_nth v iES))
                        )) {0..t} UNIV\<close>
       \<comment> \<open>Michaelis-Menten ODE:
            d[E]/dt = -k1*[E]*[S] + (km1 + k2)*[ES];
            d[S]/dt = -k1*[E]*[S] + km1*[ES];
            d[ES]/dt = k1*[E]*[S] - (km1 + k2)*[ES];
            d[P]/dt = k2*[ES]\<close>
-  assumes iv: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 = E_total\<close>
+  assumes iv: \<open>vec_nth (y 0) iE + vec_nth (y 0) iES = E_total\<close>
       \<comment> \<open>Initially: [E](0) + [ES](0) = E\_total\<close>
   assumes t: \<open>0 \<le> t\<close>
-  shows \<open>vec_nth (y t) 0 + vec_nth (y t) 2 = E_total\<close>
+  shows \<open>vec_nth (y t) iE + vec_nth (y t) iES = E_total\<close>
       \<comment> \<open>Conclusion: [E](t) + [ES](t) = E\_total for all t >= 0\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
    have enz_deriv:
-    \<open>((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative 
-      (\<lambda>w. vec_nth w 0 + vec_nth w 2)) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iE + vec_nth v iES) has_derivative 
+      (\<lambda>w. vec_nth w iE + vec_nth w iES)) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
@@ -416,41 +425,41 @@ proof -
      ------------------------------------------------------------------------ *)
 
   (* PROOF OBLIGATION 1.1 (iv): initial condition E_total \<le> [E](0) + [ES](0) *)
-  have iv_ge: \<open>E_total \<le> vec_nth (y 0) 0 + vec_nth (y 0) 2\<close>
+  have iv_ge: \<open>E_total \<le> vec_nth (y 0) iE + vec_nth (y 0) iES\<close>
     using iv by simp
 
   (* PROOF OBLIGATION 1.2 (induct_step): derivative check *)
   have induct_step_ge:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. E_total) has_derivative Dh) (at (y \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iE + vec_nth v iES) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                       3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                       iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                       iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                       iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                       iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                       3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
+                       iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                       iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                       iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                       iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close> 
     show \<open>\<exists>Dh Dg. ((\<lambda>v. E_total) has_derivative Dh) (at (y \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iE + vec_nth v iES) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                        1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                        3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                        iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                        iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                        iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                        iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                      0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                      1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                      2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                      3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
+                      iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                      iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                      iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                      iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 2\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iE + vec_nth v iES\<close>])
       apply (rule conjI, rule has_derivative_const)
       apply (rule conjI, rule enz_deriv)
       apply (auto simp: fun_upd_def)
@@ -461,39 +470,39 @@ proof -
      SUB-PART 2: [E](t) + [ES](t) \<le> E_total
      ------------------------------------------------------------------------ *)
 
-  have iv_le: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 \<le> E_total\<close>
+  have iv_le: \<open>vec_nth (y 0) iE + vec_nth (y 0) iES \<le> E_total\<close>
     using iv by simp
 
   have induct_step_le:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
-         \<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative Dh) (at (y \<tau>)) \<and>
+         \<exists>Dh Dg. ((\<lambda>v. vec_nth v iE + vec_nth v iES) has_derivative Dh) (at (y \<tau>)) \<and>
                  ((\<lambda>v. E_total) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                       3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                       iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                       iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                       iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                       iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                       3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
+                       iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                       iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                       iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                       iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close> 
-    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative Dh) (at (y \<tau>)) \<and>
+    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v iE + vec_nth v iES) has_derivative Dh) (at (y \<tau>)) \<and>
                   ((\<lambda>v. E_total) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                        1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                        3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                        iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                        iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                        iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                        iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>)) \<le>
                    Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                        1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                        3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 2\<close>])
+                        iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                        iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                        iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                        iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>))\<close>
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iE + vec_nth v iES\<close>])
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
       apply (rule conjI, rule enz_deriv)
       apply (rule conjI, rule has_derivative_const)
@@ -503,9 +512,9 @@ proof -
 
   show ?thesis
     by (auto intro!: antisym 
-                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 2\<close> and g = \<open>\<lambda>v. E_total\<close>,
+                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v iE + vec_nth v iES\<close> and g = \<open>\<lambda>v. E_total\<close>,
                              OF iv_le y_sol induct_step_le t]
-                     DI_Vect[where h = \<open>\<lambda>v. E_total\<close> and g = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 2\<close>,
+                     DI_Vect[where h = \<open>\<lambda>v. E_total\<close> and g = \<open>\<lambda>v. vec_nth v iE + vec_nth v iES\<close>,
                              OF iv_ge y_sol induct_step_ge t])
 qed
 
@@ -522,26 +531,30 @@ text \<open>
       = 0
 \<close>
 lemma michaelis_menten_substrate_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes k1 km1 k2 :: real
+  fixes iE iS iES iP :: 'p
+  assumes coords: \<open>iE \<noteq> iS\<close> \<open>iE \<noteq> iES\<close> \<open>iE \<noteq> iP\<close>
+                  \<open>iS \<noteq> iES\<close> \<open>iS \<noteq> iP\<close> \<open>iES \<noteq> iP\<close>
   assumes y_sol: 
     \<open>(y solves_ode (\<lambda>t v.
                        vec_lambda ((\<lambda>k. 0)(
-                         0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                         1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                         2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                         3 :=  k2 * vec_nth v 2))
+                         iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                         iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                         iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                         iP :=  k2 * vec_nth v iES))
                        )) {0..t} UNIV\<close>
-  assumes iv: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 + vec_nth (y 0) 3 = S_total\<close>
+  assumes iv: \<open>vec_nth (y 0) iS + vec_nth (y 0) iES + vec_nth (y 0) iP = S_total\<close>
       \<comment> \<open>Initially: [S](0) + [ES](0) + [P](0) = S\_total\<close>
   assumes t: \<open>0 \<le> t\<close>
-  shows \<open>vec_nth (y t) 1 + vec_nth (y t) 2 + vec_nth (y t) 3 = S_total\<close>
+  shows \<open>vec_nth (y t) iS + vec_nth (y t) iES + vec_nth (y t) iP = S_total\<close>
       \<comment> \<open>Conclusion: [S](t) + [ES](t) + [P](t) = S\_total for all t >= 0\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
    have sub_deriv:
-    \<open>((\<lambda>v. vec_nth v 1 + vec_nth v 2 + vec_nth v 3) has_derivative 
-      (\<lambda>w. vec_nth w 1 + vec_nth w 2 + vec_nth w 3)) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iS + vec_nth v iES + vec_nth v iP) has_derivative 
+      (\<lambda>w. vec_nth w iS + vec_nth w iES + vec_nth w iP)) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
@@ -549,41 +562,41 @@ proof -
      ------------------------------------------------------------------------ *)
 
   (*PROOF OBLIGATION 1.1 (iv): initial condition S_total \<le> [S](0) + [ES](0) + [P](0) *)
-  have iv_ge: \<open>S_total \<le> vec_nth (y 0) 1 + vec_nth (y 0) 2 + vec_nth (y 0) 3\<close>
+  have iv_ge: \<open>S_total \<le> vec_nth (y 0) iS + vec_nth (y 0) iES + vec_nth (y 0) iP\<close>
     using iv by simp
 
   (*PROOF OBLIGATION 1.2 (induct_step): derivative check Dh(field) \<le> Dg(field) *)
   have induct_step_ge:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. S_total) has_derivative Dh) (at (y \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 1 + vec_nth v 2 + vec_nth v 3) has_derivative Dg) (at (y \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iS + vec_nth v iES + vec_nth v iP) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                       3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                       iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                       iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                       iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                       iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                       3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
+                       iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                       iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                       iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                       iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
     show \<open>\<exists>Dh Dg. ((\<lambda>v. S_total) has_derivative Dh) (at (y \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 1 + vec_nth v 2 + vec_nth v 3) has_derivative Dg) (at (y \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iS + vec_nth v iES + vec_nth v iP) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                        1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                        3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                        iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                        iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                        iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                        iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                        1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                        3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
+                        iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                        iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                        iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                        iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 1 + vec_nth v 2 + vec_nth v 3\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iS + vec_nth v iES + vec_nth v iP\<close>])
       apply (rule conjI, rule has_derivative_const)
       apply (rule conjI, rule sub_deriv)
       apply (auto simp: fun_upd_def)
@@ -595,39 +608,39 @@ proof -
      SUB-PART 2: [S](t) + [ES](t) + [P](t) \<le> S_total
      ------------------------------------------------------------------------ *)
 
-  have iv_le: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 + vec_nth (y 0) 3 \<le> S_total\<close>
+  have iv_le: \<open>vec_nth (y 0) iS + vec_nth (y 0) iES + vec_nth (y 0) iP \<le> S_total\<close>
     using iv by simp
 
   have induct_step_le:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
-         \<exists>Dh Dg. ((\<lambda>v. vec_nth v 1 + vec_nth v 2 + vec_nth v 3) has_derivative Dh) (at (y \<tau>)) \<and>
+         \<exists>Dh Dg. ((\<lambda>v. vec_nth v iS + vec_nth v iES + vec_nth v iP) has_derivative Dh) (at (y \<tau>)) \<and>
                  ((\<lambda>v. S_total) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                       3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                       iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                       iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                       iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                       iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                      0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                      1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                      2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                      3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
+                      iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                      iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                      iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                      iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
-    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v 1 + vec_nth v 2 + vec_nth v 3) has_derivative Dh) (at (y \<tau>)) \<and>
+    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v iS + vec_nth v iES + vec_nth v iP) has_derivative Dh) (at (y \<tau>)) \<and>
                   ((\<lambda>v. S_total) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                        1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                        3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                        iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                        iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                        iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                        iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + (km1 + k2) * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - (km1 + k2) * vec_nth v 2,
-                       3 :=  k2 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 1 + vec_nth v 2 + vec_nth v 3\<close>])
+                       iE := -k1 * vec_nth v iE * vec_nth v iS + (km1 + k2) * vec_nth v iES,
+                       iS := -k1 * vec_nth v iE * vec_nth v iS + km1 * vec_nth v iES,
+                       iES :=  k1 * vec_nth v iE * vec_nth v iS - (km1 + k2) * vec_nth v iES,
+                       iP :=  k2 * vec_nth v iES))) \<tau> (y \<tau>))\<close>
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iS + vec_nth v iES + vec_nth v iP\<close>])
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
       apply (rule conjI, rule sub_deriv)
       apply (rule conjI, rule has_derivative_const)
@@ -638,11 +651,11 @@ proof -
 
   show ?thesis
     by (auto intro!: antisym 
-                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v 1 + vec_nth v 2 + vec_nth v 3\<close> and 
+                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v iS + vec_nth v iES + vec_nth v iP\<close> and 
                                    g = \<open>\<lambda>v. S_total\<close>,
                              OF iv_le y_sol induct_step_le t]
                      DI_Vect[where h = \<open>\<lambda>v. S_total\<close> and 
-                                   g = \<open>\<lambda>v. vec_nth v 1 + vec_nth v 2 + vec_nth v 3\<close>,
+                                   g = \<open>\<lambda>v. vec_nth v iS + vec_nth v iES + vec_nth v iP\<close>,
                              OF iv_ge y_sol induct_step_ge t])
 qed
 subsubsection \<open>SIR epidemic model: population conservation\<close>
@@ -679,61 +692,64 @@ text \<open>
                       = 0
 \<close>
 lemma sir_population_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes beta gamma :: real
       \<comment> \<open>beta: infection rate, gamma: recovery rate\<close>
+  fixes iS iI iR :: 'p
+  assumes coords: \<open>iS \<noteq> iI\<close> \<open>iS \<noteq> iR\<close> \<open>iI \<noteq> iR\<close>
   assumes y_sol: 
     \<open>(y solves_ode (\<lambda>t v.
                        vec_lambda ((\<lambda>k. 0)(
-                         0 := -beta * vec_nth v 0 * vec_nth v 1,
-                         1 :=  beta * vec_nth v 0 * vec_nth v 1 - gamma * vec_nth v 1,
-                         2 :=  gamma * vec_nth v 1))
+                         iS := -beta * vec_nth v iS * vec_nth v iI,
+                         iI :=  beta * vec_nth v iS * vec_nth v iI - gamma * vec_nth v iI,
+                         iR :=  gamma * vec_nth v iI))
                        )) {0..t} UNIV\<close>
-      \<comment> \<open>Position 0: [S], position 1: [I], position 2: [R]\<close>
-  assumes iv: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 1 + vec_nth (y 0) 2 = N\<close>
+      \<comment> \<open>Coordinate iS: [S], coordinate iI: [I], coordinate iR: [R]\<close>
+  assumes iv: \<open>vec_nth (y 0) iS + vec_nth (y 0) iI + vec_nth (y 0) iR = N\<close>
   assumes t: \<open>0 \<le> t\<close>
-  shows \<open>vec_nth (y t) 0 + vec_nth (y t) 1 + vec_nth (y t) 2 = N\<close>
+  shows \<open>vec_nth (y t) iS + vec_nth (y t) iI + vec_nth (y t) iR = N\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
    have sum_deriv:
-    \<open>((\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2) has_derivative 
-      (\<lambda>w. vec_nth w 0 + vec_nth w 1 + vec_nth w 2)) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iS + vec_nth v iI + vec_nth v iR) has_derivative 
+      (\<lambda>w. vec_nth w iS + vec_nth w iI + vec_nth w iR)) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
      SUB-PART 1: N \<le> [S](t) + [I](t) + [R](t)
      ------------------------------------------------------------------------ *)
 
-  have iv_ge: \<open>N \<le> vec_nth (y 0) 0 + vec_nth (y 0) 1 + vec_nth (y 0) 2\<close>
+  have iv_ge: \<open>N \<le> vec_nth (y 0) iS + vec_nth (y 0) iI + vec_nth (y 0) iR\<close>
     using iv by simp
 
   have induct_step_ge:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. N) has_derivative Dh) (at (y \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iS + vec_nth v iI + vec_nth v iR) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -beta * vec_nth v 0 * vec_nth v 1,
-                       1 :=  beta * vec_nth v 0 * vec_nth v 1 - gamma * vec_nth v 1,
-                       2 :=  gamma * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                       iS := -beta * vec_nth v iS * vec_nth v iI,
+                       iI :=  beta * vec_nth v iS * vec_nth v iI - gamma * vec_nth v iI,
+                       iR :=  gamma * vec_nth v iI))) \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -beta * vec_nth v 0 * vec_nth v 1,
-                       1 :=  beta * vec_nth v 0 * vec_nth v 1 - gamma * vec_nth v 1,
-                       2 :=  gamma * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                       iS := -beta * vec_nth v iS * vec_nth v iI,
+                       iI :=  beta * vec_nth v iS * vec_nth v iI - gamma * vec_nth v iI,
+                       iR :=  gamma * vec_nth v iI))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
     show \<open>\<exists>Dh Dg. ((\<lambda>v. N) has_derivative Dh) (at (y \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iS + vec_nth v iI + vec_nth v iR) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -beta * vec_nth v 0 * vec_nth v 1,
-                        1 :=  beta * vec_nth v 0 * vec_nth v 1 - gamma * vec_nth v 1,
-                        2 :=  gamma * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                        iS := -beta * vec_nth v iS * vec_nth v iI,
+                        iI :=  beta * vec_nth v iS * vec_nth v iI - gamma * vec_nth v iI,
+                        iR :=  gamma * vec_nth v iI))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -beta * vec_nth v 0 * vec_nth v 1,
-                        1 :=  beta * vec_nth v 0 * vec_nth v 1 - gamma * vec_nth v 1,
-                        2 :=  gamma * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                        iS := -beta * vec_nth v iS * vec_nth v iI,
+                        iI :=  beta * vec_nth v iS * vec_nth v iI - gamma * vec_nth v iI,
+                        iR :=  gamma * vec_nth v iI))) \<tau> (y \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iS + vec_nth v iI + vec_nth v iR\<close>])
       apply (rule conjI, rule has_derivative_const)
       apply (rule conjI, rule sum_deriv)
       apply (auto simp: fun_upd_def)
@@ -744,35 +760,35 @@ proof -
      SUB-PART 2: [S](t) + [I](t) + [R](t) \<le> N
      ------------------------------------------------------------------------ *)
 
-  have iv_le: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 1 + vec_nth (y 0) 2 \<le> N\<close>
+  have iv_le: \<open>vec_nth (y 0) iS + vec_nth (y 0) iI + vec_nth (y 0) iR \<le> N\<close>
     using iv by simp
 
   have induct_step_le:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
-         \<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2) has_derivative Dh) (at (y \<tau>)) \<and>
+         \<exists>Dh Dg. ((\<lambda>v. vec_nth v iS + vec_nth v iI + vec_nth v iR) has_derivative Dh) (at (y \<tau>)) \<and>
                  ((\<lambda>v. N) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -beta * vec_nth v 0 * vec_nth v 1,
-                       1 :=  beta * vec_nth v 0 * vec_nth v 1 - gamma * vec_nth v 1,
-                       2 :=  gamma * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                       iS := -beta * vec_nth v iS * vec_nth v iI,
+                       iI :=  beta * vec_nth v iS * vec_nth v iI - gamma * vec_nth v iI,
+                       iR :=  gamma * vec_nth v iI))) \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -beta * vec_nth v 0 * vec_nth v 1,
-                       1 :=  beta * vec_nth v 0 * vec_nth v 1 - gamma * vec_nth v 1,
-                       2 :=  gamma * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                       iS := -beta * vec_nth v iS * vec_nth v iI,
+                       iI :=  beta * vec_nth v iS * vec_nth v iI - gamma * vec_nth v iI,
+                       iR :=  gamma * vec_nth v iI))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
-    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2) has_derivative Dh) (at (y \<tau>)) \<and>
+    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v iS + vec_nth v iI + vec_nth v iR) has_derivative Dh) (at (y \<tau>)) \<and>
                   ((\<lambda>v. N) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -beta * vec_nth v 0 * vec_nth v 1,
-                        1 :=  beta * vec_nth v 0 * vec_nth v 1 - gamma * vec_nth v 1,
-                        2 :=  gamma * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                        iS := -beta * vec_nth v iS * vec_nth v iI,
+                        iI :=  beta * vec_nth v iS * vec_nth v iI - gamma * vec_nth v iI,
+                        iR :=  gamma * vec_nth v iI))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -beta * vec_nth v 0 * vec_nth v 1,
-                        1 :=  beta * vec_nth v 0 * vec_nth v 1 - gamma * vec_nth v 1,
-                        2 :=  gamma * vec_nth v 1))) \<tau> (y \<tau>))\<close>
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2\<close>])
+                        iS := -beta * vec_nth v iS * vec_nth v iI,
+                        iI :=  beta * vec_nth v iS * vec_nth v iI - gamma * vec_nth v iI,
+                        iR :=  gamma * vec_nth v iI))) \<tau> (y \<tau>))\<close>
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iS + vec_nth v iI + vec_nth v iR\<close>])
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
       apply (rule conjI, rule sum_deriv)
       apply (rule conjI, rule has_derivative_const)
@@ -782,11 +798,11 @@ proof -
 
   show ?thesis
     by (auto intro!: antisym 
-                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2\<close> and 
+                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v iS + vec_nth v iI + vec_nth v iR\<close> and 
                                    g = \<open>\<lambda>v. N\<close>,
                              OF iv_le y_sol induct_step_le t]
                      DI_Vect[where h = \<open>\<lambda>v. N\<close> and 
-                                   g = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 1 + vec_nth v 2\<close>,
+                                   g = \<open>\<lambda>v. vec_nth v iS + vec_nth v iI + vec_nth v iR\<close>,
                              OF iv_ge y_sol induct_step_ge t])
 qed
 
@@ -828,19 +844,22 @@ text \<open>
 
 text \<open>Conservation law 1: [A] + [C] = A\_total.\<close>
 lemma reversible_binding_A_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes k1 km1 :: real
+  fixes iA iB iC :: 'p
+  assumes coords: \<open>iA \<noteq> iB\<close> \<open>iA \<noteq> iC\<close> \<open>iB \<noteq> iC\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
-                                      0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                                      1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                                      2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))
+                                      iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                                      iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                                      iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))
                                     )) {0..t} UNIV\<close>
-      \<comment> \<open>Position 0: [A], position 1: [B], position 2: [C]\<close>
-  assumes iv: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 = A_total\<close>
+      \<comment> \<open>Coordinate iA: [A], coordinate iB: [B], coordinate iC: [C]\<close>
+  assumes iv: \<open>vec_nth (y 0) iA + vec_nth (y 0) iC = A_total\<close>
   assumes t: \<open>0 \<le> t\<close>
-  shows \<open>vec_nth (y t) 0 + vec_nth (y t) 2 = A_total\<close>
+  shows \<open>vec_nth (y t) iA + vec_nth (y t) iC = A_total\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY: Sandwich [A](t) + [C](t) at A_total via two DI_Vect 
      applications.  The Lie derivative cancels:
@@ -850,45 +869,45 @@ proof -
 
   (* Helper: Fréchet derivative of the sum \<lambda>v. v₀ + v₂ *)
   have deriv:
-    \<open>((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative 
-      (\<lambda>w. vec_nth w 0 + vec_nth w 2)) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iA + vec_nth v iC) has_derivative 
+      (\<lambda>w. vec_nth w iA + vec_nth w iC)) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
      SUB-PART 1: A_total \<le> [A](t) + [C](t)
      ------------------------------------------------------------------------ *)
 
-  have iv_ge: \<open>A_total \<le> vec_nth (y 0) 0 + vec_nth (y 0) 2\<close>
+  have iv_ge: \<open>A_total \<le> vec_nth (y 0) iA + vec_nth (y 0) iC\<close>
     using iv by simp
 
   have induct_step_ge:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. A_total) has_derivative Dh) (at (y \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iA + vec_nth v iC) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                       iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
+                       iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
     show \<open>\<exists>Dh Dg. ((\<lambda>v. A_total) has_derivative Dh) (at (y \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iA + vec_nth v iC) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                        iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
+                        iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 2\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iA + vec_nth v iC\<close>])
       apply (rule conjI, rule has_derivative_const)
       apply (rule conjI, rule deriv)
       apply (auto simp: fun_upd_def)
@@ -899,35 +918,35 @@ proof -
      SUB-PART 2: [A](t) + [C](t) \<le> A_total
      ------------------------------------------------------------------------ *)
 
-  have iv_le: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 \<le> A_total\<close>
+  have iv_le: \<open>vec_nth (y 0) iA + vec_nth (y 0) iC \<le> A_total\<close>
     using iv by simp
 
   have induct_step_le:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
-         \<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative Dh) (at (y \<tau>)) \<and>
+         \<exists>Dh Dg. ((\<lambda>v. vec_nth v iA + vec_nth v iC) has_derivative Dh) (at (y \<tau>)) \<and>
                  ((\<lambda>v. A_total) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                       iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
+                       iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
-    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative Dh) (at (y \<tau>)) \<and>
+    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v iA + vec_nth v iC) has_derivative Dh) (at (y \<tau>)) \<and>
                   ((\<lambda>v. A_total) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                        iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 2\<close>])
+                        iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>))\<close>
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iA + vec_nth v iC\<close>])
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
       apply (rule conjI, rule deriv)
       apply (rule conjI, rule has_derivative_const)
@@ -937,27 +956,30 @@ proof -
 
   show ?thesis
     by (auto intro!: antisym 
-                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 2\<close> and g = \<open>\<lambda>v. A_total\<close>,
+                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v iA + vec_nth v iC\<close> and g = \<open>\<lambda>v. A_total\<close>,
                              OF iv_le y_sol induct_step_le t]
-                     DI_Vect[where h = \<open>\<lambda>v. A_total\<close> and g = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 2\<close>,
+                     DI_Vect[where h = \<open>\<lambda>v. A_total\<close> and g = \<open>\<lambda>v. vec_nth v iA + vec_nth v iC\<close>,
                              OF iv_ge y_sol induct_step_ge t])
 qed
 
 text \<open>Conservation law 2: [B] + [C] = B\_total.\<close>
 lemma reversible_binding_B_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes k1 km1 :: real
+  fixes iA iB iC :: 'p
+  assumes coords: \<open>iA \<noteq> iB\<close> \<open>iA \<noteq> iC\<close> \<open>iB \<noteq> iC\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
-                                      0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                                      1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                                      2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))
+                                      iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                                      iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                                      iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))
                                     )) {0..t} UNIV\<close>
-      \<comment> \<open>Position 0: [A], position 1: [B], position 2: [C]\<close>
-  assumes iv: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 = B_total\<close>
+      \<comment> \<open>Coordinate iA: [A], coordinate iB: [B], coordinate iC: [C]\<close>
+  assumes iv: \<open>vec_nth (y 0) iB + vec_nth (y 0) iC = B_total\<close>
   assumes t: \<open>0 \<le> t\<close>
-  shows \<open>vec_nth (y t) 1 + vec_nth (y t) 2 = B_total\<close>
+  shows \<open>vec_nth (y t) iB + vec_nth (y t) iC = B_total\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY: Sandwich [B](t) + [C](t) at B_total via two DI_Vect 
      applications.  The Lie derivative cancels:
@@ -967,45 +989,45 @@ proof -
 
   (* Helper: Fr\<eacute>chet derivative of the sum \<lambda>v. v\<^sub>1 + v\<^sub>2*)
   have deriv:
-    \<open>((\<lambda>v. vec_nth v 1 + vec_nth v 2) has_derivative 
-      (\<lambda>w. vec_nth w 1 + vec_nth w 2)) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iB + vec_nth v iC) has_derivative 
+      (\<lambda>w. vec_nth w iB + vec_nth w iC)) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
      SUB-PART 1: B_total \<le> [B](t) + [C](t)
      ------------------------------------------------------------------------ *)
 
-  have iv_ge: \<open>B_total \<le> vec_nth (y 0) 1 + vec_nth (y 0) 2\<close>
+  have iv_ge: \<open>B_total \<le> vec_nth (y 0) iB + vec_nth (y 0) iC\<close>
     using iv by simp
 
   have induct_step_ge:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. B_total) has_derivative Dh) (at (y \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 1 + vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iB + vec_nth v iC) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                       iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
+                       iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
     show \<open>\<exists>Dh Dg. ((\<lambda>v. B_total) has_derivative Dh) (at (y \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 1 + vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iB + vec_nth v iC) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                        iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
+                        iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 1 + vec_nth v 2\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iB + vec_nth v iC\<close>])
       apply (rule conjI, rule has_derivative_const)
       apply (rule conjI, rule deriv)
       apply (auto simp: fun_upd_def)
@@ -1016,35 +1038,35 @@ proof -
      SUB-PART 2: [B](t) + [C](t) \<le> B_total
      ------------------------------------------------------------------------ *)
 
-  have iv_le: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 \<le> B_total\<close>
+  have iv_le: \<open>vec_nth (y 0) iB + vec_nth (y 0) iC \<le> B_total\<close>
     using iv by simp
 
   have induct_step_le:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
-         \<exists>Dh Dg. ((\<lambda>v. vec_nth v 1 + vec_nth v 2) has_derivative Dh) (at (y \<tau>)) \<and>
+         \<exists>Dh Dg. ((\<lambda>v. vec_nth v iB + vec_nth v iC) has_derivative Dh) (at (y \<tau>)) \<and>
                  ((\<lambda>v. B_total) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                       iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                       2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
+                       iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                       iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
-    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v 1 + vec_nth v 2) has_derivative Dh) (at (y \<tau>)) \<and>
+    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v iB + vec_nth v iC) has_derivative Dh) (at (y \<tau>)) \<and>
                   ((\<lambda>v. B_total) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>)) \<le>
+                        iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        1 := -k1 * vec_nth v 0 * vec_nth v 1 + km1 * vec_nth v 2,
-                        2 :=  k1 * vec_nth v 0 * vec_nth v 1 - km1 * vec_nth v 2))) \<tau> (y \<tau>))\<close>
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 1 + vec_nth v 2\<close>])
+                        iA := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iB := -k1 * vec_nth v iA * vec_nth v iB + km1 * vec_nth v iC,
+                        iC :=  k1 * vec_nth v iA * vec_nth v iB - km1 * vec_nth v iC))) \<tau> (y \<tau>))\<close>
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iB + vec_nth v iC\<close>])
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
       apply (rule conjI, rule deriv)
       apply (rule conjI, rule has_derivative_const)
@@ -1054,9 +1076,9 @@ proof -
 
   show ?thesis
     by (auto intro!: antisym 
-                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v 1 + vec_nth v 2\<close> and g = \<open>\<lambda>v. B_total\<close>,
+                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v iB + vec_nth v iC\<close> and g = \<open>\<lambda>v. B_total\<close>,
                              OF iv_le y_sol induct_step_le t]
-                     DI_Vect[where h = \<open>\<lambda>v. B_total\<close> and g = \<open>\<lambda>v. vec_nth v 1 + vec_nth v 2\<close>,
+                     DI_Vect[where h = \<open>\<lambda>v. B_total\<close> and g = \<open>\<lambda>v. vec_nth v iB + vec_nth v iC\<close>,
                              OF iv_ge y_sol induct_step_ge t])
 qed
 
@@ -1093,18 +1115,21 @@ text \<open>
 \<close>
 
 lemma dimerization_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes k1 km1 :: real
+  fixes iA iA2 :: 'p
+  assumes coords: \<open>iA \<noteq> iA2\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
-                                      0 := -2 * k1 * (vec_nth v 0)^2 + 2 * km1 * vec_nth v 1,
-                                      1 :=      k1 * (vec_nth v 0)^2 -     km1 * vec_nth v 1))
+                                      iA := -2 * k1 * (vec_nth v iA)^2 + 2 * km1 * vec_nth v iA2,
+                                      iA2 :=      k1 * (vec_nth v iA)^2 -     km1 * vec_nth v iA2))
                                     )) {0..t} UNIV\<close>
-      \<comment> \<open>Position 0: [A] (monomer), position 1: [A2] (dimer)\<close>
-  assumes iv: \<open>vec_nth (y 0) 0 + 2 * vec_nth (y 0) 1 = total0\<close>
+      \<comment> \<open>Coordinate iA: [A] (monomer), coordinate iA2: [A2] (dimer)\<close>
+  assumes iv: \<open>vec_nth (y 0) iA + 2 * vec_nth (y 0) iA2 = total0\<close>
   assumes t: \<open>0 \<le> t\<close>
-  shows \<open>vec_nth (y t) 0 + 2 * vec_nth (y t) 1 = total0\<close>
+  shows \<open>vec_nth (y t) iA + 2 * vec_nth (y t) iA2 = total0\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY: Sandwich [A](t) + 2\<sqdot>[A\<^sub>2](t) at total0 via two DI_Vect 
      applications.  The Lie derivative cancels:
@@ -1121,32 +1146,32 @@ proof -
      SUB-PART 1: total0 \<le> [A](t) + 2\<sqdot>[A\<^sub>2](t)
      ------------------------------------------------------------------------ *)
 
-  have iv_ge: \<open>total0 \<le> vec_nth (y 0) 0 + 2 * vec_nth (y 0) 1\<close>
+  have iv_ge: \<open>total0 \<le> vec_nth (y 0) iA + 2 * vec_nth (y 0) iA2\<close>
     using iv by simp
 
   have induct_step_ge:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. total0) has_derivative Dh) (at (y \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 0 + 2 * vec_nth v 1) has_derivative Dg) (at (y \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iA + 2 * vec_nth v iA2) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -2 * k1 * (vec_nth v 0)^2 + 2 * km1 * vec_nth v 1,
-                       1 :=      k1 * (vec_nth v 0)^2 -     km1 * vec_nth v 1))) \<tau> (y \<tau>))\<le>
+                       iA := -2 * k1 * (vec_nth v iA)^2 + 2 * km1 * vec_nth v iA2,
+                       iA2 :=      k1 * (vec_nth v iA)^2 -     km1 * vec_nth v iA2))) \<tau> (y \<tau>))\<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -2 * k1 * (vec_nth v 0)^2 + 2 * km1 * vec_nth v 1,
-                       1 :=      k1 * (vec_nth v 0)^2 -     km1 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                       iA := -2 * k1 * (vec_nth v iA)^2 + 2 * km1 * vec_nth v iA2,
+                       iA2 :=      k1 * (vec_nth v iA)^2 -     km1 * vec_nth v iA2))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
     show \<open>\<exists>Dh Dg. ((\<lambda>v. total0) has_derivative Dh) (at (y \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 0 + 2 * vec_nth v 1) has_derivative Dg) (at (y \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iA + 2 * vec_nth v iA2) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -2 * k1 * (vec_nth v 0)^2 + 2 * km1 * vec_nth v 1,
-                        1 :=      k1 * (vec_nth v 0)^2 -     km1 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                        iA := -2 * k1 * (vec_nth v iA)^2 + 2 * km1 * vec_nth v iA2,
+                        iA2 :=      k1 * (vec_nth v iA)^2 -     km1 * vec_nth v iA2))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -2 * k1 * (vec_nth v 0)^2 + 2 * km1 * vec_nth v 1,
-                        1 :=      k1 * (vec_nth v 0)^2 -     km1 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                        iA := -2 * k1 * (vec_nth v iA)^2 + 2 * km1 * vec_nth v iA2,
+                        iA2 :=      k1 * (vec_nth v iA)^2 -     km1 * vec_nth v iA2))) \<tau> (y \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 + 2 * vec_nth v 1\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iA + 2 * vec_nth v iA2\<close>])
       apply (rule conjI, rule has_derivative_const)
       apply (rule conjI, rule weighted_sum_has_derivative)
       apply (auto simp: power2_eq_square algebra_simps fun_upd_def)
@@ -1157,31 +1182,31 @@ proof -
      SUB-PART 2: [A](t) + 2\<sqdot>[A₂](t) \<le> total0
      ------------------------------------------------------------------------ *)
 
-  have iv_le: \<open>vec_nth (y 0) 0 + 2 * vec_nth (y 0) 1 \<le> total0\<close>
+  have iv_le: \<open>vec_nth (y 0) iA + 2 * vec_nth (y 0) iA2 \<le> total0\<close>
     using iv by simp
 
   have induct_step_le:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
-         \<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 + 2 * vec_nth v 1) has_derivative Dh) (at (y \<tau>)) \<and>
+         \<exists>Dh Dg. ((\<lambda>v. vec_nth v iA + 2 * vec_nth v iA2) has_derivative Dh) (at (y \<tau>)) \<and>
                  ((\<lambda>v. total0) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -2 * k1 * (vec_nth v 0)^2 + 2 * km1 * vec_nth v 1,
-                       1 :=      k1 * (vec_nth v 0)^2 -     km1 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                       iA := -2 * k1 * (vec_nth v iA)^2 + 2 * km1 * vec_nth v iA2,
+                       iA2 :=      k1 * (vec_nth v iA)^2 -     km1 * vec_nth v iA2))) \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := -2 * k1 * (vec_nth v 0)^2 + 2 * km1 * vec_nth v 1,
-                       1 :=      k1 * (vec_nth v 0)^2 -     km1 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                       iA := -2 * k1 * (vec_nth v iA)^2 + 2 * km1 * vec_nth v iA2,
+                       iA2 :=      k1 * (vec_nth v iA)^2 -     km1 * vec_nth v iA2))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
-    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 + 2 * vec_nth v 1) has_derivative Dh) (at (y \<tau>)) \<and>
+    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v iA + 2 * vec_nth v iA2) has_derivative Dh) (at (y \<tau>)) \<and>
                   ((\<lambda>v. total0) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -2 * k1 * (vec_nth v 0)^2 + 2 * km1 * vec_nth v 1,
-                        1 :=      k1 * (vec_nth v 0)^2 -     km1 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                        iA := -2 * k1 * (vec_nth v iA)^2 + 2 * km1 * vec_nth v iA2,
+                        iA2 :=      k1 * (vec_nth v iA)^2 -     km1 * vec_nth v iA2))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := -2 * k1 * (vec_nth v 0)^2 + 2 * km1 * vec_nth v 1,
-                        1 :=      k1 * (vec_nth v 0)^2 -     km1 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 + 2 * vec_nth v 1\<close>])
+                        iA := -2 * k1 * (vec_nth v iA)^2 + 2 * km1 * vec_nth v iA2,
+                        iA2 :=      k1 * (vec_nth v iA)^2 -     km1 * vec_nth v iA2))) \<tau> (y \<tau>))\<close>
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iA + 2 * vec_nth v iA2\<close>])
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
       apply (rule conjI, rule weighted_sum_has_derivative)
       apply (rule conjI, rule has_derivative_const)
@@ -1191,9 +1216,9 @@ proof -
 
   show ?thesis
     by (auto intro!: antisym 
-                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v 0 + 2 * vec_nth v 1\<close> and g = \<open>\<lambda>v. total0\<close>,
+                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v iA + 2 * vec_nth v iA2\<close> and g = \<open>\<lambda>v. total0\<close>,
                              OF iv_le y_sol induct_step_le t]
-                     DI_Vect[where h = \<open>\<lambda>v. total0\<close> and g = \<open>\<lambda>v. vec_nth v 0 + 2 * vec_nth v 1\<close>,
+                     DI_Vect[where h = \<open>\<lambda>v. total0\<close> and g = \<open>\<lambda>v. vec_nth v iA + 2 * vec_nth v iA2\<close>,
                              OF iv_ge y_sol induct_step_ge t])
 qed
 
@@ -1301,24 +1326,28 @@ text \<open>
     Conclude: A*g\textasciicircum{}2 >= 1 and g\textasciicircum{}2 >= 0 ==> A > 0
 \<close>
 lemma crn_simple_decay_positivity:
-  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes k :: real
+  fixes iA iG :: 'p
+      \<comment> \<open>iG is a spare coordinate for the ghost\<close>
+  assumes coords: \<open>iA \<noteq> iG\<close>
   assumes x_sol: \<open>(x solves_ode 
                     (\<lambda>t v. 
-                      vec_lambda ((\<lambda>k. 0)(0 := -k * (vec_nth v 0))))) {0..t} UNIV\<close>
-  assumes iv: \<open>vec_nth (x 0) 0 > (0::real)\<close>
+                      vec_lambda ((\<lambda>k. 0)(iA := -k * (vec_nth v iA))))) {0..t} UNIV\<close>
+  assumes iv: \<open>vec_nth (x 0) iA > (0::real)\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes k_pos: \<open>0 < k\<close>
-  shows \<open>0 < vec_nth (x t) 0\<close>
+  shows \<open>0 < vec_nth (x t) iA\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY
      
      To prove [A](t) > 0, we use the DG-then-DI pattern:
      
-       STAGE 1 (DG): Introduce a ghost species y at position 1 satisfying 
+       STAGE 1 (DG): Introduce a ghost species y at coordinate iG satisfying 
                      dy/dt = (k/2)\<sqdot>y with initial value y(0) = 1/sqrt([A](0)). 
-                     The combined trajectory ?z = x extended at index 1 
+                     The combined trajectory ?z = x extended at the ghost coordinate iG 
                      with y solves the extended ODE.
        
        STAGE 2 (DI): Prove the invariant 1 \<le> [A] \<sqdot> y² along the combined 
@@ -1332,7 +1361,7 @@ proof -
        STAGE 3 (algebra): Since [A] \<sqdot> y² \<ge> 1 and y² \<ge> 0, we get [A] > 0.
      ========================================================================== *)
 
-  define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) 0)\<close>
+  define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) iA)\<close>
 
   (* ==========================================================================
      STAGE 1: Apply DG to obtain the ghost-extended trajectory
@@ -1346,57 +1375,57 @@ proof -
   have b_cont: \<open>continuous_on {0..t} (\<lambda>\<tau>::real. 0)\<close>
     by (rule continuous_on_const)
 
-  (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at index 1 is zero *)
+  (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at the ghost coordinate iG is zero *)
   have gi_zero: \<open>\<And>\<tau> v. vec_nth ((\<lambda>t v.
-      vec_lambda ((\<lambda>k::4. 0)(0 := -k * (vec_nth v 0)))) \<tau> v) 1 = 0\<close>
+      vec_lambda ((\<lambda>k::'p. 0)(iA := -k * (vec_nth v iA)))) \<tau> v) iG = 0\<close>
     by (auto simp add: fun_upd_def)
 
   (* PROOF OBLIGATION DG.5 (gi_fresh): the vector field doesn't depend on the ghost index *)
   have gi_fresh: 
-    \<open>\<And>\<tau> v w::(real, 4) vec. (\<forall>i. i \<noteq> 1 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
-                             (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(0 := -k * (vec_nth v 0)))) \<tau> v = 
-                             (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(0 := -k * (vec_nth v 0)))) \<tau> w\<close>
+    \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
+                             (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(iA := -k * (vec_nth v iA)))) \<tau> v = 
+                             (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(iA := -k * (vec_nth v iA)))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 4) vec\<close>
-    assume eq: \<open>\<forall>i. i \<noteq> 1 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
-    have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
-    show \<open>(\<lambda>t v. vec_lambda ((\<lambda>k. 0)(0 := -k * (vec_nth v 0)))) \<tau> v =
-          (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(0 := -k * (vec_nth v 0)))) \<tau> w\<close>
+    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    assume eq: \<open>\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i\<close>
+    have v0: \<open>vec_nth v iA = vec_nth w iA\<close> using eq by simp
+    show \<open>(\<lambda>t v. vec_lambda ((\<lambda>k. 0)(iA := -k * (vec_nth v iA)))) \<tau> v =
+          (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(iA := -k * (vec_nth v iA)))) \<tau> w\<close>
       using v0 
       by (simp add: vec_eq_iff fun_upd_def)
   qed
 
   (* APPLY DG: obtain a ghost trajectory y satisfying dy/dt = (k/2)\<sqdot>y + 0 *)
   have dg_result: \<open>\<exists> y. y 0 = y0 \<and>
-      (((\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i)(1 := y \<tau>))) solves_ode
-         (\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(0 := -k * (vec_nth v 0))) +
-                vec_lambda ((\<lambda>i. 0)(1 := (k/2) * vec_nth v 1 + 0))))
+      (((\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i)(iG := y \<tau>))) solves_ode
+         (\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(iA := -k * (vec_nth v iA))) +
+                vec_lambda ((\<lambda>i. 0)(iG := (k/2) * vec_nth v iG + 0))))
          {0..t} UNIV)\<close>
-    using DG[where a = \<open>\<lambda>\<tau>. k/2\<close> and b = \<open>\<lambda>\<tau>. 0\<close> and ?y0.0 = y0 and gi = 1,
+    using DG[where a = \<open>\<lambda>\<tau>. k/2\<close> and b = \<open>\<lambda>\<tau>. 0\<close> and ?y0.0 = y0 and gi = iG,
              OF x_sol a_cont b_cont gi_zero gi_fresh] .
 
   then obtain y where 
     y_init: \<open>y 0 = y0\<close> and
     combined_sol: 
-      \<open>((\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i)(1 := y \<tau>))) solves_ode
-         (\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(0 := -k * (vec_nth v 0))) +
-                vec_lambda ((\<lambda>i. 0)(1 := (k/2) * vec_nth v 1 + 0))))
+      \<open>((\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i)(iG := y \<tau>))) solves_ode
+         (\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(iA := -k * (vec_nth v iA))) +
+                vec_lambda ((\<lambda>i. 0)(iG := (k/2) * vec_nth v iG + 0))))
          {0..t} UNIV\<close>
     by auto
 
-  let ?z = \<open>\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i)(1 := y \<tau>))\<close>
+  let ?z = \<open>\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i)(iG := y \<tau>))\<close>
 
   (* Helper: Fréchet derivative of [A] \<sqdot> y² (product rule) *)
   have xg2_has_derivative:
-    \<open>((\<lambda>v. vec_nth v 0 * (vec_nth v 1)^2) has_derivative 
-      (\<lambda>v. vec_nth v 0 * (vec_nth p 1)^2 + 
-           vec_nth p 0 * (2 * vec_nth p 1 * vec_nth v 1))) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iA * (vec_nth v iG)^2) has_derivative 
+      (\<lambda>v. vec_nth v iA * (vec_nth p iG)^2 + 
+           vec_nth p iA * (2 * vec_nth p iG * vec_nth v iG))) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
   proof -
-    have f: \<open>((\<lambda>v. vec_nth v 0) has_derivative (\<lambda>v. vec_nth v 0)) (at p)\<close>
+    have f: \<open>((\<lambda>v. vec_nth v iA) has_derivative (\<lambda>v. vec_nth v iA)) (at p)\<close>
       by (rule has_derivative_vec_nth)
-    have g: \<open>((\<lambda>v. (vec_nth v 1)^2) has_derivative 
-        (\<lambda>v. 2 * vec_nth p 1 * vec_nth v 1)) (at p)\<close>
+    have g: \<open>((\<lambda>v. (vec_nth v iG)^2) has_derivative 
+        (\<lambda>v. 2 * vec_nth p iG * vec_nth v iG)) (at p)\<close>
       by (rule component_sq_has_derivative)
     show ?thesis
       using has_derivative_mult[OF f g] 
@@ -1408,7 +1437,7 @@ proof -
      ========================================================================== *)
 
   (* PROOF OBLIGATION DI.1 (iv): initial condition 1 \<le> [A](0) \<sqdot> y(0)² *)
-  have iv_ineq: \<open>1 \<le> vec_nth (?z 0) 0 * (vec_nth (?z 0) 1)^2\<close>
+  have iv_ineq: \<open>1 \<le> vec_nth (?z 0) iA * (vec_nth (?z 0) iG)^2\<close>
     using iv
     by (simp add: y0_def y_init field_simps power2_eq_square fun_upd_def)
 
@@ -1416,23 +1445,23 @@ proof -
   have induct_step:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 0 * (vec_nth v 1)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
-                 Dh ((\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(0 := -k * (vec_nth v 0))) +
-                            vec_lambda ((\<lambda>i. 0)(1 := (k/2) * vec_nth v 1 + 0))) \<tau> (?z \<tau>)) \<le>
-                 Dg ((\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(0 := -k * (vec_nth v 0))) +
-                            vec_lambda ((\<lambda>i. 0)(1 := (k/2) * vec_nth v 1 + 0))) \<tau> (?z \<tau>))\<close>
+                 ((\<lambda>v. vec_nth v iA * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
+                 Dh ((\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(iA := -k * (vec_nth v iA))) +
+                            vec_lambda ((\<lambda>i. 0)(iG := (k/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
+                 Dg ((\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(iA := -k * (vec_nth v iA))) +
+                            vec_lambda ((\<lambda>i. 0)(iG := (k/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
     show \<open>\<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 0 * (vec_nth v 1)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
-                  Dh ((\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(0 := -k * (vec_nth v 0))) +
-                             vec_lambda ((\<lambda>i. 0)(1 := (k/2) * vec_nth v 1 + 0))) \<tau> (?z \<tau>)) \<le>
-                  Dg ((\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(0 := -k * (vec_nth v 0))) +
-                             vec_lambda ((\<lambda>i. 0)(1 := (k/2) * vec_nth v 1 + 0))) \<tau> (?z \<tau>))\<close>
+                  ((\<lambda>v. vec_nth v iA * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
+                  Dh ((\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(iA := -k * (vec_nth v iA))) +
+                             vec_lambda ((\<lambda>i. 0)(iG := (k/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
+                  Dg ((\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(iA := -k * (vec_nth v iA))) +
+                             vec_lambda ((\<lambda>i. 0)(iG := (k/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 * (vec_nth (?z \<tau>) 1)^2 + 
-                                     vec_nth (?z \<tau>) 0 * (2 * vec_nth (?z \<tau>) 1 * vec_nth v 1)\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iA * (vec_nth (?z \<tau>) iG)^2 + 
+                                     vec_nth (?z \<tau>) iA * (2 * vec_nth (?z \<tau>) iG * vec_nth v iG)\<close>])
       apply (rule conjI, rule has_derivative_const)
       apply (rule conjI, rule xg2_has_derivative)
       apply (auto simp add: power2_eq_square fun_upd_def)
@@ -1440,22 +1469,22 @@ proof -
   qed
 
   (* APPLY DI_Vect: we get the invariant 1 \<le> [A] \<sqdot> y² at time t *)
-  have ineq: \<open>1 \<le> vec_nth (?z t) 0 * (vec_nth (?z t) 1)^2\<close>
-    using DI_Vect[where h = \<open>\<lambda>v. 1\<close> and g = \<open>\<lambda>v. vec_nth v 0 * (vec_nth v 1)^2\<close>,
+  have ineq: \<open>1 \<le> vec_nth (?z t) iA * (vec_nth (?z t) iG)^2\<close>
+    using DI_Vect[where h = \<open>\<lambda>v. 1\<close> and g = \<open>\<lambda>v. vec_nth v iA * (vec_nth v iG)^2\<close>,
                   OF iv_ineq combined_sol induct_step t] .
 
   (* ==========================================================================
      STAGE 3: From [A](t) \<sqdot> y(t)² \<ge> 1 and y(t)² \<ge> 0, conclude [A](t) > 0
      ========================================================================== *)
-  show \<open>0 < vec_nth (x t) 0\<close>
+  show \<open>0 < vec_nth (x t) iA\<close>
   proof -
-    have z_eq_x: \<open>vec_nth (?z t) 0 = vec_nth (x t) 0\<close> by simp
-    have y_sq_nn: \<open>0 \<le> (vec_nth (?z t) 1)^2\<close> by simp
-    have prod_ge_1: \<open>1 \<le> vec_nth (?z t) 0 * (vec_nth (?z t) 1)^2\<close>
+    have z_eq_x: \<open>vec_nth (?z t) iA = vec_nth (x t) iA\<close> by simp
+    have y_sq_nn: \<open>0 \<le> (vec_nth (?z t) iG)^2\<close> by simp
+    have prod_ge_1: \<open>1 \<le> vec_nth (?z t) iA * (vec_nth (?z t) iG)^2\<close>
       using ineq by simp
     show ?thesis
       using z_eq_x y_sq_nn prod_ge_1
-      apply (cases \<open>vec_nth (x t) 0 \<le> 0\<close>) 
+      apply (cases \<open>vec_nth (x t) iA \<le> 0\<close>) 
        apply (auto simp: mult_le_0_iff)
       apply (metis approximation_preproc_push_neg(1) le_less_trans 
                    power2_less_0 zero_compare_simps(6) zero_less_one)
@@ -1522,24 +1551,27 @@ text \<open>
 
 
 lemma crn_min_X_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes k :: real
+  fixes iX iY iZ :: 'p
+  assumes coords: \<open>iX \<noteq> iY\<close> \<open>iX \<noteq> iZ\<close> \<open>iY \<noteq> iZ\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                    vec_lambda ((\<lambda>i. 0)
-                                               (0 := -k * vec_nth v 0 * vec_nth v 1,
-                                                1 := -k * vec_nth v 0 * vec_nth v 1,
-                                                2 :=  k * vec_nth v 0 * vec_nth v 1))
+                                               (iX := -k * vec_nth v iX * vec_nth v iY,
+                                                iY := -k * vec_nth v iX * vec_nth v iY,
+                                                iZ :=  k * vec_nth v iX * vec_nth v iY))
                                    )) {0..t} UNIV\<close>
-      \<comment> \<open>Position 0: [X], position 1: [Y], position 2: [Z].
+      \<comment> \<open>Coordinate iX: [X], coordinate iY: [Y], coordinate iZ: [Z].
          d[X]/dt = -k*[X]*[Y];
          d[Y]/dt = -k*[X]*[Y];
          d[Z]/dt = k*[X]*[Y]\<close>
-  assumes iv: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 = x0\<close>
+  assumes iv: \<open>vec_nth (y 0) iX + vec_nth (y 0) iZ = x0\<close>
       \<comment> \<open>Initially: [X](0) + [Z](0) = x0\<close>
   assumes t: \<open>0 \<le> t\<close>
-  shows \<open>vec_nth (y t) 0 + vec_nth (y t) 2 = x0\<close>
+  shows \<open>vec_nth (y t) iX + vec_nth (y t) iZ = x0\<close>
       \<comment> \<open>Conclusion: [X](t) + [Z](t) = x0 for all t >= 0\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY: Sandwich [X](t) + [Z](t) at x0 via TWO DI_Vect applications.
      
@@ -1558,9 +1590,9 @@ proof -
 
   (* Helper: Fréchet derivative of the sum \<lambda>v. v\<^sub>1+ v\<^sub>2*)
   have sum_deriv:
-    \<open>((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative 
-      (\<lambda>w. vec_nth w 0 + vec_nth w 2)) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iX + vec_nth v iZ) has_derivative 
+      (\<lambda>w. vec_nth w iX + vec_nth w iZ)) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
@@ -1568,38 +1600,38 @@ proof -
      ------------------------------------------------------------------------ *)
 
   (* PROOF OBLIGATION 1.1 (iv): initial condition x0 \<le> [X](0) + [Z](0) *)
-  have iv_ge: \<open>x0 \<le> vec_nth (y 0) 0 + vec_nth (y 0) 2\<close>
+  have iv_ge: \<open>x0 \<le> vec_nth (y 0) iX + vec_nth (y 0) iZ\<close>
     using iv by simp
 
   (* PROOF OBLIGATION 1.2 (induct_step): derivative check Dh(VelVect) \<le> Dg(VelVect) *)
   have induct_step_ge:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. x0) has_derivative Dh) (at (y \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iX + vec_nth v iZ) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. 
                          vec_lambda ((\<lambda>i. 0)
-                                     (0 := -k * vec_nth v 0 * vec_nth v 1,
-                                      1 := -k * vec_nth v 0 * vec_nth v 1,
-                                      2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                                     (iX := -k * vec_nth v iX * vec_nth v iY,
+                                      iY := -k * vec_nth v iX * vec_nth v iY,
+                                      iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)
-                                        (0 := -k * vec_nth v 0 * vec_nth v 1,
-                                         1 := -k * vec_nth v 0 * vec_nth v 1,
-                                         2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                                        (iX := -k * vec_nth v iX * vec_nth v iY,
+                                         iY := -k * vec_nth v iX * vec_nth v iY,
+                                         iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
     show \<open>\<exists>Dh Dg. ((\<lambda>v. x0) has_derivative Dh) (at (y \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iX + vec_nth v iZ) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                        0 := -k * vec_nth v 0 * vec_nth v 1,
-                        1 := -k * vec_nth v 0 * vec_nth v 1,
-                        2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                        iX := -k * vec_nth v iX * vec_nth v iY,
+                        iY := -k * vec_nth v iX * vec_nth v iY,
+                        iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                        0 := -k * vec_nth v 0 * vec_nth v 1,
-                        1 := -k * vec_nth v 0 * vec_nth v 1,
-                        2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                        iX := -k * vec_nth v iX * vec_nth v iY,
+                        iY := -k * vec_nth v iX * vec_nth v iY,
+                        iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 2\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iX + vec_nth v iZ\<close>])
       apply (rule conjI, rule has_derivative_const)
       apply (rule conjI, rule sum_deriv)
       apply (auto simp: fun_upd_def)
@@ -1611,36 +1643,36 @@ proof -
      ------------------------------------------------------------------------ *)
 
   (* PROOF OBLIGATION 2.1 (iv): initial condition [X](0) + [Z](0) \<le> x0 *)
-  have iv_le: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 \<le> x0\<close>
+  have iv_le: \<open>vec_nth (y 0) iX + vec_nth (y 0) iZ \<le> x0\<close>
     using iv by simp
 
   (* PROOF OBLIGATION 2.2 (induct_step): derivative check Dh(VelVect) \<le> Dg(VelVect) *)
   have induct_step_le:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
-         \<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative Dh) (at (y \<tau>)) \<and>
+         \<exists>Dh Dg. ((\<lambda>v. vec_nth v iX + vec_nth v iZ) has_derivative Dh) (at (y \<tau>)) \<and>
                  ((\<lambda>v. x0) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)
-                                        (0 := -k * vec_nth v 0 * vec_nth v 1,
-                                         1 := -k * vec_nth v 0 * vec_nth v 1,
-                                         2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<le>
+                                        (iX := -k * vec_nth v iX * vec_nth v iY,
+                                         iY := -k * vec_nth v iX * vec_nth v iY,
+                                         iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>))\<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)
-                                        (0 := -k * vec_nth v 0 * vec_nth v 1,
-                                         1 := -k * vec_nth v 0 * vec_nth v 1,
-                                         2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                                        (iX := -k * vec_nth v iX * vec_nth v iY,
+                                         iY := -k * vec_nth v iX * vec_nth v iY,
+                                         iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
-    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 + vec_nth v 2) has_derivative Dh) (at (y \<tau>)) \<and>
+    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v iX + vec_nth v iZ) has_derivative Dh) (at (y \<tau>)) \<and>
                   ((\<lambda>v. x0) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                        0 := -k * vec_nth v 0 * vec_nth v 1,
-                        1 := -k * vec_nth v 0 * vec_nth v 1,
-                        2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                        iX := -k * vec_nth v iX * vec_nth v iY,
+                        iY := -k * vec_nth v iX * vec_nth v iY,
+                        iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                        0 := -k * vec_nth v 0 * vec_nth v 1,
-                        1 := -k * vec_nth v 0 * vec_nth v 1,
-                        2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 2\<close>])
+                        iX := -k * vec_nth v iX * vec_nth v iY,
+                        iY := -k * vec_nth v iX * vec_nth v iY,
+                        iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>))\<close>
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iX + vec_nth v iZ\<close>])
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
       apply (rule conjI, rule sum_deriv)
       apply (rule conjI, rule has_derivative_const)
@@ -1653,29 +1685,32 @@ proof -
      ------------------------------------------------------------------------ *)
   show ?thesis
     by (auto intro!: antisym 
-                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 2\<close> and g = \<open>\<lambda>v. x0\<close>,
+                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v iX + vec_nth v iZ\<close> and g = \<open>\<lambda>v. x0\<close>,
                              OF iv_le y_sol induct_step_le t]
-                     DI_Vect[where h = \<open>\<lambda>v. x0\<close> and g = \<open>\<lambda>v. vec_nth v 0 + vec_nth v 2\<close>,
+                     DI_Vect[where h = \<open>\<lambda>v. x0\<close> and g = \<open>\<lambda>v. vec_nth v iX + vec_nth v iZ\<close>,
                              OF iv_ge y_sol induct_step_ge t])
 qed
 
 
 text \<open>Conservation law 2: [Y](t) + [Z](t) = y0.\<close>
 lemma crn_min_Y_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes k :: real
+  fixes iX iY iZ :: 'p
+  assumes coords: \<open>iX \<noteq> iY\<close> \<open>iX \<noteq> iZ\<close> \<open>iY \<noteq> iZ\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                    vec_lambda ((\<lambda>i. 0)(
-                                     0 := -k * vec_nth v 0 * vec_nth v 1,
-                                     1 := -k * vec_nth v 0 * vec_nth v 1,
-                                     2 :=  k * vec_nth v 0 * vec_nth v 1))
+                                     iX := -k * vec_nth v iX * vec_nth v iY,
+                                     iY := -k * vec_nth v iX * vec_nth v iY,
+                                     iZ :=  k * vec_nth v iX * vec_nth v iY))
                                    )) {0..t} UNIV\<close>
-  assumes iv: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 = y0\<close>
+  assumes iv: \<open>vec_nth (y 0) iY + vec_nth (y 0) iZ = y0\<close>
       \<comment> \<open>Initially: [Y](0) + [Z](0) = y0\<close>
   assumes t: \<open>0 \<le> t\<close>
-  shows \<open>vec_nth (y t) 1 + vec_nth (y t) 2 = y0\<close>
+  shows \<open>vec_nth (y t) iY + vec_nth (y t) iZ = y0\<close>
       \<comment> \<open>Conclusion: [Y](t) + [Z](t) = y0 for all t >= 0\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY: Sandwich [Y](t) + [Z](t) at y0 via two DI_Vect applications.
      
@@ -1688,9 +1723,9 @@ proof -
 
   (* Helper: Fréchet derivative of the sum \<lambda>v. v\<^sub>1+ v\<^sub>2*)
   have sum_deriv:
-    \<open>((\<lambda>v. vec_nth v 1 + vec_nth v 2) has_derivative 
-      (\<lambda>w. vec_nth w 1 + vec_nth w 2)) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iY + vec_nth v iZ) has_derivative 
+      (\<lambda>w. vec_nth w iY + vec_nth w iZ)) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
     by (intro has_derivative_add has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
@@ -1698,37 +1733,37 @@ proof -
      ------------------------------------------------------------------------ *)
 
   (* PROOF OBLIGATION 1.1 (iv): initial condition y0 \<le> [Y](0) + [Z](0) *)
-  have iv_ge: \<open>y0 \<le> vec_nth (y 0) 1 + vec_nth (y 0) 2\<close>
+  have iv_ge: \<open>y0 \<le> vec_nth (y 0) iY + vec_nth (y 0) iZ\<close>
     using iv by simp
 
   (* PROOF OBLIGATION 1.2 (induct_step): derivative check Dh(VelVect) \<le> Dg(VelVect) *)
   have induct_step_ge:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. y0) has_derivative Dh) (at (y \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 1 + vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iY + vec_nth v iZ) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                       0 := -k * vec_nth v 0 * vec_nth v 1,
-                       1 := -k * vec_nth v 0 * vec_nth v 1,
-                       2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                       iX := -k * vec_nth v iX * vec_nth v iY,
+                       iY := -k * vec_nth v iX * vec_nth v iY,
+                       iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                       0 := -k * vec_nth v 0 * vec_nth v 1,
-                       1 := -k * vec_nth v 0 * vec_nth v 1,
-                       2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                       iX := -k * vec_nth v iX * vec_nth v iY,
+                       iY := -k * vec_nth v iX * vec_nth v iY,
+                       iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
     show \<open>\<exists>Dh Dg. ((\<lambda>v. y0) has_derivative Dh) (at (y \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 1 + vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iY + vec_nth v iZ) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                        0 := -k * vec_nth v 0 * vec_nth v 1,
-                        1 := -k * vec_nth v 0 * vec_nth v 1,
-                        2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                        iX := -k * vec_nth v iX * vec_nth v iY,
+                        iY := -k * vec_nth v iX * vec_nth v iY,
+                        iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                        0 := -k * vec_nth v 0 * vec_nth v 1,
-                        1 := -k * vec_nth v 0 * vec_nth v 1,
-                        2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                        iX := -k * vec_nth v iX * vec_nth v iY,
+                        iY := -k * vec_nth v iX * vec_nth v iY,
+                        iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 1 + vec_nth v 2\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iY + vec_nth v iZ\<close>])
       apply (rule conjI, rule has_derivative_const)
       apply (rule conjI, rule sum_deriv)
       apply (auto simp: fun_upd_def)
@@ -1740,36 +1775,36 @@ proof -
      ------------------------------------------------------------------------ *)
 
   (* PROOF OBLIGATION 2.1 (iv): initial condition [Y](0) + [Z](0) \<le> y0 *)
-  have iv_le: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 \<le> y0\<close>
+  have iv_le: \<open>vec_nth (y 0) iY + vec_nth (y 0) iZ \<le> y0\<close>
     using iv by simp
 
   (* PROOF OBLIGATION 2.2 (induct_step): derivative check Dh(VelVect) \<le> Dg(VelVect) *)
   have induct_step_le:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
-         \<exists>Dh Dg. ((\<lambda>v. vec_nth v 1 + vec_nth v 2) has_derivative Dh) (at (y \<tau>)) \<and>
+         \<exists>Dh Dg. ((\<lambda>v. vec_nth v iY + vec_nth v iZ) has_derivative Dh) (at (y \<tau>)) \<and>
                  ((\<lambda>v. y0) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                        0 := -k * vec_nth v 0 * vec_nth v 1,
-                        1 := -k * vec_nth v 0 * vec_nth v 1,
-                        2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                        iX := -k * vec_nth v iX * vec_nth v iY,
+                        iY := -k * vec_nth v iX * vec_nth v iY,
+                        iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                        0 := -k * vec_nth v 0 * vec_nth v 1,
-                        1 := -k * vec_nth v 0 * vec_nth v 1,
-                        2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                        iX := -k * vec_nth v iX * vec_nth v iY,
+                        iY := -k * vec_nth v iX * vec_nth v iY,
+                        iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
-    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v 1 + vec_nth v 2) has_derivative Dh) (at (y \<tau>)) \<and>
+    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v iY + vec_nth v iZ) has_derivative Dh) (at (y \<tau>)) \<and>
                   ((\<lambda>v. y0) has_derivative Dg) (at (y \<tau>)) \<and>
                    Dh ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                         0 := -k * vec_nth v 0 * vec_nth v 1,
-                         1 := -k * vec_nth v 0 * vec_nth v 1,
-                         2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                         iX := -k * vec_nth v iX * vec_nth v iY,
+                         iY := -k * vec_nth v iX * vec_nth v iY,
+                         iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>)) \<le>
                    Dg ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                         0 := -k * vec_nth v 0 * vec_nth v 1,
-                         1 := -k * vec_nth v 0 * vec_nth v 1,
-                         2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 1 + vec_nth v 2\<close>])
+                         iX := -k * vec_nth v iX * vec_nth v iY,
+                         iY := -k * vec_nth v iX * vec_nth v iY,
+                         iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>))\<close>
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iY + vec_nth v iZ\<close>])
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
       apply (rule conjI, rule sum_deriv)
       apply (rule conjI, rule has_derivative_const)
@@ -1782,26 +1817,29 @@ proof -
      ------------------------------------------------------------------------ *)
   show ?thesis
     by (auto intro!: antisym 
-                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v 1 + vec_nth v 2\<close> and g = \<open>\<lambda>v. y0\<close>,
+                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v iY + vec_nth v iZ\<close> and g = \<open>\<lambda>v. y0\<close>,
                              OF iv_le y_sol induct_step_le t]
-                     DI_Vect[where h = \<open>\<lambda>v. y0\<close> and g = \<open>\<lambda>v. vec_nth v 1 + vec_nth v 2\<close>,
+                     DI_Vect[where h = \<open>\<lambda>v. y0\<close> and g = \<open>\<lambda>v. vec_nth v iY + vec_nth v iZ\<close>,
                              OF iv_ge y_sol induct_step_ge t])
 qed
 
 lemma crn_min_difference_preserved:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes k :: real
+  fixes iX iY iZ :: 'p
+  assumes coords: \<open>iX \<noteq> iY\<close> \<open>iX \<noteq> iZ\<close> \<open>iY \<noteq> iZ\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                    vec_lambda ((\<lambda>i. 0)(
-                                     0 := -k * vec_nth v 0 * vec_nth v 1,
-                                     1 := -k * vec_nth v 0 * vec_nth v 1,
-                                     2 :=  k * vec_nth v 0 * vec_nth v 1))
+                                     iX := -k * vec_nth v iX * vec_nth v iY,
+                                     iY := -k * vec_nth v iX * vec_nth v iY,
+                                     iZ :=  k * vec_nth v iX * vec_nth v iY))
                                    )) {0..t} UNIV\<close>
-  assumes iv_x: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 = x0\<close>
-  assumes iv_y: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 = y0\<close>
+  assumes iv_x: \<open>vec_nth (y 0) iX + vec_nth (y 0) iZ = x0\<close>
+  assumes iv_y: \<open>vec_nth (y 0) iY + vec_nth (y 0) iZ = y0\<close>
   assumes t: \<open>0 \<le> t\<close>
-  shows \<open>vec_nth (y t) 0 - vec_nth (y t) 1 = x0 - y0\<close>
+  shows \<open>vec_nth (y t) iX - vec_nth (y t) iY = x0 - y0\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY: Compose the two conservation lemmas.
      
@@ -1814,10 +1852,10 @@ proof -
      finished by linarith.
      ========================================================================== *)
 
-  have x_conservation: \<open>vec_nth (y t) 0 + vec_nth (y t) 2 = x0\<close>
-    using crn_min_X_conservation[OF y_sol iv_x t] .
-  have y_conservation: \<open>vec_nth (y t) 1 + vec_nth (y t) 2 = y0\<close>
-    using crn_min_Y_conservation[OF y_sol iv_y t] .
+  have x_conservation: \<open>vec_nth (y t) iX + vec_nth (y t) iZ = x0\<close>
+    using crn_min_X_conservation[OF coords y_sol iv_x t] .
+  have y_conservation: \<open>vec_nth (y t) iY + vec_nth (y t) iZ = y0\<close>
+    using crn_min_Y_conservation[OF coords y_sol iv_y t] .
   show ?thesis
     using x_conservation y_conservation 
     by linarith
@@ -1934,22 +1972,25 @@ text \<open>
 \<close>
 
 lemma toggle_switch_difference_conservation:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes \<alpha> \<beta> :: real
+  fixes iU iV :: 'p
+  assumes coords: \<open>iU \<noteq> iV\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
-                                      0 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1,
-                                      1 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1))
+                                      iU := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV,
+                                      iV := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV))
                                     )) {0..t} UNIV\<close>
-      \<comment> \<open>Symmetric toggle switch without degradation, u at position 0 and v at position 1:
+      \<comment> \<open>Symmetric toggle switch without degradation, u at coordinate iU and v at coordinate iV:
          du/dt = alpha - beta*u*v;
          dv/dt = alpha - beta*u*v\<close>
-  assumes iv: \<open>vec_nth (y 0) 0 - vec_nth (y 0) 1 = c\<close>
+  assumes iv: \<open>vec_nth (y 0) iU - vec_nth (y 0) iV = c\<close>
       \<comment> \<open>Initial difference: c = u(0) - v(0)\<close>
   assumes t: \<open>0 \<le> t\<close>
-  shows \<open>vec_nth (y t) 0 - vec_nth (y t) 1 = c\<close>
+  shows \<open>vec_nth (y t) iU - vec_nth (y t) iV = c\<close>
       \<comment> \<open>Conclusion: the difference u(t) - v(t) is preserved\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY: Sandwich u(t) - v(t) at c via two DI_Vect applications.
      
@@ -1962,9 +2003,9 @@ proof -
 
   (* Helper: Fréchet derivative of the difference \<lambda>v. v₀ - v₁ *)
   have diff_deriv:
-    \<open>((\<lambda>v. vec_nth v 0 - vec_nth v 1) has_derivative 
-      (\<lambda>w. vec_nth w 0 - vec_nth w 1)) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iU - vec_nth v iV) has_derivative 
+      (\<lambda>w. vec_nth w iU - vec_nth w iV)) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
     by (intro has_derivative_diff has_derivative_vec_nth)
 
   (* ------------------------------------------------------------------------
@@ -1972,33 +2013,33 @@ proof -
      ------------------------------------------------------------------------ *)
 
   (* PROOF OBLIGATION 1.1 (iv): initial condition c \<le> u(0) - v(0) *)
-  have iv_ge: \<open>c \<le> vec_nth (y 0) 0 - vec_nth (y 0) 1\<close>
+  have iv_ge: \<open>c \<le> vec_nth (y 0) iU - vec_nth (y 0) iV\<close>
     using iv by simp
 
   (* PROOF OBLIGATION 1.2 (induct_step): derivative check Dh(VelVect) \<le> Dg(VelVect) *)
   have induct_step_ge:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. c) has_derivative Dh) (at (y \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 0 - vec_nth v 1) has_derivative Dg) (at (y \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iU - vec_nth v iV) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1,
-                       1 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                       iU := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV,
+                       iV := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV))) \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1,
-                       1 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                       iU := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV,
+                       iV := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
     show \<open>\<exists>Dh Dg. ((\<lambda>v. c) has_derivative Dh) (at (y \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 0 - vec_nth v 1) has_derivative Dg) (at (y \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iU - vec_nth v iV) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1,
-                        1 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                        iU := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV,
+                        iV := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1,
-                        1 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                        iU := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV,
+                        iV := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV))) \<tau> (y \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 - vec_nth v 1\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iU - vec_nth v iV\<close>])
       apply (rule conjI, rule has_derivative_const)
       apply (rule conjI, rule diff_deriv)
       apply (auto simp: fun_upd_def)
@@ -2010,32 +2051,32 @@ proof -
      ------------------------------------------------------------------------ *)
 
   (* PROOF OBLIGATION 2.1 (iv): initial condition u(0) - v(0) \<le> c *)
-  have iv_le: \<open>vec_nth (y 0) 0 - vec_nth (y 0) 1 \<le> c\<close>
+  have iv_le: \<open>vec_nth (y 0) iU - vec_nth (y 0) iV \<le> c\<close>
     using iv by simp
 
   (* PROOF OBLIGATION 2.2 (induct_step): derivative check Dh(VelVect) \<le> Dg(VelVect) *)
   have induct_step_le:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
-         \<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 - vec_nth v 1) has_derivative Dh) (at (y \<tau>)) \<and>
+         \<exists>Dh Dg. ((\<lambda>v. vec_nth v iU - vec_nth v iV) has_derivative Dh) (at (y \<tau>)) \<and>
                  ((\<lambda>v. c) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1,
-                       1 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                       iU := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV,
+                       iV := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV))) \<tau> (y \<tau>)) \<le>
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                       0 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1,
-                       1 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                       iU := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV,
+                       iV := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
-    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 - vec_nth v 1) has_derivative Dh) (at (y \<tau>)) \<and>
+    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v iU - vec_nth v iV) has_derivative Dh) (at (y \<tau>)) \<and>
                   ((\<lambda>v. c) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1,
-                        1 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                        iU := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV,
+                        iV := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                        0 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1,
-                        1 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 - vec_nth v 1\<close>])
+                        iU := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV,
+                        iV := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV))) \<tau> (y \<tau>))\<close>
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iU - vec_nth v iV\<close>])
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
       apply (rule conjI, rule diff_deriv)
       apply (rule conjI, rule has_derivative_const)
@@ -2048,9 +2089,9 @@ proof -
      ------------------------------------------------------------------------ *)
   show ?thesis
     by (auto intro!: antisym 
-                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v 0 - vec_nth v 1\<close> and g = \<open>\<lambda>v. c\<close>,
+                     DI_Vect[where h = \<open>\<lambda>v. vec_nth v iU - vec_nth v iV\<close> and g = \<open>\<lambda>v. c\<close>,
                              OF iv_le y_sol induct_step_le t]
-                     DI_Vect[where h = \<open>\<lambda>v. c\<close> and g = \<open>\<lambda>v. vec_nth v 0 - vec_nth v 1\<close>,
+                     DI_Vect[where h = \<open>\<lambda>v. c\<close> and g = \<open>\<lambda>v. vec_nth v iU - vec_nth v iV\<close>,
                              OF iv_ge y_sol induct_step_ge t])
 qed
 
@@ -2074,22 +2115,25 @@ text \<open>
 
 text \<open>DC application: strengthen the domain to include the conservation invariant.\<close>
 lemma toggle_switch_DC_strengthened_domain:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes \<alpha> \<beta> :: real
+  fixes iU iV :: 'p
+  assumes coords: \<open>iU \<noteq> iV\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
-                                      0 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1,
-                                      1 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1))
+                                      iU := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV,
+                                      iV := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV))
                                     )) {0..t} UNIV\<close>
-  assumes iv_eq: \<open>vec_nth (y 0) 0 = vec_nth (y 0) 1\<close>
+  assumes iv_eq: \<open>vec_nth (y 0) iU = vec_nth (y 0) iV\<close>
       \<comment> \<open>Symmetric initial condition: u(0) = v(0)\<close>
   assumes t: \<open>0 \<le> t\<close>
   shows \<open>(y solves_ode (\<lambda>t v.
             vec_lambda ((\<lambda>k. 0)(
-              0 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1,
-              1 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1))
-          )) {0..t} (UNIV \<inter> {v. vec_nth v 0 = vec_nth v 1})\<close>
+              iU := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV,
+              iV := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV))
+          )) {0..t} (UNIV \<inter> {v. vec_nth v iU = vec_nth v iV})\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY: Apply DC with cut-formula C v \<equiv> (v₀ = v₁).
      
@@ -2097,7 +2141,7 @@ proof -
        1. (y_sol) The trajectory solves the ODE on the original domain.
           This is passed directly from our assumption.
        2. (C_inv) For every \<tau> \<in> [0..t], the cut-formula holds at y(\<tau>), 
-          i.e., vec_nth (y \<tau>) 0 = vec_nth (y \<tau>) 1.
+          i.e., vec_nth (y \<tau>) iU = vec_nth (y \<tau>) iV.
      
      The C_inv obligation is discharged using 
      toggle_switch_difference_conservation: since u(0) = v(0) gives 
@@ -2110,26 +2154,26 @@ proof -
   (* PROOF OBLIGATION DC.2 (C_inv): u(\<tau>) = v(\<tau>) for all \<tau> \<in> [0..t].
      Proved by restricting y to {0..\<tau>} and invoking the difference 
      conservation lemma with initial difference c = 0. *)
-  have C_inv: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> vec_nth (y \<tau>) 0 = vec_nth (y \<tau>) 1\<close>
+  have C_inv: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> vec_nth (y \<tau>) iU = vec_nth (y \<tau>) iV\<close>
   proof -
     fix \<tau> assume h\<tau>: \<open>\<tau> \<in> {0..t}\<close>
 
     (* Restrict the ODE to {0..\<tau>} *)
     have y_sol_\<tau>: \<open>(y solves_ode (\<lambda>t v.
         vec_lambda ((\<lambda>k. 0)(
-          0 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1,
-          1 := \<alpha> - \<beta> * vec_nth v 0 * vec_nth v 1))
+          iU := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV,
+          iV := \<alpha> - \<beta> * vec_nth v iU * vec_nth v iV))
         )) {0..\<tau>} UNIV\<close>
       using solves_ode_subset_ivl[OF y_sol h\<tau>] .
 
     (* Initial difference is 0 (from the symmetric initial condition) *)
-    have iv0: \<open>vec_nth (y 0) 0 - vec_nth (y 0) 1 = 0\<close>
+    have iv0: \<open>vec_nth (y 0) iU - vec_nth (y 0) iV = 0\<close>
       using iv_eq by simp
 
     (* Apply the difference conservation lemma at time \<tau> *)
-    have \<open>vec_nth (y \<tau>) 0 - vec_nth (y \<tau>) 1 = 0\<close>
-      using h\<tau> toggle_switch_difference_conservation[OF y_sol_\<tau> iv0 ] by simp
-    thus \<open>vec_nth (y \<tau>) 0 = vec_nth (y \<tau>) 1\<close> 
+    have \<open>vec_nth (y \<tau>) iU - vec_nth (y \<tau>) iV = 0\<close>
+      using h\<tau> toggle_switch_difference_conservation[OF coords y_sol_\<tau> iv0 ] by simp
+    thus \<open>vec_nth (y \<tau>) iU = vec_nth (y \<tau>) iV\<close> 
       by simp
   qed
 
@@ -2283,19 +2327,22 @@ text \<open>
   not a defect of our formalization.
 \<close>
 lemma gardner_toggle_switch_u_positive:
-  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes \<alpha>1 \<alpha>2 :: real
   fixes \<beta> \<gamma> :: nat
+  fixes iU iV iG :: 'p
+      \<comment> \<open>iG is a spare coordinate for the ghost\<close>
+  assumes coords: \<open>iU \<noteq> iV\<close> \<open>iU \<noteq> iG\<close> \<open>iV \<noteq> iG\<close>
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
-                                      0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-                                      1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))
+                                      iU := \<alpha>1 / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+                                      iV := \<alpha>2 / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))
                                     )) {0..t} UNIV\<close>
-      \<comment> \<open>Position 0: u (protein 1), position 1: v (protein 2).
+      \<comment> \<open>Coordinate iU: u (protein 1), coordinate iV: v (protein 2).
          Gardner toggle switch:
            du/dt = alpha1/(1 + v\textasciicircum{}beta) - u;
            dv/dt = alpha2/(1 + u\textasciicircum{}gamma) - v\<close>
-  assumes u0_pos: \<open>vec_nth (x 0) 0 > (0::real)\<close>
+  assumes u0_pos: \<open>vec_nth (x 0) iU > (0::real)\<close>
       \<comment> \<open>Initial condition: u(0) > 0 (protein 1 is initially present)\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes \<alpha>1_nn: \<open>0 \<le> \<alpha>1\<close>
@@ -2303,22 +2350,23 @@ lemma gardner_toggle_switch_u_positive:
   assumes \<beta>_pos: \<open>1 \<le> \<beta>\<close>
       \<comment> \<open>The Hill coefficient is a positive integer\<close>
   \<comment> \<open>The conditional assumption, explained in the text above the lemma:\<close>
-  assumes v_nn: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> vec_nth (x \<tau>) 1\<close>
+  assumes v_nn: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> vec_nth (x \<tau>) iV\<close>
       \<comment> \<open>Protein v stays non-negative along the trajectory.
          This assumption is discharged in
          gardner\_toggle\_switch\_u\_positive\_unconditional by applying
          gardner\_toggle\_switch\_v\_nonneg, which uses DI\_boundary.\<close>
-  shows \<open>0 < vec_nth (x t) 0\<close>
+  shows \<open>0 < vec_nth (x t) iU\<close>
     \<comment> \<open>Conclusion: protein u remains strictly positive at time t\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY
      
      To prove u(t) > 0, we use the apply-DG-then-apply-DI pattern:
      
-       STAGE 1 (DG): We introduce a ghost species y at position 2 satisfying 
+       STAGE 1 (DG): We introduce a ghost species y at coordinate iG satisfying 
                      dy/dt = (1/2)\<sqdot>y with initial value y(0) = 1/sqrt(u(0)). 
-                     The combined trajectory ?z = x extended at index 2 
+                     The combined trajectory ?z = x extended at the ghost coordinate iG 
                      with y solves the extended ODE.
        
        STAGE 2 (DI): We prove the invariant 1 \<le> u \<sqdot> y² along the combined 
@@ -2337,7 +2385,7 @@ proof -
 
      ========================================================================== *)
 
-  define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) 0)\<close>
+  define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) iU)\<close>
 
   (* ==========================================================================
      STAGE 1: Apply DG to obtain the ghost-extended trajectory
@@ -2353,79 +2401,79 @@ proof -
   have b_cont: \<open>continuous_on {0..t} (\<lambda>\<tau>::real. 0)\<close>
     by (rule continuous_on_const)
 
-  (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at index 2 is zero *)
+  (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at the ghost coordinate iG is zero *)
   have gi_zero: 
    \<open>\<And>\<tau> v. vec_nth ((\<lambda>t v.
-          vec_lambda ((\<lambda>k::4. 0)(
-                       0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-                       1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> v) 2 = 0\<close>
+          vec_lambda ((\<lambda>k::'p. 0)(
+                       iU := \<alpha>1 / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+                       iV := \<alpha>2 / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))) \<tau> v) iG = 0\<close>
     by (auto simp add: fun_upd_def)
 
   (* PROOF OBLIGATION DG.5 (gi_fresh): the vector field doesn't depend on the ghost index *)
   have gi_fresh: 
-    \<open>\<And>\<tau> v w::(real, 4) vec. (\<forall>i. i \<noteq> 2 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
+    \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
                              (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                                  0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-                                  1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> v =
+                                  iU := \<alpha>1 / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+                                  iV := \<alpha>2 / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))) \<tau> v =
                              (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                                  0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-                                  1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> w\<close>
+                                  iU := \<alpha>1 / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+                                  iV := \<alpha>2 / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 4) vec\<close>
-    assume eq: \<open>\<forall>i. i \<noteq> 2 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
+    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    assume eq: \<open>\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i\<close>
     (* The vector field reads indices 0 and 1; neither is 2 *)
-    have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
-    have v1: \<open>vec_nth v 1 = vec_nth w 1\<close> using eq by simp
+    have v0: \<open>vec_nth v iU = vec_nth w iU\<close> using eq by simp
+    have v1: \<open>vec_nth v iV = vec_nth w iV\<close> using eq by simp
     show \<open>(\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-            0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-            1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> v =
+            iU := \<alpha>1 / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+            iV := \<alpha>2 / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))) \<tau> v =
           (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-            0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-            1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> w\<close>
+            iU := \<alpha>1 / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+            iV := \<alpha>2 / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))) \<tau> w\<close>
       using v0 v1 by (simp add: vec_eq_iff fun_upd_def)
   qed
 
   (* APPLY DG: we obtain a ghost trajectory y satisfying dy/dt = (1/2)\<sqdot>y + 0 *)
   have dg_result: \<open>\<exists> y. y 0 = y0 \<and>
-      (((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(2 := y \<tau>))) solves_ode
+      (((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(iG := y \<tau>))) solves_ode
          (\<lambda>\<tau> v. vec_lambda
                  ((\<lambda>k. 0)
-                  (0 := \<alpha>1 / (1 + vec_nth v 1 ^ \<beta>) - vec_nth v 0,
-                   1 := \<alpha>2 / (1 + vec_nth v 0 ^ \<gamma>) - vec_nth v 1)) +
+                  (iU := \<alpha>1 / (1 + vec_nth v iV ^ \<beta>) - vec_nth v iU,
+                   iV := \<alpha>2 / (1 + vec_nth v iU ^ \<gamma>) - vec_nth v iV)) +
                 vec_lambda
                  ((\<lambda>i. 0)
-                  (2 := (1/2) * vec_nth v 2 + 0))))
+                  (iG := (1/2) * vec_nth v iG + 0))))
          {0..t} UNIV)\<close>
-    using DG[where a = \<open>\<lambda>\<tau>. 1/2\<close> and b = \<open>\<lambda>\<tau>. 0\<close> and ?y0.0 = y0 and gi = 2,
+    using DG[where a = \<open>\<lambda>\<tau>. 1/2\<close> and b = \<open>\<lambda>\<tau>. 0\<close> and ?y0.0 = y0 and gi = iG,
              OF x_sol a_cont b_cont gi_zero gi_fresh] .
 
   (* We extract the ghost trajectory y and the combined solves_ode fact *)
   then obtain y where 
     y_init: \<open>y 0 = y0\<close> and
     combined_sol: 
-      \<open>((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(2 := y \<tau>))) solves_ode
+      \<open>((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(iG := y \<tau>))) solves_ode
          (\<lambda>\<tau> v. vec_lambda
                  ((\<lambda>k. 0)
-                  (0 := \<alpha>1 / (1 + vec_nth v 1 ^ \<beta>) - vec_nth v 0,
-                   1 := \<alpha>2 / (1 + vec_nth v 0 ^ \<gamma>) - vec_nth v 1)) +
+                  (iU := \<alpha>1 / (1 + vec_nth v iV ^ \<beta>) - vec_nth v iU,
+                   iV := \<alpha>2 / (1 + vec_nth v iU ^ \<gamma>) - vec_nth v iV)) +
                 vec_lambda
-                 ((\<lambda>i. 0)(2 := (1/2) * vec_nth v 2 + 0))))
+                 ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))))
          {0..t} UNIV\<close>
     by auto
 
-  let ?z = \<open>\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i) (2 := y \<tau>))\<close>
+  let ?z = \<open>\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i) (iG := y \<tau>))\<close>
 
   (* Helper: Fréchet derivative of u \<sqdot> y² (product rule) *)
   have ug2_has_derivative:
-    \<open>((\<lambda>v. vec_nth v 0 * (vec_nth v 2)^2) has_derivative 
-      (\<lambda>v. vec_nth v 0 * (vec_nth p 2)^2 + 
-           vec_nth p 0 * (2 * vec_nth p 2 * vec_nth v 2))) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) has_derivative 
+      (\<lambda>v. vec_nth v iU * (vec_nth p iG)^2 + 
+           vec_nth p iU * (2 * vec_nth p iG * vec_nth v iG))) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
   proof -
-    have f: \<open>((\<lambda>v. vec_nth v 0) has_derivative (\<lambda>v. vec_nth v 0)) (at p)\<close>
+    have f: \<open>((\<lambda>v. vec_nth v iU) has_derivative (\<lambda>v. vec_nth v iU)) (at p)\<close>
       by (rule has_derivative_vec_nth)
-    have g: \<open>((\<lambda>v. (vec_nth v 2)^2) has_derivative 
-        (\<lambda>v. 2 * vec_nth p 2 * vec_nth v 2)) (at p)\<close>
+    have g: \<open>((\<lambda>v. (vec_nth v iG)^2) has_derivative 
+        (\<lambda>v. 2 * vec_nth p iG * vec_nth v iG)) (at p)\<close>
       by (rule component_sq_has_derivative)
     show ?thesis
       using has_derivative_mult[OF f g] 
@@ -2438,7 +2486,7 @@ proof -
 
   (* PROOF OBLIGATION DI.1 (iv): initial condition 1 \<le> u(0) \<sqdot> y(0)² *)
   (* Since y(0) = 1/sqrt(u(0)), we have y(0)² = 1/u(0), so u(0)\<sqdot>y(0)² = 1 *)
-  have iv_ineq: \<open>1 \<le> vec_nth (?z 0) 0 * (vec_nth (?z 0) 2)^2\<close>
+  have iv_ineq: \<open>1 \<le> vec_nth (?z 0) iU * (vec_nth (?z 0) iG)^2\<close>
     unfolding fun_upd_def
     using u0_pos 
     by (simp add: y0_def y_init field_simps power2_eq_square)
@@ -2451,40 +2499,40 @@ proof -
   have induct_step:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 0 * (vec_nth v 2)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
                  Dh ((\<lambda>\<tau> v. vec_lambda
                          ((\<lambda>k. 0)
-                          (0 := \<alpha>1 / (1 + vec_nth v 1 ^ \<beta>) - vec_nth v 0,
-                           1 := \<alpha>2 / (1 + vec_nth v 0 ^ \<gamma>) - vec_nth v 1)) +
+                          (iU := \<alpha>1 / (1 + vec_nth v iV ^ \<beta>) - vec_nth v iU,
+                           iV := \<alpha>2 / (1 + vec_nth v iU ^ \<gamma>) - vec_nth v iV)) +
                         vec_lambda
-                         ((\<lambda>i. 0)(2 := (1/2) * vec_nth v 2 + 0))) \<tau> (?z \<tau>)) \<le>
+                         ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
                  Dg ((\<lambda>\<tau> v. vec_lambda
                          ((\<lambda>k. 0)
-                          (0 := \<alpha>1 / (1 + vec_nth v 1 ^ \<beta>) - vec_nth v 0,
-                           1 := \<alpha>2 / (1 + vec_nth v 0 ^ \<gamma>) - vec_nth v 1)) +
+                          (iU := \<alpha>1 / (1 + vec_nth v iV ^ \<beta>) - vec_nth v iU,
+                           iV := \<alpha>2 / (1 + vec_nth v iU ^ \<gamma>) - vec_nth v iV)) +
                         vec_lambda
-                         ((\<lambda>i. 0)(2 := (1/2) * vec_nth v 2 + 0))) \<tau> (?z \<tau>))\<close>
+                         ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
-    have v_nn_\<tau>: \<open>0 \<le> vec_nth (x \<tau>) 1\<close> using v_nn[OF \<tau>_in] .
+    have v_nn_\<tau>: \<open>0 \<le> vec_nth (x \<tau>) iV\<close> using v_nn[OF \<tau>_in] .
     show \<open>\<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 0 * (vec_nth v 2)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
                   Dh ((\<lambda>\<tau> v. vec_lambda
                           ((\<lambda>k. 0)
-                           (0 := \<alpha>1 / (1 + vec_nth v 1 ^ \<beta>) - vec_nth v 0,
-                            1 := \<alpha>2 / (1 + vec_nth v 0 ^ \<gamma>) - vec_nth v 1)) +
+                           (iU := \<alpha>1 / (1 + vec_nth v iV ^ \<beta>) - vec_nth v iU,
+                            iV := \<alpha>2 / (1 + vec_nth v iU ^ \<gamma>) - vec_nth v iV)) +
                          vec_lambda
-                          ((\<lambda>i. 0)(2 := (1/2) * vec_nth v 2 + 0))) \<tau> (?z \<tau>)) \<le>
+                          ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
                   Dg ((\<lambda>\<tau> v. vec_lambda
                           ((\<lambda>k. 0)
-                           (0 := \<alpha>1 / (1 + vec_nth v 1 ^ \<beta>) - vec_nth v 0,
-                            1 := \<alpha>2 / (1 + vec_nth v 0 ^ \<gamma>) - vec_nth v 1)) +
+                           (iU := \<alpha>1 / (1 + vec_nth v iV ^ \<beta>) - vec_nth v iU,
+                            iV := \<alpha>2 / (1 + vec_nth v iU ^ \<gamma>) - vec_nth v iV)) +
                          vec_lambda
-                          ((\<lambda>i. 0)(2 := (1/2) * vec_nth v 2 + 0))) \<tau> (?z \<tau>))\<close>
+                          ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 * (vec_nth (?z \<tau>) 2)^2 + 
-                                      vec_nth (?z \<tau>) 0 * (2 * vec_nth (?z \<tau>) 2 * vec_nth v 2)\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iU * (vec_nth (?z \<tau>) iG)^2 + 
+                                      vec_nth (?z \<tau>) iU * (2 * vec_nth (?z \<tau>) iG * vec_nth v iG)\<close>])
       apply (rule conjI, rule has_derivative_const)
       apply (rule conjI, rule ug2_has_derivative)
       apply (auto simp add: power2_eq_square fun_upd_def)
@@ -2496,22 +2544,22 @@ proof -
   qed
 
   (* APPLY DI_Vect: we get the invariant 1 \<le> u \<sqdot> y² at time t *)
-  have ineq: \<open>1 \<le> vec_nth (?z t) 0 * (vec_nth (?z t) 2)^2\<close>
-    using DI_Vect[where  h = \<open>\<lambda>v. 1\<close> and g = \<open>\<lambda>v. vec_nth v 0 * (vec_nth v 2)^2\<close>,
+  have ineq: \<open>1 \<le> vec_nth (?z t) iU * (vec_nth (?z t) iG)^2\<close>
+    using DI_Vect[where  h = \<open>\<lambda>v. 1\<close> and g = \<open>\<lambda>v. vec_nth v iU * (vec_nth v iG)^2\<close>,
                   OF iv_ineq combined_sol induct_step t] .
 
   (* ==========================================================================
      STAGE 3: From u(t) \<sqdot> y(t)² \<ge> 1 and y(t)² \<ge> 0, conclude u(t) > 0
      ========================================================================== *)
-  show \<open>0 < vec_nth (x t) 0\<close>
+  show \<open>0 < vec_nth (x t) iU\<close>
   proof -
-    have z_eq_x: \<open>vec_nth (?z t) 0 = vec_nth (x t) 0\<close> by simp
-    have y_sq_nn: \<open>0 \<le> (vec_nth (?z t) 2)^2\<close> by simp
-    have prod_ge_1: \<open>1 \<le> vec_nth (?z t) 0 * (vec_nth (?z t) 2)^2\<close>
+    have z_eq_x: \<open>vec_nth (?z t) iU = vec_nth (x t) iU\<close> by simp
+    have y_sq_nn: \<open>0 \<le> (vec_nth (?z t) iG)^2\<close> by simp
+    have prod_ge_1: \<open>1 \<le> vec_nth (?z t) iU * (vec_nth (?z t) iG)^2\<close>
       using ineq by simp
     show ?thesis
       using z_eq_x y_sq_nn prod_ge_1
-      apply (cases \<open>vec_nth (x t) 0 \<le> 0\<close>) 
+      apply (cases \<open>vec_nth (x t) iU \<le> 0\<close>) 
        apply (auto simp: mult_le_0_iff)
       apply (metis approximation_preproc_push_neg(1) le_less_trans 
                    power2_less_0 zero_compare_simps(6) zero_less_one)
@@ -2541,17 +2589,17 @@ text \<open>
   We prove: if v(0) >= 0, alpha2 > 0, and gamma is a positive even Hill coefficient,
   then v(tau) >= 0 throughout the Gardner toggle switch trajectory.
   PROOF METHOD: Differential Induction with Boundary Condition (DI\_boundary).
-  The candidate function is `invar(w) = vec\_nth w 1` (i.e., the v component).
+  The candidate function is `invar(w) = vec\_nth w iV` (i.e., the v component).
 \begin{itemize}
 \item Differentiability assumption: invar is linear, so it's everywhere
-  Frechet-differentiable with Dinvar = (lambdaw. vec\_nth w 1).
-\item Boundary condition: at every point where v = 0 (i.e., vec\_nth (y tau) 1 = 0),
-  we need 0 < Dinvar (f tau (y tau)) = vec\_nth (f tau (y tau)) 1.
+  Frechet-differentiable with Dinvar = (lambdaw. vec\_nth w iV).
+\item Boundary condition: at every point where v = 0 (i.e., vec\_nth (y tau) iV = 0),
+  we need 0 < Dinvar (f tau (y tau)) = vec\_nth (f tau (y tau)) iV.
 \end{itemize}
 
     The Gardner ODE gives:
-      vec\_nth (f tau (y tau)) 1 = alpha2/(1 + (vec\_nth (y tau) 0)\textasciicircum{}gamma) - vec\_nth (y tau) 1
-                            = alpha2/(1 + (vec\_nth (y tau) 0)\textasciicircum{}gamma) - 0        (since v = 0)
+      vec\_nth (f tau (y tau)) iV = alpha2/(1 + (vec\_nth (y tau) iU)\textasciicircum{}gamma) - vec\_nth (y tau) iV
+                            = alpha2/(1 + (vec\_nth (y tau) iU)\textasciicircum{}gamma) - 0        (since v = 0)
                             = alpha2/(1 + u\textasciicircum{}gamma)
 
     Since alpha2 > 0 and 1 + u\textasciicircum{}gamma > 0 (because gamma is even, so u\textasciicircum{}gamma >= 0),
@@ -2559,23 +2607,26 @@ text \<open>
 \<close>
 
 lemma gardner_toggle_switch_v_nonneg:
-  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes \<alpha>1 \<alpha>2 :: real
   fixes \<beta> \<gamma> :: nat
+  fixes iU iV :: 'p
+  assumes coords: \<open>iU \<noteq> iV\<close>
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
-                                      0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-                                      1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))
+                                      iU := \<alpha>1 / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+                                      iV := \<alpha>2 / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))
                                     )) {0..t} UNIV\<close>
-  assumes v0_nn: \<open>0 \<le> vec_nth (x 0) 1\<close>
+  assumes v0_nn: \<open>0 \<le> vec_nth (x 0) iV\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes \<alpha>2_pos: \<open>0 < \<alpha>2\<close>
   assumes \<gamma>_even: \<open>even \<gamma>\<close>
   assumes \<gamma>_pos: \<open>1 \<le> \<gamma>\<close>
-  shows \<open>0 \<le> vec_nth (x t) 1\<close>
+  shows \<open>0 \<le> vec_nth (x t) iV\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
-     PROOF STRATEGY: Apply DI_boundary with  invar = \<lambda>w. vec_nth w 1
+     PROOF STRATEGY: Apply DI_boundary with  invar = \<lambda>w. vec_nth w iV
      
      DI_boundary establishes non-negativity of a funtion along the 
      trajectory, given that:
@@ -2598,7 +2649,7 @@ proof -
      ========================================================================== *)
 
   (* PROOF OBLIGATION 1 (iv): initial condition 0 \<le> v(0) *)
-  have iv: \<open>0 \<le> (\<lambda>w. vec_nth w 1) (x 0)\<close>
+  have iv: \<open>0 \<le> (\<lambda>w. vec_nth w iV) (x 0)\<close>
     using v0_nn by simp
 
   (* PROOF OBLIGATION 2 (ODE): directly from x_sol *)
@@ -2609,11 +2660,11 @@ proof -
 
   (* PROOF OBLIGATION 4 (invar_diff): invar is differentiable everywhere along x *)
   have invar_diff: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 
-                        \<exists> Dinvar. ((\<lambda>w. vec_nth w 1) has_derivative Dinvar) (at (x \<tau>))\<close>
+                        \<exists> Dinvar. ((\<lambda>w. vec_nth w iV) has_derivative Dinvar) (at (x \<tau>))\<close>
   proof -
     fix \<tau> assume \<open>\<tau> \<in> {0..t}\<close>
-    show \<open>\<exists> Dinvar. ((\<lambda>w. vec_nth w 1) has_derivative Dinvar) (at (x \<tau>))\<close>
-      by (rule exI[where x = \<open>\<lambda>w. vec_nth w 1\<close>]) (rule has_derivative_vec_nth)
+    show \<open>\<exists> Dinvar. ((\<lambda>w. vec_nth w iV) has_derivative Dinvar) (at (x \<tau>))\<close>
+      by (rule exI[where x = \<open>\<lambda>w. vec_nth w iV\<close>]) (rule has_derivative_vec_nth)
   qed
 
   (* PROOF OBLIGATION 5 (boundary_step): at v = 0, the Lie derivative is strictly positive.
@@ -2622,36 +2673,36 @@ proof -
      When v = 0, this becomes \<alpha>2/(1 + u^\<gamma>), which is > 0 because 
      \<alpha>2 > 0 and the denominator is strictly positive (1 + u^\<gamma> > 0 
      when \<gamma> is even, so u^\<gamma> \<ge> 0). *)
-  have boundary_step: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> (\<lambda>w. vec_nth w 1) (x \<tau>) = 0 \<Longrightarrow>
-                           \<exists> Dinvar. ((\<lambda>w. vec_nth w 1) has_derivative Dinvar) (at (x \<tau>)) \<and>
+  have boundary_step: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> (\<lambda>w. vec_nth w iV) (x \<tau>) = 0 \<Longrightarrow>
+                           \<exists> Dinvar. ((\<lambda>w. vec_nth w iV) has_derivative Dinvar) (at (x \<tau>)) \<and>
                                      0 < Dinvar ((\<lambda>t v.
                                        vec_lambda ((\<lambda>k. 0)(
-                                         0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-                                         1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> (x \<tau>))\<close>
+                                         iU := \<alpha>1 / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+                                         iV := \<alpha>2 / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))) \<tau> (x \<tau>))\<close>
   proof -
     fix \<tau> assume h\<tau>: \<open>\<tau> \<in> {0..t}\<close>
-    assume v_eq_0: \<open>(\<lambda>w. vec_nth w 1) (x \<tau>) = 0\<close>
-    hence v_zero: \<open>vec_nth (x \<tau>) 1 = 0\<close> by simp
+    assume v_eq_0: \<open>(\<lambda>w. vec_nth w iV) (x \<tau>) = 0\<close>
+    hence v_zero: \<open>vec_nth (x \<tau>) iV = 0\<close> by simp
 
-    (* Use Dinvar = vec_nth \<sqdot> 1 *)
-    have deriv: \<open>((\<lambda>w. vec_nth w 1) has_derivative (\<lambda>w. vec_nth w 1)) (at (x \<tau>))\<close>
+    (* Use Dinvar = vec_nth \<sqdot> iV *)
+    have deriv: \<open>((\<lambda>w. vec_nth w iV) has_derivative (\<lambda>w. vec_nth w iV)) (at (x \<tau>))\<close>
       by (rule has_derivative_vec_nth)
 
     (* Compute Dinvar applied to the vector field *)
-    let ?u = \<open>vec_nth (x \<tau>) 0\<close>
+    let ?u = \<open>vec_nth (x \<tau>) iU\<close>
     have field_1: \<open>vec_nth ((\<lambda>t v.
         vec_lambda ((\<lambda>k. 0)(
-          0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-          1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> (x \<tau>)) 1 = 
-         \<alpha>2 / (1 + ?u^\<gamma>) - vec_nth (x \<tau>) 1\<close>
+          iU := \<alpha>1 / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+          iV := \<alpha>2 / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))) \<tau> (x \<tau>)) iV = 
+         \<alpha>2 / (1 + ?u^\<gamma>) - vec_nth (x \<tau>) iV\<close>
       by (simp add: fun_upd_def)
     also have \<open>... = \<alpha>2 / (1 + ?u^\<gamma>)\<close>
       using v_zero by simp
     finally have lie_val: 
               \<open>vec_nth ((\<lambda>t v.
                             vec_lambda ((\<lambda>k. 0)(
-                              0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-                              1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> (x \<tau>)) 1 =
+                              iU := \<alpha>1 / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+                              iV := \<alpha>2 / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))) \<tau> (x \<tau>)) iV =
                              \<alpha>2 / (1 + ?u^\<gamma>)\<close> .
 
     (* Show this is strictly positive *)
@@ -2662,12 +2713,12 @@ proof -
     have lie_pos: \<open>0 < \<alpha>2 / (1 + ?u^\<gamma>)\<close>
       using \<alpha>2_pos denom_pos 
       by simp
-    show \<open>\<exists> Dinvar. ((\<lambda>w. vec_nth w 1) has_derivative Dinvar) (at (x \<tau>)) \<and>
+    show \<open>\<exists> Dinvar. ((\<lambda>w. vec_nth w iV) has_derivative Dinvar) (at (x \<tau>)) \<and>
                     0 < Dinvar ((\<lambda>t v.
                       vec_lambda ((\<lambda>k. 0)(
-                        0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-                        1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> (x \<tau>))\<close>
-      apply (rule exI[where x = \<open>\<lambda>w. vec_nth w 1\<close>])
+                        iU := \<alpha>1 / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+                        iV := \<alpha>2 / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))) \<tau> (x \<tau>))\<close>
+      apply (rule exI[where x = \<open>\<lambda>w. vec_nth w iV\<close>])
       apply (rule conjI)
        apply (rule deriv)
       using lie_val lie_pos 
@@ -2676,11 +2727,11 @@ proof -
   qed
 
   (* APPLY DI_boundary via forward reasoning *)
-  have nn_at_t: \<open>0 \<le> (\<lambda>w. vec_nth w 1) (x t)\<close>
-    using DI_boundary[where invar = \<open>\<lambda>w. vec_nth w 1\<close> and
+  have nn_at_t: \<open>0 \<le> (\<lambda>w. vec_nth w iV) (x t)\<close>
+    using DI_boundary[where invar = \<open>\<lambda>w. vec_nth w iV\<close> and
                             f = \<open>\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                                  0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-                                  1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))\<close> and
+                                  iU := \<alpha>1 / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+                                  iV := \<alpha>2 / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))\<close> and
                             Q = UNIV,
                       OF iv x_sol t invar_diff boundary_step] .
 
@@ -2714,42 +2765,46 @@ text \<open>
   non-negativity.
 \<close>
 lemma gardner_toggle_switch_u_positive_unconditional:
-  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes \<alpha>1 \<alpha>2 :: real
   fixes \<beta> \<gamma> :: nat
+  fixes iU iV iG :: 'p
+      \<comment> \<open>iG is a spare coordinate for the ghost\<close>
+  assumes coords: \<open>iU \<noteq> iV\<close> \<open>iU \<noteq> iG\<close> \<open>iV \<noteq> iG\<close>
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)
-                                                (0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-                                                 1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))
+                                                (iU := \<alpha>1 / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+                                                 iV := \<alpha>2 / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))
                                     )) {0..t} UNIV\<close>
-  assumes u0_pos: \<open>vec_nth (x 0) 0 > (0::real)\<close>
-  assumes v0_nn: \<open>0 \<le> vec_nth (x 0) 1\<close>
+  assumes u0_pos: \<open>vec_nth (x 0) iU > (0::real)\<close>
+  assumes v0_nn: \<open>0 \<le> vec_nth (x 0) iV\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes \<alpha>1_nn: \<open>0 \<le> \<alpha>1\<close>
   assumes \<alpha>2_pos: \<open>0 < \<alpha>2\<close>
   assumes \<beta>_pos: \<open>1 \<le> \<beta>\<close>
   assumes \<gamma>_even: \<open>even \<gamma>\<close>
   assumes \<gamma>_pos: \<open>1 \<le> \<gamma>\<close>
-  shows \<open>0 < vec_nth (x t) 0\<close>
+  shows \<open>0 < vec_nth (x t) iU\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* Step 1: we prove 0 \<le> v(\<tau>) for all \<tau> \<in> [0..t] using gardner_toggle_switch_v_nonneg *)
-  have v_nn_on_interval: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> vec_nth (x \<tau>) 1\<close>
+  have v_nn_on_interval: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> vec_nth (x \<tau>) iV\<close>
   proof -
     fix \<tau> assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
     have x_sol_\<tau>: \<open>(x solves_ode (\<lambda>t v.
                                      vec_lambda ((\<lambda>k. 0)
-                                                 (0 := \<alpha>1 / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-                                                  1 := \<alpha>2 / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))
+                                                 (iU := \<alpha>1 / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+                                                  iV := \<alpha>2 / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))
                                      )) {0..\<tau>} UNIV\<close>
       using solves_ode_subset_ivl[OF x_sol] \<tau>_in  .
     (* Apply gardner_toggle_switch_v_nonneg *)
-    show \<open>0 \<le> vec_nth (x \<tau>) 1\<close>
-      using \<tau>_in gardner_toggle_switch_v_nonneg[OF x_sol_\<tau> v0_nn _  \<alpha>2_pos \<gamma>_even \<gamma>_pos] 
+    show \<open>0 \<le> vec_nth (x \<tau>) iV\<close>
+      using \<tau>_in gardner_toggle_switch_v_nonneg[OF coords(1) x_sol_\<tau> v0_nn _  \<alpha>2_pos \<gamma>_even \<gamma>_pos] 
       by simp
   qed
   (* Step 2: Apply the conditional theorem gardner_toggle_switch_u_positive *)
   show ?thesis
-    using gardner_toggle_switch_u_positive[OF x_sol u0_pos t \<alpha>1_nn \<beta>_pos v_nn_on_interval] .
+    using gardner_toggle_switch_u_positive[OF coords x_sol u0_pos t \<alpha>1_nn \<beta>_pos v_nn_on_interval] .
 qed
 
 text \<open>
@@ -2824,8 +2879,8 @@ text \<open>
   tau in [0..t].
 
   The continuity requirements on alpha1, alpha2 come from the ODE existence
-  theory: the vector field (lambdat v. vec\_lambda ((lambdak. 0)(0 := alpha1(t)/... - v?,
-  1 := alpha2(t)/... - v?))) must be continuous in t for the classical
+  theory: the vector field (lambdat v. vec\_lambda ((lambdak. 0)(iU := alpha1(t)/... - v?,
+  iV := alpha2(t)/... - v?))) must be continuous in t for the classical
   ODE theory we rely on. So we require alpha1, alpha2 to be continuous\_on \{0..t\}.
 
   \textbf{USING THE LEMMAS}\\
@@ -2854,36 +2909,40 @@ text \<open>
 \<close>
 
 lemma gardner_toggle_switch_u_positive_time_dependent:
-  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes \<alpha>1 \<alpha>2 :: \<open>real \<Rightarrow> real\<close>
   fixes \<beta> \<gamma> :: nat
+  fixes iU iV iG :: 'p
+      \<comment> \<open>iG is a spare coordinate for the ghost\<close>
+  assumes coords: \<open>iU \<noteq> iV\<close> \<open>iU \<noteq> iG\<close> \<open>iV \<noteq> iG\<close>
   assumes x_sol: \<open>(x solves_ode (\<lambda>\<tau> v.
                                     vec_lambda ((\<lambda>k. 0)(
-                                      0 := \<alpha>1 \<tau> / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-                                      1 := \<alpha>2 \<tau> / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))
+                                      iU := \<alpha>1 \<tau> / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+                                      iV := \<alpha>2 \<tau> / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))
                                     )) {0..t} UNIV\<close>
       \<comment> \<open>Time-varying Gardner toggle switch:
            du/dt = alpha1(tau)/(1 + v\textasciicircum{}beta) - u;
            dv/dt = alpha2(tau)/(1 + u\textasciicircum{}gamma) - v\<close>
-  assumes u0_pos: \<open>vec_nth (x 0) 0 > (0::real)\<close>
+  assumes u0_pos: \<open>vec_nth (x 0) iU > (0::real)\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes \<alpha>1_nn_pointwise: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> \<alpha>1 \<tau>\<close>
       \<comment> \<open>The production rate for u is non-negative pointwise along the trajectory\<close>
   assumes \<beta>_pos: \<open>1 \<le> \<beta>\<close>
   \<comment> \<open>The conditional assumption: v stays non-negative\<close>
-  assumes v_nn: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> vec_nth (x \<tau>) 1\<close>
-  shows \<open>0 < vec_nth (x t) 0\<close>
+  assumes v_nn: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> vec_nth (x \<tau>) iV\<close>
+  shows \<open>0 < vec_nth (x t) iU\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY: Same apply-DG-then-apply-DI pattern as the constant-rate version.
      
-     STAGE 1 (DG): Ghost y at index 2 with dy/dt = (1/2)\<sqdot>y, y(0) = 1/\<surd>u(0).
+     STAGE 1 (DG): Ghost y at coordinate iG with dy/dt = (1/2)\<sqdot>y, y(0) = 1/\<surd>u(0).
      STAGE 2 (DI): Invariant 1 \<le> u\<sqdot>y². Lie derivative computation uses 
                    \<alpha>1(\<tau>)/(1+v^\<beta>)\<sqdot>y² \<ge> 0, which requires \<alpha>1(\<tau>) \<ge> 0 pointwise.
      STAGE 3 (algebra): From u\<sqdot>y² \<ge> 1 and y² \<ge> 0, conclude u > 0.
      ========================================================================== *)
 
-  define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) 0)\<close>
+  define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) iU)\<close>
 
   (* ==========================================================================
      STAGE 1: We apply DG to obtain the ghost-extended trajectory
@@ -2899,82 +2958,82 @@ proof -
   have b_cont: \<open>continuous_on {0..t} (\<lambda>\<tau>::real. 0)\<close>
     by (rule continuous_on_const)
 
-  (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at index 2 is zero *)
+  (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at the ghost coordinate iG is zero *)
   have gi_zero: \<open>\<And>\<tau> v. vec_nth ((\<lambda>\<tau> v.
-      vec_lambda ((\<lambda>k::4. 0)(
-        0 := \<alpha>1 \<tau> / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-        1 := \<alpha>2 \<tau> / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> v) 2 = 0\<close>
+      vec_lambda ((\<lambda>k::'p. 0)(
+        iU := \<alpha>1 \<tau> / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+        iV := \<alpha>2 \<tau> / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))) \<tau> v) iG = 0\<close>
     by (auto simp add: fun_upd_def)
 
   (* PROOF OBLIGATION DG.5 (gi_fresh): the vector field doesn't depend on the ghost index.
      Note: even though \<alpha>1, \<alpha>2 are functions of \<tau>, they depend only on \<tau> 
      (not on v), so the gi_fresh argument is unchanged: the vector field reads 
-     vec_nth v 0 and vec_nth v 1 but not vec_nth v 2. *)
-  have gi_fresh: \<open>\<And>\<tau> v w::(real, 4) vec. (\<forall>i. i \<noteq> 2 \<longrightarrow> vec_nth v i = vec_nth w i) 
+     vec_nth v iU and vec_nth v iV but not vec_nth v iG. *)
+  have gi_fresh: \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i) 
                            \<Longrightarrow> (\<lambda>\<tau> v. vec_lambda ((\<lambda>k. 0)(
-                                 0 := \<alpha>1 \<tau> / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-                                 1 := \<alpha>2 \<tau> / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> v 
+                                 iU := \<alpha>1 \<tau> / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+                                 iV := \<alpha>2 \<tau> / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))) \<tau> v 
                               = (\<lambda>\<tau> v. vec_lambda ((\<lambda>k. 0)(
-                                 0 := \<alpha>1 \<tau> / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-                                 1 := \<alpha>2 \<tau> / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> w\<close>
+                                 iU := \<alpha>1 \<tau> / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+                                 iV := \<alpha>2 \<tau> / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 4) vec\<close>
-    assume eq: \<open>\<forall>i. i \<noteq> 2 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
-    have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
-    have v1: \<open>vec_nth v 1 = vec_nth w 1\<close> using eq by simp
+    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    assume eq: \<open>\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i\<close>
+    have v0: \<open>vec_nth v iU = vec_nth w iU\<close> using eq by simp
+    have v1: \<open>vec_nth v iV = vec_nth w iV\<close> using eq by simp
     show \<open>(\<lambda>\<tau> v. vec_lambda ((\<lambda>k. 0)(
-            0 := \<alpha>1 \<tau> / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-            1 := \<alpha>2 \<tau> / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> v =
+            iU := \<alpha>1 \<tau> / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+            iV := \<alpha>2 \<tau> / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))) \<tau> v =
           (\<lambda>\<tau> v. vec_lambda ((\<lambda>k. 0)(
-            0 := \<alpha>1 \<tau> / (1 + (vec_nth v 1)^\<beta>) - vec_nth v 0,
-            1 := \<alpha>2 \<tau> / (1 + (vec_nth v 0)^\<gamma>) - vec_nth v 1))) \<tau> w\<close>
+            iU := \<alpha>1 \<tau> / (1 + (vec_nth v iV)^\<beta>) - vec_nth v iU,
+            iV := \<alpha>2 \<tau> / (1 + (vec_nth v iU)^\<gamma>) - vec_nth v iV))) \<tau> w\<close>
       using v0 v1 by (simp add: vec_eq_iff fun_upd_def)
   qed
 
   (* APPLY DG *)
   have dg_result: \<open>\<exists> y. y 0 = y0 \<and>
-      (((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(2 := y \<tau>))) solves_ode
+      (((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(iG := y \<tau>))) solves_ode
          (\<lambda>\<tau> v. vec_lambda
                  ((\<lambda>k. 0)
-                  (0 := \<alpha>1 \<tau> / (1 + vec_nth v 1 ^ \<beta>) - vec_nth v 0,
-                   1 := \<alpha>2 \<tau> / (1 + vec_nth v 0 ^ \<gamma>) - vec_nth v 1)) +
+                  (iU := \<alpha>1 \<tau> / (1 + vec_nth v iV ^ \<beta>) - vec_nth v iU,
+                   iV := \<alpha>2 \<tau> / (1 + vec_nth v iU ^ \<gamma>) - vec_nth v iV)) +
                 vec_lambda
                  ((\<lambda>i. 0)
-                  (2 := (1/2) * vec_nth v 2 + 0))))
+                  (iG := (1/2) * vec_nth v iG + 0))))
          {0..t} UNIV)\<close>
     using DG[where 
             a = \<open>\<lambda>\<tau>. 1/2\<close> and 
             b = \<open>\<lambda>\<tau>. 0\<close> and 
             ?y0.0 = y0 and
-            gi = 2,
+            gi = iG,
             OF x_sol a_cont b_cont gi_zero gi_fresh] .
 
   then obtain y where 
     y_init: \<open>y 0 = y0\<close> and
     combined_sol: 
-      \<open>((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(2 := y \<tau>))) solves_ode
+      \<open>((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(iG := y \<tau>))) solves_ode
          (\<lambda>\<tau> v. vec_lambda
                  ((\<lambda>k. 0)
-                  (0 := \<alpha>1 \<tau> / (1 + vec_nth v 1 ^ \<beta>) - vec_nth v 0,
-                   1 := \<alpha>2 \<tau> / (1 + vec_nth v 0 ^ \<gamma>) - vec_nth v 1)) +
+                  (iU := \<alpha>1 \<tau> / (1 + vec_nth v iV ^ \<beta>) - vec_nth v iU,
+                   iV := \<alpha>2 \<tau> / (1 + vec_nth v iU ^ \<gamma>) - vec_nth v iV)) +
                 vec_lambda
-                 ((\<lambda>i. 0)(2 := (1/2) * vec_nth v 2 + 0))))
+                 ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))))
          {0..t} UNIV\<close>
     by auto
 
-  let ?z = \<open>\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i)(2 := y \<tau>))\<close>
+  let ?z = \<open>\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i)(iG := y \<tau>))\<close>
 
   (* Helper: Fréchet derivative of u \<sqdot> y² *)
   have ug2_has_derivative:
-    \<open>((\<lambda>v. vec_nth v 0 * (vec_nth v 2)^2) has_derivative 
-      (\<lambda>v. vec_nth v 0 * (vec_nth p 2)^2 + 
-           vec_nth p 0 * (2 * vec_nth p 2 * vec_nth v 2))) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) has_derivative 
+      (\<lambda>v. vec_nth v iU * (vec_nth p iG)^2 + 
+           vec_nth p iU * (2 * vec_nth p iG * vec_nth v iG))) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
   proof -
-    have f: \<open>((\<lambda>v. vec_nth v 0) has_derivative (\<lambda>v. vec_nth v 0)) (at p)\<close>
+    have f: \<open>((\<lambda>v. vec_nth v iU) has_derivative (\<lambda>v. vec_nth v iU)) (at p)\<close>
       by (rule has_derivative_vec_nth)
-    have g: \<open>((\<lambda>v. (vec_nth v 2)^2) has_derivative 
-        (\<lambda>v. 2 * vec_nth p 2 * vec_nth v 2)) (at p)\<close>
+    have g: \<open>((\<lambda>v. (vec_nth v iG)^2) has_derivative 
+        (\<lambda>v. 2 * vec_nth p iG * vec_nth v iG)) (at p)\<close>
       by (rule component_sq_has_derivative)
     show ?thesis
       using has_derivative_mult[OF f g] 
@@ -2986,7 +3045,7 @@ proof -
      ========================================================================== *)
 
   (* PROOF OBLIGATION DI.1 (iv): initial condition 1 \<le> u(0) \<sqdot> y(0)² *)
-  have iv_ineq: \<open>1 \<le> vec_nth (?z 0) 0 * (vec_nth (?z 0) 2)^2\<close>
+  have iv_ineq: \<open>1 \<le> vec_nth (?z 0) iU * (vec_nth (?z 0) iG)^2\<close>
     unfolding fun_upd_def
     using u0_pos 
     by (simp add: y0_def y_init field_simps power2_eq_square)
@@ -2999,41 +3058,41 @@ proof -
   have induct_step:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 
          \<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 0 * (vec_nth v 2)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
                  Dh ((\<lambda>\<tau> v. vec_lambda
                          ((\<lambda>k. 0)
-                          (0 := \<alpha>1 \<tau> / (1 + vec_nth v 1 ^ \<beta>) - vec_nth v 0,
-                           1 := \<alpha>2 \<tau> / (1 + vec_nth v 0 ^ \<gamma>) - vec_nth v 1)) +
+                          (iU := \<alpha>1 \<tau> / (1 + vec_nth v iV ^ \<beta>) - vec_nth v iU,
+                           iV := \<alpha>2 \<tau> / (1 + vec_nth v iU ^ \<gamma>) - vec_nth v iV)) +
                         vec_lambda
-                         ((\<lambda>i. 0)(2 := (1/2) * vec_nth v 2 + 0))) \<tau> (?z \<tau>)) \<le>
+                         ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
                  Dg ((\<lambda>\<tau> v. vec_lambda
                          ((\<lambda>k. 0)
-                          (0 := \<alpha>1 \<tau> / (1 + vec_nth v 1 ^ \<beta>) - vec_nth v 0,
-                           1 := \<alpha>2 \<tau> / (1 + vec_nth v 0 ^ \<gamma>) - vec_nth v 1)) +
+                          (iU := \<alpha>1 \<tau> / (1 + vec_nth v iV ^ \<beta>) - vec_nth v iU,
+                           iV := \<alpha>2 \<tau> / (1 + vec_nth v iU ^ \<gamma>) - vec_nth v iV)) +
                         vec_lambda
-                         ((\<lambda>i. 0)(2 := (1/2) * vec_nth v 2 + 0))) \<tau> (?z \<tau>))\<close>
+                         ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
     have \<alpha>1_\<tau>_nn: \<open>0 \<le> \<alpha>1 \<tau>\<close> using \<alpha>1_nn_pointwise[OF \<tau>_in_t] .
-    have v_\<tau>_nn: \<open>0 \<le> vec_nth (x \<tau>) 1\<close> using v_nn[OF \<tau>_in_t] .
+    have v_\<tau>_nn: \<open>0 \<le> vec_nth (x \<tau>) iV\<close> using v_nn[OF \<tau>_in_t] .
     show \<open>\<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 0 * (vec_nth v 2)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
                   Dh ((\<lambda>\<tau> v. vec_lambda
                           ((\<lambda>k. 0)
-                           (0 := \<alpha>1 \<tau> / (1 + vec_nth v 1 ^ \<beta>) - vec_nth v 0,
-                            1 := \<alpha>2 \<tau> / (1 + vec_nth v 0 ^ \<gamma>) - vec_nth v 1)) +
+                           (iU := \<alpha>1 \<tau> / (1 + vec_nth v iV ^ \<beta>) - vec_nth v iU,
+                            iV := \<alpha>2 \<tau> / (1 + vec_nth v iU ^ \<gamma>) - vec_nth v iV)) +
                          vec_lambda
-                          ((\<lambda>i. 0)(2 := (1/2) * vec_nth v 2 + 0))) \<tau> (?z \<tau>)) \<le>
+                          ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
                   Dg ((\<lambda>\<tau> v. vec_lambda
                           ((\<lambda>k. 0)
-                           (0 := \<alpha>1 \<tau> / (1 + vec_nth v 1 ^ \<beta>) - vec_nth v 0,
-                            1 := \<alpha>2 \<tau> / (1 + vec_nth v 0 ^ \<gamma>) - vec_nth v 1)) +
+                           (iU := \<alpha>1 \<tau> / (1 + vec_nth v iV ^ \<beta>) - vec_nth v iU,
+                            iV := \<alpha>2 \<tau> / (1 + vec_nth v iU ^ \<gamma>) - vec_nth v iV)) +
                          vec_lambda
-                          ((\<lambda>i. 0)(2 := (1/2) * vec_nth v 2 + 0))) \<tau> (?z \<tau>))\<close>
+                          ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 0 * (vec_nth (?z \<tau>) 2)^2 + 
-                                      vec_nth (?z \<tau>) 0 * (2 * vec_nth (?z \<tau>) 2 * vec_nth v 2)\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iU * (vec_nth (?z \<tau>) iG)^2 + 
+                                      vec_nth (?z \<tau>) iU * (2 * vec_nth (?z \<tau>) iG * vec_nth v iG)\<close>])
       apply (rule conjI, rule has_derivative_const)
       apply (rule conjI, rule ug2_has_derivative)
       apply (auto simp add: power2_eq_square fun_upd_def)
@@ -3044,24 +3103,24 @@ proof -
   qed
 
   (* We APPLY DI_Vect *)
-  have ineq: \<open>1 \<le> vec_nth (?z t) 0 * (vec_nth (?z t) 2)^2\<close>
+  have ineq: \<open>1 \<le> vec_nth (?z t) iU * (vec_nth (?z t) iG)^2\<close>
     using DI_Vect[where 
             h = \<open>\<lambda>v. 1\<close> and 
-            g = \<open>\<lambda>v. vec_nth v 0 * (vec_nth v 2)^2\<close>,
+            g = \<open>\<lambda>v. vec_nth v iU * (vec_nth v iG)^2\<close>,
             OF iv_ineq combined_sol induct_step t] .
 
   (* ==========================================================================
      STAGE 3: From u(t) \<sqdot> y(t)² \<ge> 1 and y(t)² \<ge> 0, conclude u(t) > 0
      ========================================================================== *)
-  show \<open>0 < vec_nth (x t) 0\<close>
+  show \<open>0 < vec_nth (x t) iU\<close>
   proof -
-    have z_eq_x: \<open>vec_nth (?z t) 0 = vec_nth (x t) 0\<close> by simp
-    have y_sq_nn: \<open>0 \<le> (vec_nth (?z t) 2)^2\<close> by simp
-    have prod_ge_1: \<open>1 \<le> vec_nth (?z t) 0 * (vec_nth (?z t) 2)^2\<close>
+    have z_eq_x: \<open>vec_nth (?z t) iU = vec_nth (x t) iU\<close> by simp
+    have y_sq_nn: \<open>0 \<le> (vec_nth (?z t) iG)^2\<close> by simp
+    have prod_ge_1: \<open>1 \<le> vec_nth (?z t) iU * (vec_nth (?z t) iG)^2\<close>
       using ineq by simp
     show ?thesis
       using z_eq_x y_sq_nn prod_ge_1
-      apply (cases \<open>vec_nth (x t) 0 \<le> 0\<close>) 
+      apply (cases \<open>vec_nth (x t) iU \<le> 0\<close>) 
        apply (auto simp: mult_le_0_iff)
       apply (metis approximation_preproc_push_neg(1) le_less_trans 
                    power2_less_0 zero_compare_simps(6) zero_less_one)
@@ -3140,30 +3199,34 @@ text \<open>
 \<close>
 
 lemma negative_autoregulation_positive:
-  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes \<alpha> \<beta> :: real
   fixes n :: nat
+  fixes iU iG :: 'p
+      \<comment> \<open>iG is a spare coordinate for the ghost\<close>
+  assumes coords: \<open>iU \<noteq> iG\<close>
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
-                                      0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0))
+                                      iU := \<alpha> / (1 + (vec_nth v iU)^n) - \<beta> * vec_nth v iU))
                                     )) {0..t} UNIV\<close>
-      \<comment> \<open>Position 0: protein u. ODE: du/dt = alpha/(1 + u\textasciicircum{}n) - beta*u\<close>
-  assumes u0_pos: \<open>vec_nth (x 0) 0 > (0::real)\<close>
+      \<comment> \<open>Coordinate iU: protein u. ODE: du/dt = alpha/(1 + u\textasciicircum{}n) - beta*u\<close>
+  assumes u0_pos: \<open>vec_nth (x 0) iU > (0::real)\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes \<alpha>_nn: \<open>0 \<le> \<alpha>\<close>
   assumes \<beta>_pos: \<open>0 < \<beta>\<close>
   assumes n_even: \<open>even n\<close>
   assumes n_pos: \<open>1 \<le> n\<close>
-  shows \<open>0 < vec_nth (x t) 0\<close>
+  shows \<open>0 < vec_nth (x t) iU\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY
      
      To prove u(t) > 0, we use the apply-DG-then-apply-DI pattern:
      
-       STAGE 1 (DG): Introduce a ghost species y at position 1 satisfying 
+       STAGE 1 (DG): Introduce a ghost species y at coordinate iG satisfying 
                      dy/dt = (\<beta>/2)\<sqdot>y with initial value y(0) = 1/sqrt(u(0)). 
-                     The combined trajectory ?z = x extended at index 1 
+                     The combined trajectory ?z = x extended at the ghost coordinate iG 
                      with y solves the extended ODE.
        
        STAGE 2 (DI): Prove the invariant 1 \<le> u \<sqdot> y\<^sup>2 along the combined 
@@ -3182,7 +3245,7 @@ proof -
      reasoning at the bottom of each stage.
      ========================================================================== *)
 
-  define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) 0)\<close>
+  define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) iU)\<close>
 
   (* ==========================================================================
      STAGE 1: we apply DG to obtain the ghost-extended trajectory
@@ -3199,69 +3262,69 @@ proof -
   have b_cont: \<open>continuous_on {0..t} (\<lambda>\<tau>::real. 0)\<close>
     by (rule continuous_on_const)
 
-  (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at index 1 is zero *)
+  (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at the ghost coordinate iG is zero *)
   have gi_zero: \<open>\<And>\<tau> v. vec_nth ((\<lambda>t v.
-      vec_lambda ((\<lambda>k::4. 0)(
-        0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0))) \<tau> v) 1 = 0\<close>
+      vec_lambda ((\<lambda>k::'p. 0)(
+        iU := \<alpha> / (1 + (vec_nth v iU)^n) - \<beta> * vec_nth v iU))) \<tau> v) iG = 0\<close>
     by (auto simp add: fun_upd_def)
 
   (* PROOF OBLIGATION DG.5 (gi_fresh): the vector field doesn't depend on the ghost index *)
-  have gi_fresh: \<open>\<And>\<tau> v w::(real, 4) vec. (\<forall>i. i \<noteq> 1 \<longrightarrow> vec_nth v i = vec_nth w i) 
+  have gi_fresh: \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i) 
                            \<Longrightarrow> (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                                 0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0))) \<tau> v 
+                                 iU := \<alpha> / (1 + (vec_nth v iU)^n) - \<beta> * vec_nth v iU))) \<tau> v 
                               = (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                                 0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0))) \<tau> w\<close>
+                                 iU := \<alpha> / (1 + (vec_nth v iU)^n) - \<beta> * vec_nth v iU))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 4) vec\<close>
-    assume eq: \<open>\<forall>i. i \<noteq> 1 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
-    (* The field only reads index 0; not index 1 *)
-    have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
+    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    assume eq: \<open>\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i\<close>
+    (* The field only reads coordinate iU; not coordinate iG *)
+    have v0: \<open>vec_nth v iU = vec_nth w iU\<close> using eq by simp
     show \<open>(\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-            0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0))) \<tau> v =
+            iU := \<alpha> / (1 + (vec_nth v iU)^n) - \<beta> * vec_nth v iU))) \<tau> v =
           (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-            0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0))) \<tau> w\<close>
+            iU := \<alpha> / (1 + (vec_nth v iU)^n) - \<beta> * vec_nth v iU))) \<tau> w\<close>
       using v0 by (simp add: vec_eq_iff fun_upd_def)
   qed
 
   (* APPLY DG: we obtain a ghost trajectory y satisfying dy/dt = (\<beta>/2)\<sqdot>y + 0 *)
   have dg_result: \<open>\<exists> y. y 0 = y0 \<and>
-      (((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(1 := y \<tau>))) solves_ode
+      (((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(iG := y \<tau>))) solves_ode
          (\<lambda>\<tau> v. vec_lambda
                  ((\<lambda>k. 0)
-                  (0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0)) +
+                  (iU := \<alpha> / (1 + (vec_nth v iU)^n) - \<beta> * vec_nth v iU)) +
                 vec_lambda
                  ((\<lambda>i. 0)
-                  (1 := (\<beta>/2) * vec_nth v 1 + 0))))
+                  (iG := (\<beta>/2) * vec_nth v iG + 0))))
          {0..t} UNIV)\<close>
-    using DG[where a = \<open>\<lambda>\<tau>. \<beta>/2\<close> and b = \<open>\<lambda>\<tau>. 0\<close> and ?y0.0 = y0 and gi = 1,
+    using DG[where a = \<open>\<lambda>\<tau>. \<beta>/2\<close> and b = \<open>\<lambda>\<tau>. 0\<close> and ?y0.0 = y0 and gi = iG,
             OF x_sol a_cont b_cont gi_zero gi_fresh] .
 
   (* We extract the ghost trajectory y and the combined solves_ode fact *)
   then obtain y where 
     y_init: \<open>y 0 = y0\<close> and
     combined_sol: 
-      \<open>((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(1 := y \<tau>))) solves_ode
+      \<open>((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(iG := y \<tau>))) solves_ode
          (\<lambda>\<tau> v. vec_lambda
                  ((\<lambda>k. 0)
-                  (0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0)) +
+                  (iU := \<alpha> / (1 + (vec_nth v iU)^n) - \<beta> * vec_nth v iU)) +
                 vec_lambda
-                 ((\<lambda>i. 0)(1 := (\<beta>/2) * vec_nth v 1 + 0))))
+                 ((\<lambda>i. 0)(iG := (\<beta>/2) * vec_nth v iG + 0))))
          {0..t} UNIV\<close>
     by auto
 
-  let ?z = \<open>\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i) (1:=y \<tau>))\<close>
+  let ?z = \<open>\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i) (iG:=y \<tau>))\<close>
 
   (* Helper: Frechet derivative of u \<sqdot> y\<^sup>2 (product rule) *)
   have ug2_has_derivative:
-    \<open>((\<lambda>v. vec_nth v 0 * (vec_nth v 1)^2) has_derivative 
-      (\<lambda>v. vec_nth v 0 * (vec_nth p 1)^2 + 
-           vec_nth p 0 * (2 * vec_nth p 1 * vec_nth v 1))) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) has_derivative 
+      (\<lambda>v. vec_nth v iU * (vec_nth p iG)^2 + 
+           vec_nth p iU * (2 * vec_nth p iG * vec_nth v iG))) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
   proof -
-    have f: \<open>((\<lambda>v. vec_nth v 0) has_derivative (\<lambda>v. vec_nth v 0)) (at p)\<close>
+    have f: \<open>((\<lambda>v. vec_nth v iU) has_derivative (\<lambda>v. vec_nth v iU)) (at p)\<close>
       by (rule has_derivative_vec_nth)
-    have g: \<open>((\<lambda>v. (vec_nth v 1)^2) has_derivative 
-        (\<lambda>v. 2 * vec_nth p 1 * vec_nth v 1)) (at p)\<close>
+    have g: \<open>((\<lambda>v. (vec_nth v iG)^2) has_derivative 
+        (\<lambda>v. 2 * vec_nth p iG * vec_nth v iG)) (at p)\<close>
       by (rule component_sq_has_derivative)
     show ?thesis
       using has_derivative_mult[OF f g] 
@@ -3274,7 +3337,7 @@ proof -
 
   (* PROOF OBLIGATION DI.1 (iv): initial condition 1 \<le> u(0) \<sqdot> y(0)\<^sup>2 *)
   (* Since y(0) = 1/sqrt(u(0)), we have y(0)\<^sup>2 = 1/u(0), so u(0) \<sqdot> y(0)\<^sup>2 = 1 *)
-  have iv: \<open>(\<lambda>v. (1::real)) (?z 0) \<le> (\<lambda>v. vec_nth v 0 * (vec_nth v 1)^2) (?z 0)\<close>
+  have iv: \<open>(\<lambda>v. (1::real)) (?z 0) \<le> (\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) (?z 0)\<close>
     unfolding fun_upd_def
     using u0_pos 
     by (simp add: y0_def y_init field_simps power2_eq_square)
@@ -3286,43 +3349,43 @@ proof -
   have induct_step:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 0 * (vec_nth v 1)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
                  Dh ((\<lambda>\<tau> v. vec_lambda
                          ((\<lambda>k. 0)
-                          (0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0)) +
+                          (iU := \<alpha> / (1 + (vec_nth v iU)^n) - \<beta> * vec_nth v iU)) +
                         vec_lambda
-                         ((\<lambda>i. 0)(1 := (\<beta>/2) * vec_nth v 1 + 0))) \<tau> (?z \<tau>)) \<le>
+                         ((\<lambda>i. 0)(iG := (\<beta>/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
                  Dg ((\<lambda>\<tau> v. vec_lambda
                         ((\<lambda>k. 0)
-                         (0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0)) +
+                         (iU := \<alpha> / (1 + (vec_nth v iU)^n) - \<beta> * vec_nth v iU)) +
                        vec_lambda
-                        ((\<lambda>i. 0)(1 := (\<beta>/2) * vec_nth v 1 + 0))) \<tau> (?z \<tau>))\<close>
+                        ((\<lambda>i. 0)(iG := (\<beta>/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
     show \<open>\<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 0 * (vec_nth v 1)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
                   Dh ((\<lambda>\<tau> v. vec_lambda
                           ((\<lambda>k. 0)
-                           (0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0)) +
+                           (iU := \<alpha> / (1 + (vec_nth v iU)^n) - \<beta> * vec_nth v iU)) +
                          vec_lambda
-                          ((\<lambda>i. 0)(1 := (\<beta>/2) * vec_nth v 1 + 0))) \<tau> (?z \<tau>))\<le>
+                          ((\<lambda>i. 0)(iG := (\<beta>/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<le>
                   Dg ((\<lambda>\<tau> v. vec_lambda
                          ((\<lambda>k. 0)
-                          (0 := \<alpha> / (1 + (vec_nth v 0)^n) - \<beta> * vec_nth v 0)) +
+                          (iU := \<alpha> / (1 + (vec_nth v iU)^n) - \<beta> * vec_nth v iU)) +
                         vec_lambda
-                         ((\<lambda>i. 0)(1 := (\<beta>/2) * vec_nth v 1 + 0))) \<tau> (?z \<tau>))\<close>
+                         ((\<lambda>i. 0)(iG := (\<beta>/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
       apply (rule exI[where x=\<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x=\<open>\<lambda>v. vec_nth v 0 * (vec_nth (?z \<tau>) 1)^2 + 
-                                    vec_nth (?z \<tau>) 0 * (2 * vec_nth (?z \<tau>) 1 * vec_nth v 1)\<close>])
+      apply (rule exI[where x=\<open>\<lambda>v. vec_nth v iU * (vec_nth (?z \<tau>) iG)^2 + 
+                                    vec_nth (?z \<tau>) iU * (2 * vec_nth (?z \<tau>) iG * vec_nth v iG)\<close>])
       apply (rule conjI)
        apply (rule has_derivative_const)
       apply (rule conjI)
        apply (rule ug2_has_derivative)
       apply (auto simp add: power2_eq_square fun_upd_def)
-      apply (subgoal_tac \<open>(\<alpha> / (1 + vec_nth (x \<tau>) 0 ^ n) - \<beta> * vec_nth (x \<tau>) 0) * (y \<tau> * y \<tau>) +
-                          vec_nth (x \<tau>) 0 * (y \<tau> * (\<beta> * y \<tau>)) =
-                          \<alpha> / (1 + vec_nth (x \<tau>) 0 ^ n) * (y \<tau> * y \<tau>)\<close>)
+      apply (subgoal_tac \<open>(\<alpha> / (1 + vec_nth (x \<tau>) iU ^ n) - \<beta> * vec_nth (x \<tau>) iU) * (y \<tau> * y \<tau>) +
+                          vec_nth (x \<tau>) iU * (y \<tau> * (\<beta> * y \<tau>)) =
+                          \<alpha> / (1 + vec_nth (x \<tau>) iU ^ n) * (y \<tau> * y \<tau>)\<close>)
        prefer 2
        apply (simp add: algebra_simps)
       apply simp
@@ -3334,22 +3397,22 @@ proof -
   qed
 
   (* WE APPLY DI_Vect: we get the invariant 1 \<le> u \<sqdot> y\<^sup>2 at time t *)
-  have ineq: \<open>(\<lambda>v. (1::real)) (?z t) \<le> (\<lambda>v. vec_nth v 0 * (vec_nth v 1)^2) (?z t)\<close>
-    using DI_Vect[where h = \<open>\<lambda>v. 1\<close> and g = \<open>\<lambda>v. vec_nth v 0 * (vec_nth v 1)^2\<close>,
+  have ineq: \<open>(\<lambda>v. (1::real)) (?z t) \<le> (\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) (?z t)\<close>
+    using DI_Vect[where h = \<open>\<lambda>v. 1\<close> and g = \<open>\<lambda>v. vec_nth v iU * (vec_nth v iG)^2\<close>,
                   OF iv combined_sol induct_step t] .
 
   (* ==========================================================================
      STAGE 3: From u(t) \<sqdot> y(t)\<^sup>2 \<ge> 1 and y(t)\<^sup>2 \<ge> 0, conclude u(t) > 0
      ========================================================================== *)
-  show \<open>0 < vec_nth (x t) 0\<close>
+  show \<open>0 < vec_nth (x t) iU\<close>
   proof -
-    have z_eq_x: \<open>vec_nth (?z t) 0 = vec_nth (x t) 0\<close> by simp
-    have y_sq_nn: \<open>0 \<le> (vec_nth (?z t) 1)^2\<close> by simp
-    have prod_ge_1: \<open>1 \<le> vec_nth (?z t) 0 * (vec_nth (?z t) 1)^2\<close>
+    have z_eq_x: \<open>vec_nth (?z t) iU = vec_nth (x t) iU\<close> by simp
+    have y_sq_nn: \<open>0 \<le> (vec_nth (?z t) iG)^2\<close> by simp
+    have prod_ge_1: \<open>1 \<le> vec_nth (?z t) iU * (vec_nth (?z t) iG)^2\<close>
       using ineq by simp
     show ?thesis
       using z_eq_x y_sq_nn prod_ge_1
-      apply (cases \<open>vec_nth (x t) 0 \<le> 0\<close>) 
+      apply (cases \<open>vec_nth (x t) iU \<le> 0\<close>) 
        apply (auto simp: mult_le_0_iff)
       apply (metis approximation_preproc_push_neg(1) le_less_trans 
                    power2_less_0 zero_compare_simps(6) zero_less_one)
@@ -3441,26 +3504,31 @@ text \<open>
   certifies that the ODE model remains physically meaningful forever.
 \<close>
 
-text \<open>Lemma 1: positivity of u (ghost at position 3, witness u * g\textasciicircum{}2).\<close>
+text \<open>Lemma 1: positivity of u (ghost at coordinate iG, witness u * g\textasciicircum{}2).\<close>
 lemma repressilator_u_positive:
-  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes \<alpha> :: real
   fixes n :: nat
+  fixes iU iV iW iG :: 'p
+      \<comment> \<open>iG is a spare coordinate for the ghost\<close>
+  assumes coords: \<open>iU \<noteq> iV\<close> \<open>iU \<noteq> iW\<close> \<open>iU \<noteq> iG\<close>
+                  \<open>iV \<noteq> iW\<close> \<open>iV \<noteq> iG\<close> \<open>iW \<noteq> iG\<close>
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
-                                      0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                                      1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                                      2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))
+                                      iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                                      iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                                      iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))
                                     )) {0..t} UNIV\<close>
-      \<comment> \<open>Position 0: u, position 1: v, position 2: w.
+      \<comment> \<open>Coordinate iU: u, coordinate iV: v, coordinate iW: w.
          Ring: u is repressed by w, v by u, and w by v\<close>
-  assumes u0_pos: \<open>vec_nth (x 0) 0 > (0::real)\<close>
+  assumes u0_pos: \<open>vec_nth (x 0) iU > (0::real)\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes \<alpha>_nn: \<open>0 \<le> \<alpha>\<close>
   assumes n_even: \<open>even n\<close>
   assumes n_pos: \<open>1 \<le> n\<close>
-  shows \<open>0 < vec_nth (x t) 0\<close>
+  shows \<open>0 < vec_nth (x t) iU\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY
      
@@ -3468,7 +3536,7 @@ proof -
      
        STAGE 1 (DG): We introduce a ghost species y satisfying dy/dt = (1/2)\<sqdot>y
                      with initial value y(0) = 1/sqrt(u(0)). The combined 
-                     trajectory ?z = x extended at index 3 with y solves 
+                     trajectory ?z = x extended at the ghost coordinate iG with y solves 
                      the extended ODE.
        
        STAGE 2 (DI): We prove the invariant 1 \<le> u \<sqdot> y\<^sup>2 along the combined 
@@ -3482,7 +3550,7 @@ proof -
      reasoning at the bottom of each stage.
      ========================================================================== *)
 
-  define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) 0)\<close>
+  define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) iU)\<close>
 
   (* ==========================================================================
      STAGE 1: We apply DG to obtain the ghost-extended trajectory
@@ -3499,83 +3567,83 @@ proof -
   have b_cont: \<open>continuous_on {0..t} (\<lambda>\<tau>::real. 0)\<close>
     by (rule continuous_on_const)
 
-  (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at index 3 is zero *)
+  (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at the ghost coordinate iG is zero *)
   have gi_zero: \<open>\<And>\<tau> v. vec_nth ((\<lambda>t v.
-      vec_lambda ((\<lambda>k::4. 0)(
-        0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-        1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-        2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> v) 3 = 0\<close>
+      vec_lambda ((\<lambda>k::'p. 0)(
+        iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+        iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+        iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> v) iG = 0\<close>
     by (auto simp add: fun_upd_def)
 
   (* PROOF OBLIGATION DG.5 (gi_fresh): the vector field doesn't depend on the ghost index *)
   have gi_fresh: 
-    \<open>\<And>\<tau> v w::(real, 4) vec. (\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
+    \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
                             (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                                 0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                                 1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                                 2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> v = 
+                                 iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                                 iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                                 iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> v = 
                             (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                                 0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                                 1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                                 2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> w\<close>
+                                 iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                                 iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                                 iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 4) vec\<close>
-    assume eq: \<open>\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
-    have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
-    have v1: \<open>vec_nth v 1 = vec_nth w 1\<close> using eq by simp
-    have v2: \<open>vec_nth v 2 = vec_nth w 2\<close> using eq by simp
+    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    assume eq: \<open>\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i\<close>
+    have v0: \<open>vec_nth v iU = vec_nth w iU\<close> using eq by simp
+    have v1: \<open>vec_nth v iV = vec_nth w iV\<close> using eq by simp
+    have v2: \<open>vec_nth v iW = vec_nth w iW\<close> using eq by simp
     show \<open>(\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-            0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-            1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-            2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> v =
+            iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+            iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+            iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> v =
           (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-            0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-            1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-            2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> w\<close>
+            iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+            iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+            iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> w\<close>
       using v0 v1 v2 by (simp add: vec_eq_iff fun_upd_def)
   qed
 
   (* WE APPLY DG: obtain a ghost trajectory y satisfying dy/dt = (1/2)\<sqdot>y + 0 *)
   have dg_result: \<open>\<exists> y. y 0 = y0 \<and>
-      (((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(3 := y \<tau>))) solves_ode
+      (((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(iG := y \<tau>))) solves_ode
          (\<lambda>\<tau> v. vec_lambda
                  ((\<lambda>k. 0)
-                  (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                   1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                   2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                  (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                   iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                   iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                 vec_lambda
-                 ((\<lambda>i. 0) (3 := (1/2) * vec_nth v 3 + 0)))) {0..t} UNIV)\<close>
-    using DG[where a = \<open>\<lambda>\<tau>. 1/2\<close> and b = \<open>\<lambda>\<tau>. 0\<close> and  ?y0.0 = y0 and gi = 3,
+                 ((\<lambda>i. 0) (iG := (1/2) * vec_nth v iG + 0)))) {0..t} UNIV)\<close>
+    using DG[where a = \<open>\<lambda>\<tau>. 1/2\<close> and b = \<open>\<lambda>\<tau>. 0\<close> and  ?y0.0 = y0 and gi = iG,
              OF x_sol a_cont b_cont gi_zero gi_fresh] .
 
   (* We extract the ghost trajectory y and the combined solves_ode fact *)
   then obtain y where 
     y_init: \<open>y 0 = y0\<close> and
     combined_sol: 
-      \<open>((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(3 := y \<tau>))) solves_ode
+      \<open>((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(iG := y \<tau>))) solves_ode
          (\<lambda>\<tau> v. vec_lambda
                  ((\<lambda>k. 0)
-                  (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                   1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                   2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                  (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                   iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                   iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                 vec_lambda
-                 ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))))
+                 ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))))
          {0..t} UNIV\<close>
     by auto
 
-  let ?z = \<open>\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i) (3:=y \<tau>))\<close>
+  let ?z = \<open>\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i) (iG:=y \<tau>))\<close>
 
   (* Helper: Frechet derivative of u \<sqdot> y\<^sup>2 (product rule) *)
   have ug2_has_derivative:
-    \<open>((\<lambda>v. vec_nth v 0 * (vec_nth v 3)^2) has_derivative 
-      (\<lambda>v. vec_nth v 0 * (vec_nth p 3)^2 + 
-           vec_nth p 0 * (2 * vec_nth p 3 * vec_nth v 3))) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) has_derivative 
+      (\<lambda>v. vec_nth v iU * (vec_nth p iG)^2 + 
+           vec_nth p iU * (2 * vec_nth p iG * vec_nth v iG))) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
   proof -
-    have f: \<open>((\<lambda>v. vec_nth v 0) has_derivative (\<lambda>v. vec_nth v 0)) (at p)\<close>
+    have f: \<open>((\<lambda>v. vec_nth v iU) has_derivative (\<lambda>v. vec_nth v iU)) (at p)\<close>
       by (rule has_derivative_vec_nth)
-    have g: \<open>((\<lambda>v. (vec_nth v 3)^2) has_derivative 
-        (\<lambda>v. 2 * vec_nth p 3 * vec_nth v 3)) (at p)\<close>
+    have g: \<open>((\<lambda>v. (vec_nth v iG)^2) has_derivative 
+        (\<lambda>v. 2 * vec_nth p iG * vec_nth v iG)) (at p)\<close>
       by (rule component_sq_has_derivative)
     show ?thesis
       using has_derivative_mult[OF f g] 
@@ -3588,7 +3656,7 @@ proof -
 
   (* PROOF OBLIGATION DI.1 (iv): initial condition 1 \<le> u(0) \<sqdot> y(0)\<^sup>2 *)
   (* Since y(0) = 1/sqrt(u(0)), we have y(0)\<^sup>2 = 1/u(0), so u(0) \<sqdot> y(0)\<^sup>2 = 1 *)
-  have iv: \<open>(\<lambda>v. (1::real)) (?z 0) \<le> (\<lambda>v. vec_nth v 0 * (vec_nth v 3)^2) (?z 0)\<close>
+  have iv: \<open>(\<lambda>v. (1::real)) (?z 0) \<le> (\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) (?z 0)\<close>
     unfolding fun_upd_def
     using u0_pos 
     by (simp add: y0_def y_init field_simps power2_eq_square)
@@ -3599,51 +3667,51 @@ proof -
   have induct_step:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 0 * (vec_nth v 3)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
                  Dh ((\<lambda>\<tau> v. vec_lambda
                          ((\<lambda>k. 0)
-                          (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                           1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                           2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                          (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                           iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                           iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                         vec_lambda
-                         ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))) \<tau> (?z \<tau>)) \<le>
+                         ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
                  Dg ((\<lambda>\<tau> v. vec_lambda
                          ((\<lambda>k. 0)
-                          (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                           1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                           2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                          (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                           iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                           iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                         vec_lambda
-                         ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))) \<tau> (?z \<tau>))\<close>
+                         ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
     show \<open>\<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 0 * (vec_nth v 3)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
                   Dh ((\<lambda>\<tau> v. vec_lambda
                           ((\<lambda>k. 0)
-                           (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                            1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                            2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                           (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                            iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                            iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                          vec_lambda
-                          ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))) \<tau> (?z \<tau>)) \<le>
+                          ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
                    Dg ((\<lambda>\<tau> v. vec_lambda
                           ((\<lambda>k. 0)
-                           (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                            1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                            2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                           (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                            iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                            iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                          vec_lambda
-                          ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))) \<tau> (?z \<tau>))\<close>
+                          ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
       apply (rule exI[where x=\<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x=\<open>\<lambda>v. vec_nth v 0 * (vec_nth (?z \<tau>) 3)^2 + 
-                                   vec_nth (?z \<tau>) 0 * (2 * vec_nth (?z \<tau>) 3 * vec_nth v 3)\<close>])
+      apply (rule exI[where x=\<open>\<lambda>v. vec_nth v iU * (vec_nth (?z \<tau>) iG)^2 + 
+                                   vec_nth (?z \<tau>) iU * (2 * vec_nth (?z \<tau>) iG * vec_nth v iG)\<close>])
       apply (rule conjI)
        apply (rule has_derivative_const)
       apply (rule conjI)
        apply (rule ug2_has_derivative)
       apply (auto simp add: power2_eq_square fun_upd_def)
-      apply (subgoal_tac \<open>(\<alpha> / (1 + vec_nth (x \<tau>) 2 ^ n) - vec_nth (x \<tau>) 0) * (y \<tau> * y \<tau>) +
-                           vec_nth (x \<tau>) 0 * (y \<tau> * y \<tau>) =
-                          \<alpha> / (1 + vec_nth (x \<tau>) 2 ^ n) * (y \<tau> * y \<tau>)\<close>)
+      apply (subgoal_tac \<open>(\<alpha> / (1 + vec_nth (x \<tau>) iW ^ n) - vec_nth (x \<tau>) iU) * (y \<tau> * y \<tau>) +
+                           vec_nth (x \<tau>) iU * (y \<tau> * y \<tau>) =
+                          \<alpha> / (1 + vec_nth (x \<tau>) iW ^ n) * (y \<tau> * y \<tau>)\<close>)
        prefer 2
        apply (simp add: algebra_simps)
       apply simp
@@ -3655,21 +3723,21 @@ proof -
   qed
 
   (* WE APPLY DI_Vect: we get the invariant 1 \<le> u \<sqdot> y\<^sup>2 at time t *)
-  have ineq: \<open>(\<lambda>v. (1::real)) (?z t) \<le> (\<lambda>v. vec_nth v 0 * (vec_nth v 3)^2) (?z t)\<close>
-    using DI_Vect[where h = \<open>\<lambda>v. 1\<close> and g = \<open>\<lambda>v. vec_nth v 0 * (vec_nth v 3)^2\<close>,
+  have ineq: \<open>(\<lambda>v. (1::real)) (?z t) \<le> (\<lambda>v. vec_nth v iU * (vec_nth v iG)^2) (?z t)\<close>
+    using DI_Vect[where h = \<open>\<lambda>v. 1\<close> and g = \<open>\<lambda>v. vec_nth v iU * (vec_nth v iG)^2\<close>,
                   OF    iv combined_sol induct_step t] .
   (* ==========================================================================
      STAGE 3: From u(t) \<sqdot> y(t)\<^sup>2 \<ge> 1 and y(t)\<^sup>2 \<ge> 0, conclude u(t) > 0
      ========================================================================== *)
-  show \<open>0 < vec_nth (x t) 0\<close>
+  show \<open>0 < vec_nth (x t) iU\<close>
   proof -
-    have z_eq_x: \<open>vec_nth (?z t) 0 = vec_nth (x t) 0\<close> by simp
-    have y_sq_nn: \<open>0 \<le> (vec_nth (?z t) 3)^2\<close> by simp
-    have prod_ge_1: \<open>1 \<le> vec_nth (?z t) 0 * (vec_nth (?z t) 3)^2\<close>
+    have z_eq_x: \<open>vec_nth (?z t) iU = vec_nth (x t) iU\<close> by simp
+    have y_sq_nn: \<open>0 \<le> (vec_nth (?z t) iG)^2\<close> by simp
+    have prod_ge_1: \<open>1 \<le> vec_nth (?z t) iU * (vec_nth (?z t) iG)^2\<close>
       using ineq by simp
     show ?thesis
       using z_eq_x y_sq_nn prod_ge_1
-      apply (cases \<open>vec_nth (x t) 0 \<le> 0\<close>) 
+      apply (cases \<open>vec_nth (x t) iU \<le> 0\<close>) 
        apply (auto simp: mult_le_0_iff)
       apply (metis approximation_preproc_push_neg(1) le_less_trans 
                    power2_less_0 zero_compare_simps(6) zero_less_one)
@@ -3677,24 +3745,29 @@ proof -
   qed
 qed
 
-text \<open>Lemma 2: positivity of v (mirror argument, ghost at position 3).\<close>
+text \<open>Lemma 2: positivity of v (mirror argument, ghost at coordinate iG).\<close>
 lemma repressilator_v_positive:
-  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes \<alpha> :: real
   fixes n :: nat
+  fixes iU iV iW iG :: 'p
+      \<comment> \<open>iG is a spare coordinate for the ghost\<close>
+  assumes coords: \<open>iU \<noteq> iV\<close> \<open>iU \<noteq> iW\<close> \<open>iU \<noteq> iG\<close>
+                  \<open>iV \<noteq> iW\<close> \<open>iV \<noteq> iG\<close> \<open>iW \<noteq> iG\<close>
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
-                                      0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                                      1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                                      2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))
+                                      iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                                      iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                                      iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))
                                     )) {0..t} UNIV\<close>
-  assumes v0_pos: \<open>vec_nth (x 0) 1 > (0::real)\<close>
+  assumes v0_pos: \<open>vec_nth (x 0) iV > (0::real)\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes \<alpha>_nn: \<open>0 \<le> \<alpha>\<close>
   assumes n_even: \<open>even n\<close>
   assumes n_pos: \<open>1 \<le> n\<close>
-  shows \<open>0 < vec_nth (x t) 1\<close>
+  shows \<open>0 < vec_nth (x t) iV\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY
      
@@ -3702,7 +3775,7 @@ proof -
      
        STAGE 1 (DG): We introduce a ghost species y satisfying dy/dt = (1/2)\<sqdot>y
                      with initial value y(0) = 1/sqrt(v(0)). The combined 
-                     trajectory ?z = x extended at index 3 with y solves 
+                     trajectory ?z = x extended at the ghost coordinate iG with y solves 
                      the extended ODE.
        
        STAGE 2 (DI): We prove the invariant 1 \<le> v \<sqdot> y\<^sup>2 along the combined 
@@ -3714,7 +3787,7 @@ proof -
      on top, axiom on bottom" pattern.
      ========================================================================== *)
 
-  define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) 1)\<close>
+  define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) iV)\<close>
 
   (* ==========================================================================
      STAGE 1: Apply DG to obtain the ghost-extended trajectory
@@ -3728,85 +3801,85 @@ proof -
   have b_cont: \<open>continuous_on {0..t} (\<lambda>\<tau>::real. 0)\<close>
     by (rule continuous_on_const)
 
-  (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at index 3 is zero *)
+  (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at the ghost coordinate iG is zero *)
   have gi_zero: \<open>\<And>\<tau> v. vec_nth ((\<lambda>t v.
-      vec_lambda ((\<lambda>k::4. 0)(
-        0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-        1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-        2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> v) 3 = 0\<close>
+      vec_lambda ((\<lambda>k::'p. 0)(
+        iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+        iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+        iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> v) iG = 0\<close>
     by (auto simp add: fun_upd_def)
 
   (* PROOF OBLIGATION DG.5 (gi_fresh): the vector field doesn't depend on the ghost index *)
-  have gi_fresh: \<open>\<And>\<tau> v w::(real, 4) vec. (\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
+  have gi_fresh: \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
                             (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                                 0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                                 1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                                 2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> v = 
+                                 iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                                 iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                                 iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> v = 
                             (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                                 0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                                 1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                                 2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> w\<close>
+                                 iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                                 iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                                 iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 4) vec\<close>
-    assume eq: \<open>\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
-    have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
-    have v1: \<open>vec_nth v 1 = vec_nth w 1\<close> using eq by simp
-    have v2: \<open>vec_nth v 2 = vec_nth w 2\<close> using eq by simp
+    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    assume eq: \<open>\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i\<close>
+    have v0: \<open>vec_nth v iU = vec_nth w iU\<close> using eq by simp
+    have v1: \<open>vec_nth v iV = vec_nth w iV\<close> using eq by simp
+    have v2: \<open>vec_nth v iW = vec_nth w iW\<close> using eq by simp
     show \<open>(\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-            0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-            1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-            2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> v =
+            iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+            iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+            iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> v =
           (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-            0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-            1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-            2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> w\<close>
+            iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+            iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+            iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> w\<close>
       using v0 v1 v2 
       by (simp add: vec_eq_iff fun_upd_def)
   qed
 
   (* APPLY DG: we obtain a ghost trajectory y satisfying dy/dt = (1/2)\<sqdot>y + 0 *)
   have dg_result: \<open>\<exists> y. y 0 = y0 \<and>
-      (((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(3 := y \<tau>))) solves_ode
+      (((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(iG := y \<tau>))) solves_ode
          (\<lambda>\<tau> v. vec_lambda
                  ((\<lambda>k. 0)
-                  (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                   1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                   2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                  (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                   iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                   iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                 vec_lambda
                  ((\<lambda>i. 0)
-                  (3 := (1/2) * vec_nth v 3 + 0))))
+                  (iG := (1/2) * vec_nth v iG + 0))))
          {0..t} UNIV)\<close>
-    using DG[where a = \<open>\<lambda>\<tau>. 1/2\<close> and b = \<open>\<lambda>\<tau>. 0\<close> and ?y0.0 = y0 and gi = 3,
+    using DG[where a = \<open>\<lambda>\<tau>. 1/2\<close> and b = \<open>\<lambda>\<tau>. 0\<close> and ?y0.0 = y0 and gi = iG,
              OF x_sol a_cont b_cont gi_zero gi_fresh] .
 
   (* We extract the ghost trajectory y and the combined solves_ode fact *)
   then obtain y where 
     y_init: \<open>y 0 = y0\<close> and
     combined_sol: 
-      \<open>((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(3 := y \<tau>))) solves_ode
+      \<open>((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(iG := y \<tau>))) solves_ode
          (\<lambda>\<tau> v. vec_lambda
                  ((\<lambda>k. 0)
-                  (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                   1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                   2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                  (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                   iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                   iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                 vec_lambda
-                 ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))))
+                 ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))))
          {0..t} UNIV\<close>
     by auto
 
-  let ?z = \<open>\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i) (3:=y \<tau>))\<close>
+  let ?z = \<open>\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i) (iG:=y \<tau>))\<close>
 
   (* Helper: Frechet derivative of v \<sqdot> y\<^sup>2 (product rule) *)
   have vg2_has_derivative:
-    \<open>((\<lambda>v. vec_nth v 1 * (vec_nth v 3)^2) has_derivative 
-      (\<lambda>v. vec_nth v 1 * (vec_nth p 3)^2 + 
-           vec_nth p 1 * (2 * vec_nth p 3 * vec_nth v 3))) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iV * (vec_nth v iG)^2) has_derivative 
+      (\<lambda>v. vec_nth v iV * (vec_nth p iG)^2 + 
+           vec_nth p iV * (2 * vec_nth p iG * vec_nth v iG))) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
   proof -
-    have f: \<open>((\<lambda>v. vec_nth v 1) has_derivative (\<lambda>v. vec_nth v 1)) (at p)\<close>
+    have f: \<open>((\<lambda>v. vec_nth v iV) has_derivative (\<lambda>v. vec_nth v iV)) (at p)\<close>
       by (rule has_derivative_vec_nth)
-    have g: \<open>((\<lambda>v. (vec_nth v 3)^2) has_derivative 
-        (\<lambda>v. 2 * vec_nth p 3 * vec_nth v 3)) (at p)\<close>
+    have g: \<open>((\<lambda>v. (vec_nth v iG)^2) has_derivative 
+        (\<lambda>v. 2 * vec_nth p iG * vec_nth v iG)) (at p)\<close>
       by (rule component_sq_has_derivative)
     show ?thesis
       using has_derivative_mult[OF f g] 
@@ -3818,7 +3891,7 @@ proof -
      ========================================================================== *)
 
   (* PROOF OBLIGATION DI.1 (iv): initial condition 1 \<le> v(0) \<sqdot> y(0)\<^sup>2 *)
-  have iv: \<open>(\<lambda>v. (1::real)) (?z 0) \<le> (\<lambda>v. vec_nth v 1 * (vec_nth v 3)^2) (?z 0)\<close>
+  have iv: \<open>(\<lambda>v. (1::real)) (?z 0) \<le> (\<lambda>v. vec_nth v iV * (vec_nth v iG)^2) (?z 0)\<close>
     unfolding fun_upd_def
     using v0_pos 
     by (simp add: y0_def y_init field_simps power2_eq_square)
@@ -3829,51 +3902,51 @@ proof -
   have induct_step:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 1 * (vec_nth v 3)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iV * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
                  Dh ((\<lambda>\<tau> v. vec_lambda
                          ((\<lambda>k. 0)
-                          (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                           1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                           2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                          (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                           iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                           iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                         vec_lambda
-                         ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))) \<tau> (?z \<tau>)) \<le>
+                         ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
                 Dg ((\<lambda>\<tau> v. vec_lambda
                          ((\<lambda>k. 0)
-                          (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                           1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                           2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                          (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                           iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                           iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                         vec_lambda
-                         ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))) \<tau> (?z \<tau>))\<close>
+                         ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
     show \<open>\<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 1 * (vec_nth v 3)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iV * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
                   Dh ((\<lambda>\<tau> v. vec_lambda
                           ((\<lambda>k. 0)
-                           (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                            1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                            2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                           (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                            iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                            iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                          vec_lambda
-                          ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))) \<tau> (?z \<tau>)) \<le>
+                          ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
                   Dg ((\<lambda>\<tau> v. vec_lambda
                           ((\<lambda>k. 0)
-                           (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                            1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                            2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                           (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                            iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                            iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                          vec_lambda
-                          ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))) \<tau> (?z \<tau>))\<close>
+                          ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
       apply (rule exI[where x=\<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x=\<open>\<lambda>v. vec_nth v 1 * (vec_nth (?z \<tau>) 3)^2 + 
-                                    vec_nth (?z \<tau>) 1 * (2 * vec_nth (?z \<tau>) 3 * vec_nth v 3)\<close>])
+      apply (rule exI[where x=\<open>\<lambda>v. vec_nth v iV * (vec_nth (?z \<tau>) iG)^2 + 
+                                    vec_nth (?z \<tau>) iV * (2 * vec_nth (?z \<tau>) iG * vec_nth v iG)\<close>])
       apply (rule conjI)
        apply (rule has_derivative_const)
       apply (rule conjI)
        apply (rule vg2_has_derivative)
       apply (auto simp add: power2_eq_square fun_upd_def)
-      apply (subgoal_tac \<open>(\<alpha> / (1 + vec_nth (x \<tau>) 0 ^ n) - vec_nth (x \<tau>) 1) * (y \<tau> * y \<tau>) +
-                          vec_nth (x \<tau>) 1 * (y \<tau> * y \<tau>) =
-                          \<alpha> / (1 + vec_nth (x \<tau>) 0 ^ n) * (y \<tau> * y \<tau>)\<close>)
+      apply (subgoal_tac \<open>(\<alpha> / (1 + vec_nth (x \<tau>) iU ^ n) - vec_nth (x \<tau>) iV) * (y \<tau> * y \<tau>) +
+                          vec_nth (x \<tau>) iV * (y \<tau> * y \<tau>) =
+                          \<alpha> / (1 + vec_nth (x \<tau>) iU ^ n) * (y \<tau> * y \<tau>)\<close>)
        prefer 2
        apply (simp add: algebra_simps)
       apply simp
@@ -3885,22 +3958,22 @@ proof -
   qed
 
   (* WE APPLY DI_Vect: we get the invariant 1 \<le> v \<sqdot> y\<^sup>2 at time t *)
-  have ineq: \<open>(\<lambda>v. (1::real)) (?z t) \<le> (\<lambda>v. vec_nth v 1 * (vec_nth v 3)^2) (?z t)\<close>
-    using DI_Vect[where h = \<open>\<lambda>v. 1\<close> and g = \<open>\<lambda>v. vec_nth v 1 * (vec_nth v 3)^2\<close>,
+  have ineq: \<open>(\<lambda>v. (1::real)) (?z t) \<le> (\<lambda>v. vec_nth v iV * (vec_nth v iG)^2) (?z t)\<close>
+    using DI_Vect[where h = \<open>\<lambda>v. 1\<close> and g = \<open>\<lambda>v. vec_nth v iV * (vec_nth v iG)^2\<close>,
                   OF iv combined_sol induct_step t] .
 
   (* ==========================================================================
      STAGE 3: From v(t) \<sqdot> y(t)\<^sup>2 \<ge> 1 and y(t)\<^sup>2 \<ge> 0, conclude v(t) > 0
      ========================================================================== *)
-  show \<open>0 < vec_nth (x t) 1\<close>
+  show \<open>0 < vec_nth (x t) iV\<close>
   proof -
-    have z_eq_x: \<open>vec_nth (?z t) 1 = vec_nth (x t) 1\<close> by simp
-    have y_sq_nn: \<open>0 \<le> (vec_nth (?z t) 3)^2\<close> by simp
-    have prod_ge_1: \<open>1 \<le> vec_nth (?z t) 1 * (vec_nth (?z t) 3)^2\<close>
+    have z_eq_x: \<open>vec_nth (?z t) iV = vec_nth (x t) iV\<close> by simp
+    have y_sq_nn: \<open>0 \<le> (vec_nth (?z t) iG)^2\<close> by simp
+    have prod_ge_1: \<open>1 \<le> vec_nth (?z t) iV * (vec_nth (?z t) iG)^2\<close>
       using ineq by simp
     show ?thesis
       using z_eq_x y_sq_nn prod_ge_1
-      apply (cases \<open>vec_nth (x t) 1 \<le> 0\<close>) 
+      apply (cases \<open>vec_nth (x t) iV \<le> 0\<close>) 
        apply (auto simp: mult_le_0_iff)
       apply (metis approximation_preproc_push_neg(1) le_less_trans 
                    power2_less_0 zero_compare_simps(6) zero_less_one)
@@ -3908,24 +3981,29 @@ proof -
   qed
 qed
 
-text \<open>Lemma 3: positivity of w (mirror argument, ghost at position 3).\<close>
+text \<open>Lemma 3: positivity of w (mirror argument, ghost at coordinate iG).\<close>
 lemma repressilator_w_positive:
-  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes \<alpha> :: real
   fixes n :: nat
+  fixes iU iV iW iG :: 'p
+      \<comment> \<open>iG is a spare coordinate for the ghost\<close>
+  assumes coords: \<open>iU \<noteq> iV\<close> \<open>iU \<noteq> iW\<close> \<open>iU \<noteq> iG\<close>
+                  \<open>iV \<noteq> iW\<close> \<open>iV \<noteq> iG\<close> \<open>iW \<noteq> iG\<close>
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
                                    vec_lambda ((\<lambda>k. 0)(
-                                     0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                                     1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                                     2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))
+                                     iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                                     iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                                     iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))
                                    )) {0..t} UNIV\<close>
-  assumes w0_pos: \<open>vec_nth (x 0) 2 > (0::real)\<close>
+  assumes w0_pos: \<open>vec_nth (x 0) iW > (0::real)\<close>
   assumes t: \<open>t \<ge> 0\<close>
   assumes \<alpha>_nn: \<open>\<alpha> \<ge> 0\<close>
   assumes n_even: \<open>even n\<close>
   assumes n_pos: \<open>n \<ge> 1\<close>
-  shows \<open>vec_nth (x t) 2 > (0::real)\<close>
+  shows \<open>vec_nth (x t) iW > (0::real)\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY
      
@@ -3933,7 +4011,7 @@ proof -
      
        STAGE 1 (DG): We introduce a ghost species y satisfying dy/dt = (1/2)\<sqdot>y
                      with initial value y(0) = 1/sqrt(W(0)). The combined 
-                     trajectory ?z = x extended at index 3 with y solves 
+                     trajectory ?z = x extended at the ghost coordinate iG with y solves 
                      the extended ODE.
        
        STAGE 2 (DI): We prove the invariant W \<sqdot> y² \<ge> 1 along the combined 
@@ -3947,7 +4025,7 @@ proof -
      reasoning at the bottom of each stage.
      ========================================================================== *)
 
-  define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) 2)\<close>
+  define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) iW)\<close>
 
   (* ==========================================================================
      STAGE 1: Apply DG to obtain the ghost-extended trajectory
@@ -3964,90 +4042,90 @@ proof -
   have b_cont: \<open>continuous_on {0..t} (\<lambda>\<tau>::real. 0)\<close>
     by (rule continuous_on_const)
 
-  (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at index 3 is zero *)
+  (* PROOF OBLIGATION DG.4 (gi_zero): the vector field's component at the ghost coordinate iG is zero *)
   have gi_zero: \<open>\<And>\<tau> v. vec_nth ((\<lambda>t v.
-      vec_lambda ((\<lambda>k::4. 0)(
-        0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-        1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-        2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> v) 3 = 0\<close>
+      vec_lambda ((\<lambda>k::'p. 0)(
+        iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+        iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+        iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> v) iG = 0\<close>
     by (auto simp add: fun_upd_def)
 
   (* PROOF OBLIGATION DG.5 (gi_fresh): the vector field doesn't depend on the ghost index *)
   have gi_fresh: 
-    \<open>\<And>\<tau> v w::(real, 4) vec. (\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
+    \<open>\<And>\<tau> v w::(real, 'p) vec. (\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow>
                              (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                                  0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                                  1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                                  2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> v =
+                                  iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                                  iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                                  iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> v =
                              (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                                  0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                                  1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                                  2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> w\<close>
+                                  iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                                  iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                                  iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> w\<close>
   proof -
-    fix \<tau> :: real and v w :: \<open>(real, 4) vec\<close>
-    assume eq: \<open>\<forall>i. i \<noteq> 3 \<longrightarrow> vec_nth v i = vec_nth w i\<close>
+    fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
+    assume eq: \<open>\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i\<close>
     (* The field only reads indices 0, 1, 2; none of these is 3 *)
-    have v0: \<open>vec_nth v 0 = vec_nth w 0\<close> using eq by simp
-    have v1: \<open>vec_nth v 1 = vec_nth w 1\<close> using eq by simp
-    have v2: \<open>vec_nth v 2 = vec_nth w 2\<close> using eq by simp
+    have v0: \<open>vec_nth v iU = vec_nth w iU\<close> using eq by simp
+    have v1: \<open>vec_nth v iV = vec_nth w iV\<close> using eq by simp
+    have v2: \<open>vec_nth v iW = vec_nth w iW\<close> using eq by simp
     show \<open>(\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-            0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-            1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-            2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> v =
+            iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+            iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+            iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> v =
           (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-            0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-            1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-            2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))) \<tau> w\<close>
+            iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+            iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+            iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))) \<tau> w\<close>
       using v0 v1 v2 by (simp add: vec_eq_iff fun_upd_def)
   qed
 
   (* WE APPLY DG: we obtain a ghost trajectory y satisfying dy/dt = (1/2)\<sqdot>y + 0 *)
   have dg_result: \<open>\<exists> y. y 0 = y0 \<and>
-      (((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(3 := y \<tau>))) solves_ode
+      (((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(iG := y \<tau>))) solves_ode
          (\<lambda>\<tau> v. vec_lambda
                  ((\<lambda>k. 0)
-                  (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                   1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                   2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                  (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                   iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                   iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                 vec_lambda
                  ((\<lambda>i. 0)
-                  (3 := (1/2) * vec_nth v 3 + 0))))
+                  (iG := (1/2) * vec_nth v iG + 0))))
          {0..t} UNIV)\<close>
     using DG[where 
             a = \<open>\<lambda>\<tau>. 1/2\<close> and 
             b = \<open>\<lambda>\<tau>. 0\<close> and 
             ?y0.0 = y0 and
-            gi = 3,
+            gi = iG,
             OF x_sol a_cont b_cont gi_zero gi_fresh] .
 
   (* We extract the ghost trajectory y and the combined solves_ode fact *)
   then obtain y where 
     y_init: \<open>y 0 = y0\<close> and
     combined_sol: 
-      \<open>((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(3 := y \<tau>))) solves_ode
+      \<open>((\<lambda>\<tau>. vec_lambda ((vec_nth (x \<tau>))(iG := y \<tau>))) solves_ode
          (\<lambda>\<tau> v. vec_lambda
                  ((\<lambda>k. 0)
-                  (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                   1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                   2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                  (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                   iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                   iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                 vec_lambda
-                 ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))))
+                 ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))))
          {0..t} UNIV\<close>
     by auto
 
-  let ?z = \<open>\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i) (3:=y \<tau>))\<close>
+  let ?z = \<open>\<lambda>\<tau>. vec_lambda ((\<lambda>i. vec_nth (x \<tau>) i) (iG:=y \<tau>))\<close>
 
   (* Helper: Frechet derivative of w \<sqdot> y\<^sup>2 (product rule) *)
   have wg2_has_derivative:
-    \<open>((\<lambda>v. vec_nth v 2 * (vec_nth v 3)^2) has_derivative 
-      (\<lambda>v. vec_nth v 2 * (vec_nth p 3)^2 + 
-           vec_nth p 2 * (2 * vec_nth p 3 * vec_nth v 3))) (at p)\<close>
-    for p :: \<open>(real, 4) vec\<close>
+    \<open>((\<lambda>v. vec_nth v iW * (vec_nth v iG)^2) has_derivative 
+      (\<lambda>v. vec_nth v iW * (vec_nth p iG)^2 + 
+           vec_nth p iW * (2 * vec_nth p iG * vec_nth v iG))) (at p)\<close>
+    for p :: \<open>(real, 'p) vec\<close>
   proof -
-    have f: \<open>((\<lambda>v. vec_nth v 2) has_derivative (\<lambda>v. vec_nth v 2)) (at p)\<close>
+    have f: \<open>((\<lambda>v. vec_nth v iW) has_derivative (\<lambda>v. vec_nth v iW)) (at p)\<close>
       by (rule has_derivative_vec_nth)
-    have g: \<open>((\<lambda>v. (vec_nth v 3)^2) has_derivative 
-        (\<lambda>v. 2 * vec_nth p 3 * vec_nth v 3)) (at p)\<close>
+    have g: \<open>((\<lambda>v. (vec_nth v iG)^2) has_derivative 
+        (\<lambda>v. 2 * vec_nth p iG * vec_nth v iG)) (at p)\<close>
       by (rule component_sq_has_derivative)
     show ?thesis
       using has_derivative_mult[OF f g] 
@@ -4060,7 +4138,7 @@ proof -
 
   (* PROOF OBLIGATION DI.1 (iv): initial condition 1 \<le> W(0) \<sqdot> y(0)\<^sup>2 *)
   (* Since y(0) = 1/sqrt(W(0)), we have y(0)\<^sup>2 = 1/W(0), so W(0) \<sqdot> y(0)\<^sup>2 = 1 *)
-  have iv: \<open>(\<lambda>v. (1::real)) (?z 0) \<le> (\<lambda>v. vec_nth v 2 * (vec_nth v 3)^2) (?z 0)\<close>
+  have iv: \<open>(\<lambda>v. (1::real)) (?z 0) \<le> (\<lambda>v. vec_nth v iW * (vec_nth v iG)^2) (?z 0)\<close>
     unfolding fun_upd_def
     using w0_pos 
     by (simp add: y0_def y_init field_simps power2_eq_square)
@@ -4071,51 +4149,51 @@ proof -
   have induct_step:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
          \<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 2 * (vec_nth v 3)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iW * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
                  Dh ((\<lambda>\<tau> v. vec_lambda
                          ((\<lambda>k. 0)
-                          (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                           1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                           2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                          (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                           iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                           iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                         vec_lambda
-                         ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))) \<tau> (?z \<tau>)) \<le>
+                         ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
                  Dg ((\<lambda>\<tau> v. vec_lambda
                          ((\<lambda>k. 0)
-                          (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                           1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                           2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                          (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                           iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                           iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                         vec_lambda
-                         ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))) \<tau> (?z \<tau>))\<close>
+                         ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
     show \<open>\<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 2 * (vec_nth v 3)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iW * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
                   Dh ((\<lambda>\<tau> v. vec_lambda
                           ((\<lambda>k. 0)
-                           (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                            1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                            2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                           (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                            iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                            iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                          vec_lambda
-                          ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))) \<tau> (?z \<tau>)) \<le>
+                          ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
                   Dg ((\<lambda>\<tau> v. vec_lambda
                           ((\<lambda>k. 0)
-                           (0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                            1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                            2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2)) +
+                           (iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                            iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                            iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW)) +
                          vec_lambda
-                          ((\<lambda>i. 0)(3 := (1/2) * vec_nth v 3 + 0))) \<tau> (?z \<tau>))\<close>
+                          ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
       apply (rule exI[where x=\<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x=\<open>\<lambda>v. vec_nth v 2 * (vec_nth (?z \<tau>) 3)^2 + 
-                                    vec_nth (?z \<tau>) 2 * (2 * vec_nth (?z \<tau>) 3 * vec_nth v 3)\<close>])
+      apply (rule exI[where x=\<open>\<lambda>v. vec_nth v iW * (vec_nth (?z \<tau>) iG)^2 + 
+                                    vec_nth (?z \<tau>) iW * (2 * vec_nth (?z \<tau>) iG * vec_nth v iG)\<close>])
       apply (rule conjI)
        apply (rule has_derivative_const)
       apply (rule conjI)
        apply (rule wg2_has_derivative)
       apply (auto simp add: power2_eq_square fun_upd_def)
-      apply (subgoal_tac \<open>(\<alpha> / (1 + vec_nth (x \<tau>) 1 ^ n) - vec_nth (x \<tau>) 2) * (y \<tau> * y \<tau>) +
-                          vec_nth (x \<tau>) 2 * (y \<tau> * y \<tau>)
-                        = \<alpha> / (1 + vec_nth (x \<tau>) 1 ^ n) * (y \<tau> * y \<tau>)\<close>)
+      apply (subgoal_tac \<open>(\<alpha> / (1 + vec_nth (x \<tau>) iV ^ n) - vec_nth (x \<tau>) iW) * (y \<tau> * y \<tau>) +
+                          vec_nth (x \<tau>) iW * (y \<tau> * y \<tau>)
+                        = \<alpha> / (1 + vec_nth (x \<tau>) iV ^ n) * (y \<tau> * y \<tau>)\<close>)
        prefer 2
        apply (simp add: algebra_simps)
       apply simp
@@ -4127,22 +4205,22 @@ proof -
   qed
 
   (* WE APPLY DI_Vect: we get the invariant W \<sqdot> y\<^sup>2 \<ge> 1 at time t *)
-  have ineq: \<open>(\<lambda>v. (1::real)) (?z t) \<le> (\<lambda>v. vec_nth v 2 * (vec_nth v 3)^2) (?z t)\<close>
-    using DI_Vect[where h = \<open>\<lambda>v. 1\<close> and g = \<open>\<lambda>v. vec_nth v 2 * (vec_nth v 3)^2\<close>,
+  have ineq: \<open>(\<lambda>v. (1::real)) (?z t) \<le> (\<lambda>v. vec_nth v iW * (vec_nth v iG)^2) (?z t)\<close>
+    using DI_Vect[where h = \<open>\<lambda>v. 1\<close> and g = \<open>\<lambda>v. vec_nth v iW * (vec_nth v iG)^2\<close>,
                   OF iv combined_sol induct_step t] .
 
   (* ==========================================================================
      STAGE 3: From W(t) \<sqdot> y(t)\<^sup>2 \<ge> 1 and y(t)\<^sup>2 \<ge> 0, conclude W(t) > 0
      ========================================================================== *)
-  show \<open>vec_nth (x t) 2 > 0\<close>
+  show \<open>vec_nth (x t) iW > 0\<close>
   proof -
-    have z_eq_x: \<open>vec_nth (?z t) 2 = vec_nth (x t) 2\<close> by simp
-    have y_sq_nn: \<open>(vec_nth (?z t) 3)^2 \<ge> 0\<close> by simp
-    have prod_ge_1: \<open>vec_nth (?z t) 2 * (vec_nth (?z t) 3)^2 \<ge> 1\<close>
+    have z_eq_x: \<open>vec_nth (?z t) iW = vec_nth (x t) iW\<close> by simp
+    have y_sq_nn: \<open>(vec_nth (?z t) iG)^2 \<ge> 0\<close> by simp
+    have prod_ge_1: \<open>vec_nth (?z t) iW * (vec_nth (?z t) iG)^2 \<ge> 1\<close>
       using ineq by simp
     show ?thesis
       using z_eq_x y_sq_nn prod_ge_1
-      apply (cases \<open>vec_nth (x t) 2 \<le> 0\<close>) 
+      apply (cases \<open>vec_nth (x t) iW \<le> 0\<close>) 
        apply (auto simp: mult_le_0_iff)
       apply (metis approximation_preproc_push_neg(1) le_less_trans 
                    power2_less_0 zero_compare_simps(6) zero_less_one)
@@ -4152,30 +4230,35 @@ qed
 
 text \<open>Main theorem: all three proteins stay strictly positive.\<close>
 theorem repressilator_all_positive:
-  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes \<alpha> :: real
   fixes n :: nat
+  fixes iU iV iW iG :: 'p
+      \<comment> \<open>iG is a spare coordinate for the ghost\<close>
+  assumes coords: \<open>iU \<noteq> iV\<close> \<open>iU \<noteq> iW\<close> \<open>iU \<noteq> iG\<close>
+                  \<open>iV \<noteq> iW\<close> \<open>iV \<noteq> iG\<close> \<open>iW \<noteq> iG\<close>
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
-                                      0 := \<alpha> / (1 + (vec_nth v 2)^n) - vec_nth v 0,
-                                      1 := \<alpha> / (1 + (vec_nth v 0)^n) - vec_nth v 1,
-                                      2 := \<alpha> / (1 + (vec_nth v 1)^n) - vec_nth v 2))
+                                      iU := \<alpha> / (1 + (vec_nth v iW)^n) - vec_nth v iU,
+                                      iV := \<alpha> / (1 + (vec_nth v iU)^n) - vec_nth v iV,
+                                      iW := \<alpha> / (1 + (vec_nth v iV)^n) - vec_nth v iW))
                                     )) {0..t} UNIV\<close>
-  assumes u0_pos: \<open>(0::real)< vec_nth (x 0) 0\<close>
-  assumes v0_pos: \<open>(0::real) < vec_nth (x 0) 1\<close>
-  assumes w0_pos: \<open>(0::real) < vec_nth (x 0) 2\<close>
+  assumes u0_pos: \<open>(0::real)< vec_nth (x 0) iU\<close>
+  assumes v0_pos: \<open>(0::real) < vec_nth (x 0) iV\<close>
+  assumes w0_pos: \<open>(0::real) < vec_nth (x 0) iW\<close>
   assumes t: \<open> 0 \<le> t \<close>
   assumes \<alpha>_nn: \<open> 0 \<le> \<alpha> \<close>
   assumes n_even: \<open>even n\<close>
   assumes n_pos: \<open> 1 \<le> n \<close>
-  shows \<open>0 < vec_nth (x t) 0 \<and>  0 < vec_nth (x t) 1 \<and>  0 < vec_nth (x t) 2\<close>
+  shows \<open>0 < vec_nth (x t) iU \<and>  0 < vec_nth (x t) iV \<and>  0 < vec_nth (x t) iW\<close>
 proof (intro conjI)
-  show \<open>0 < vec_nth (x t) 0\<close>
-    using repressilator_u_positive[OF x_sol u0_pos t \<alpha>_nn n_even n_pos] .
-  show \<open>0 < vec_nth (x t) 1\<close>
-    using repressilator_v_positive[OF x_sol v0_pos t \<alpha>_nn n_even n_pos] .
-  show \<open>0 < vec_nth (x t) 2\<close>
-    using repressilator_w_positive[OF x_sol w0_pos t \<alpha>_nn n_even n_pos] .
+  note coords_neq [simp] = coords coords[THEN not_sym]
+  show \<open>0 < vec_nth (x t) iU\<close>
+    using repressilator_u_positive[OF coords x_sol u0_pos t \<alpha>_nn n_even n_pos] .
+  show \<open>0 < vec_nth (x t) iV\<close>
+    using repressilator_v_positive[OF coords x_sol v0_pos t \<alpha>_nn n_even n_pos] .
+  show \<open>0 < vec_nth (x t) iW\<close>
+    using repressilator_w_positive[OF coords x_sol w0_pos t \<alpha>_nn n_even n_pos] .
 qed
 
 
@@ -4283,28 +4366,31 @@ text \<open>
 \<close>
 
 lemma antithetic_integral_feedback_conservation:
-  fixes x :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes x :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes \<mu>1 \<theta> \<eta> :: real
+  fixes iZ1 iZ2 iX :: 'p
+  assumes coords: \<open>iZ1 \<noteq> iZ2\<close> \<open>iZ1 \<noteq> iX\<close> \<open>iZ2 \<noteq> iX\<close>
   assumes x_sol: \<open>(x solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>k. 0)(
-                                      0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                                      1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                                      2 := 0))
+                                      iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                                      iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                                      iX := 0))
                                     )) {0..t} UNIV\<close>
-      \<comment> \<open>Position 0: Z1 (controller species, constant production);
-         position 1: Z2 (controller species, X-proportional production);
-         position 2: X (process species, held constant at the setpoint for simplicity)\<close>
-  assumes iv: \<open>vec_nth (x 0) 0 - vec_nth (x 0) 1 = c\<close>
+      \<comment> \<open>Coordinate iZ1: Z1 (controller species, constant production);
+         coordinate iZ2: Z2 (controller species, X-proportional production);
+         coordinate iX: X (process species, held constant at the setpoint for simplicity)\<close>
+  assumes iv: \<open>vec_nth (x 0) iZ1 - vec_nth (x 0) iZ2 = c\<close>
       \<comment> \<open>Initial integral state: c = Z1(0) - Z2(0)\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes \<theta>_pos: \<open>0 < \<theta>\<close>
-  assumes setpoint: \<open>vec_nth (x 0) 2 = \<mu>1 / \<theta>\<close>
+  assumes setpoint: \<open>vec_nth (x 0) iX = \<mu>1 / \<theta>\<close>
       \<comment> \<open>X starts at the setpoint mu1/theta. Since dX/dt = 0 in this
          simplified model, X stays there; the proof establishes this first,
          as a separate conservation.\<close>
-  shows \<open>vec_nth (x t) 0 - vec_nth (x t) 1 = c\<close>
+  shows \<open>vec_nth (x t) iZ1 - vec_nth (x t) iZ2 = c\<close>
       \<comment> \<open>Conclusion: the integral state Z1 - Z2 is conserved at the setpoint\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY
      
@@ -4326,16 +4412,16 @@ proof -
   (* ==========================================================================
      PART A: We establish X(\<tau>) = \<mu>/\<theta> for all \<tau> \<in> [0..t]
      ========================================================================== *)
-  have X_constant: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> vec_nth (x \<tau>) 2 = \<mu>1 / \<theta>\<close>
+  have X_constant: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> vec_nth (x \<tau>) iX = \<mu>1 / \<theta>\<close>
   proof -
     fix \<tau> assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
     
     (* Restrict the ODE to {0..\<tau>} *)
     have x_sol_\<tau>: \<open>(x solves_ode (\<lambda>t v.
                                    vec_lambda ((\<lambda>k. 0)(
-                                     0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                                     1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                                     2 := 0))
+                                     iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                                     iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                                     iX := 0))
                                    )) {0..\<tau>} UNIV\<close>
       using solves_ode_subset_ivl[OF x_sol] \<tau>_in .
     
@@ -4344,37 +4430,37 @@ proof -
        ------------------------------------------------------------------------ *)
     
     (* PROOF OBLIGATION A1.1 (iv): initial condition \<mu>/\<theta> \<le> X(0) *)
-    have iv_up: \<open>(\<lambda>v. \<mu>1/\<theta>) (x 0) \<le> (\<lambda>v. vec_nth v 2) (x 0)\<close>
+    have iv_up: \<open>(\<lambda>v. \<mu>1/\<theta>) (x 0) \<le> (\<lambda>v. vec_nth v iX) (x 0)\<close>
       using setpoint by simp
 
     (* PROOF OBLIGATION A1.2 (induct_step): derivative check Dh(VelVect) \<le> Dg(VelVect) *)
     have induct_step_up:
       \<open>\<And>\<tau>'. \<tau> \<in> {0..t} \<Longrightarrow>
            \<exists>Dh Dg. ((\<lambda>v. \<mu>1/\<theta>) has_derivative Dh) (at (x \<tau>')) \<and>
-                   ((\<lambda>v. vec_nth v 2) has_derivative Dg) (at (x \<tau>')) \<and>
+                   ((\<lambda>v. vec_nth v iX) has_derivative Dg) (at (x \<tau>')) \<and>
                    Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                         0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         2 := 0))) \<tau>' (x \<tau>'))
+                         iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iX := 0))) \<tau>' (x \<tau>'))
                    \<le> Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                         0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         2 := 0))) \<tau>' (x \<tau>'))\<close>
+                         iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iX := 0))) \<tau>' (x \<tau>'))\<close>
     proof -
       fix \<tau>' :: real
       assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
       show \<open>\<exists>Dh Dg. ((\<lambda>v. \<mu>1/\<theta>) has_derivative Dh) (at (x \<tau>')) \<and>
-                    ((\<lambda>v. vec_nth v 2) has_derivative Dg) (at (x \<tau>')) \<and>
+                    ((\<lambda>v. vec_nth v iX) has_derivative Dg) (at (x \<tau>')) \<and>
                     Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                          0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                          1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                          2 := 0))) \<tau>' (x \<tau>')) \<le>
+                          iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                          iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                          iX := 0))) \<tau>' (x \<tau>')) \<le>
                     Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                         0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         2 := 0))) \<tau>' (x \<tau>'))\<close>
+                         iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iX := 0))) \<tau>' (x \<tau>'))\<close>
         apply (rule exI[where x=\<open>\<lambda>v. 0\<close>])
-        apply (rule exI[where x=\<open>\<lambda>v. vec_nth v 2\<close>])
+        apply (rule exI[where x=\<open>\<lambda>v. vec_nth v iX\<close>])
         apply (rule conjI, rule has_derivative_const)
         apply (rule conjI, rule has_derivative_vec_nth)
         apply (auto simp: fun_upd_def)
@@ -4382,8 +4468,8 @@ proof -
     qed
 
     (* WE APPLY DI_Vect for direction UP *)
-    have up: \<open>\<mu>1/\<theta> \<le> vec_nth (x \<tau>) 2\<close>
-      using DI_Vect[where  h = \<open>\<lambda>v. \<mu>1/\<theta>\<close> and g = \<open>\<lambda>v. vec_nth v 2\<close>,
+    have up: \<open>\<mu>1/\<theta> \<le> vec_nth (x \<tau>) iX\<close>
+      using DI_Vect[where  h = \<open>\<lambda>v. \<mu>1/\<theta>\<close> and g = \<open>\<lambda>v. vec_nth v iX\<close>,
                     OF iv_up x_sol_\<tau> induct_step_up] \<tau>_in by simp
 
     (* ------------------------------------------------------------------------
@@ -4391,36 +4477,36 @@ proof -
        ------------------------------------------------------------------------ *)
 
     (* PROOF OBLIGATION A2.1 (iv): initial condition X(0) \<le> \<mu>/\<theta> *)
-    have iv_down: \<open>(\<lambda>v. vec_nth v 2) (x 0) \<le> (\<lambda>v. \<mu>1/\<theta>) (x 0)\<close>
+    have iv_down: \<open>(\<lambda>v. vec_nth v iX) (x 0) \<le> (\<lambda>v. \<mu>1/\<theta>) (x 0)\<close>
       using setpoint by simp
 
     (* PROOF OBLIGATION A2.2 (induct_step): derivative check Dh(field) \<le> Dg(field) *)
     have induct_step_down:
       \<open>\<And>\<tau>'. \<tau> \<in> {0..t} \<Longrightarrow>
-           \<exists>Dh Dg. ((\<lambda>v. vec_nth v 2) has_derivative Dh) (at (x \<tau>')) \<and>
+           \<exists>Dh Dg. ((\<lambda>v. vec_nth v iX) has_derivative Dh) (at (x \<tau>')) \<and>
                    ((\<lambda>v. \<mu>1/\<theta>) has_derivative Dg) (at (x \<tau>')) \<and>
                    Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                         0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         2 := 0))) \<tau>' (x \<tau>')) \<le>
+                         iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iX := 0))) \<tau>' (x \<tau>')) \<le>
                    Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                         0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         2 := 0))) \<tau>' (x \<tau>'))\<close>
+                         iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iX := 0))) \<tau>' (x \<tau>'))\<close>
     proof -
       fix \<tau>' :: real
       assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
-      show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v 2) has_derivative Dh) (at (x \<tau>')) \<and>
+      show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v iX) has_derivative Dh) (at (x \<tau>')) \<and>
                     ((\<lambda>v. \<mu>1/\<theta>) has_derivative Dg) (at (x \<tau>')) \<and>
                     Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                          0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                          1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                          2 := 0))) \<tau>' (x \<tau>')) \<le>
+                          iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                          iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                          iX := 0))) \<tau>' (x \<tau>')) \<le>
                     Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                          0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                          1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                          2 := 0))) \<tau>' (x \<tau>'))\<close>
-        apply (rule exI[where x=\<open>\<lambda>v. vec_nth v 2\<close>])
+                          iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                          iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                          iX := 0))) \<tau>' (x \<tau>'))\<close>
+        apply (rule exI[where x=\<open>\<lambda>v. vec_nth v iX\<close>])
         apply (rule exI[where x=\<open>\<lambda>v. 0\<close>])
         apply (rule conjI, rule has_derivative_vec_nth)
         apply (rule conjI, rule has_derivative_const)
@@ -4429,14 +4515,14 @@ proof -
     qed
 
     (* WE APPLY DI_Vect for direction DOWN *)
-    have down: \<open>vec_nth (x \<tau>) 2 \<le> \<mu>1/\<theta>\<close>
+    have down: \<open>vec_nth (x \<tau>) iX \<le> \<mu>1/\<theta>\<close>
       using DI_Vect[where 
-                    h = \<open>\<lambda>v. vec_nth v 2\<close> and 
+                    h = \<open>\<lambda>v. vec_nth v iX\<close> and 
                     g = \<open>\<lambda>v. \<mu>1/\<theta>\<close>,
                     OF iv_down x_sol_\<tau> induct_step_down] \<tau>_in by simp
 
     (* Sandwich: up and down give equality *)
-    from up down show \<open>vec_nth (x \<tau>) 2 = \<mu>1/\<theta>\<close> by linarith
+    from up down show \<open>vec_nth (x \<tau>) iX = \<mu>1/\<theta>\<close> by linarith
   qed
 
   (* ==========================================================================
@@ -4459,37 +4545,37 @@ proof -
        ------------------------------------------------------------------------ *)
 
     (* PROOF OBLIGATION B1.1 (iv): initial condition c \<le> Z\<^sub>1(0) - Z\<^sub>2(0) *)
-    have iv_ge: \<open>(\<lambda>v. c) (x 0) \<le> (\<lambda>v. vec_nth v 0 - vec_nth v 1) (x 0)\<close>
+    have iv_ge: \<open>(\<lambda>v. c) (x 0) \<le> (\<lambda>v. vec_nth v iZ1 - vec_nth v iZ2) (x 0)\<close>
       using iv by simp
 
     (* PROOF OBLIGATION B1.2 (induct_step): derivative check Dh(field) \<le> Dg(field) *)
     have induct_step_ge:
       \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
            \<exists>Dh Dg. ((\<lambda>v. c) has_derivative Dh) (at (x \<tau>)) \<and>
-                   ((\<lambda>v. vec_nth v 0 - vec_nth v 1) has_derivative Dg) (at (x \<tau>)) \<and>
+                   ((\<lambda>v. vec_nth v iZ1 - vec_nth v iZ2) has_derivative Dg) (at (x \<tau>)) \<and>
                    Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                         0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         2 := 0))) \<tau> (x \<tau>)) \<le>
+                         iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iX := 0))) \<tau> (x \<tau>)) \<le>
                    Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                         0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         2 := 0))) \<tau> (x \<tau>))\<close>
+                         iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iX := 0))) \<tau> (x \<tau>))\<close>
     proof -
       fix \<tau> :: real
       assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
       show \<open>\<exists>Dh Dg. ((\<lambda>v. c) has_derivative Dh) (at (x \<tau>)) \<and>
-                    ((\<lambda>v. vec_nth v 0 - vec_nth v 1) has_derivative Dg) (at (x \<tau>)) \<and>
+                    ((\<lambda>v. vec_nth v iZ1 - vec_nth v iZ2) has_derivative Dg) (at (x \<tau>)) \<and>
                     Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                          0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                          1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                          2 := 0))) \<tau> (x \<tau>)) \<le>
+                          iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                          iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                          iX := 0))) \<tau> (x \<tau>)) \<le>
                     Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                          0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                          1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                          2 := 0))) \<tau> (x \<tau>))\<close>
+                          iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                          iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                          iX := 0))) \<tau> (x \<tau>))\<close>
         apply (rule exI[where x=\<open>\<lambda>v. 0\<close>])
-        apply (rule exI[where x=\<open>\<lambda>v. vec_nth v 0 - vec_nth v 1\<close>])
+        apply (rule exI[where x=\<open>\<lambda>v. vec_nth v iZ1 - vec_nth v iZ2\<close>])
         apply (rule conjI, rule has_derivative_const)
         apply (rule conjI)
         apply (intro has_derivative_diff has_derivative_vec_nth)
@@ -4503,36 +4589,36 @@ proof -
        ------------------------------------------------------------------------ *)
 
     (* PROOF OBLIGATION B2.1 (iv): initial condition Z\<^sub>1(0) - Z\<^sub>2(0) \<le> c *)
-    have iv_le: \<open>(\<lambda>v. vec_nth v 0 - vec_nth v 1) (x 0) \<le> (\<lambda>v. c) (x 0)\<close>
+    have iv_le: \<open>(\<lambda>v. vec_nth v iZ1 - vec_nth v iZ2) (x 0) \<le> (\<lambda>v. c) (x 0)\<close>
       using iv by simp
 
     (* PROOF OBLIGATION B2.2 (induct_step): derivative check Dh(field) \<le> Dg(field) *)
     have induct_step_le:
       \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
-           \<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 - vec_nth v 1) has_derivative Dh) (at (x \<tau>)) \<and>
+           \<exists>Dh Dg. ((\<lambda>v. vec_nth v iZ1 - vec_nth v iZ2) has_derivative Dh) (at (x \<tau>)) \<and>
                    ((\<lambda>v. c) has_derivative Dg) (at (x \<tau>)) \<and>
                    Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                         0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         2 := 0))) \<tau> (x \<tau>)) \<le>
+                         iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iX := 0))) \<tau> (x \<tau>)) \<le>
                    Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                         0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                         2 := 0))) \<tau> (x \<tau>))\<close>
+                         iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                         iX := 0))) \<tau> (x \<tau>))\<close>
     proof -
       fix \<tau> :: real
       assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
-      show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v 0 - vec_nth v 1) has_derivative Dh) (at (x \<tau>)) \<and>
+      show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth v iZ1 - vec_nth v iZ2) has_derivative Dh) (at (x \<tau>)) \<and>
                     ((\<lambda>v. c) has_derivative Dg) (at (x \<tau>)) \<and>
                     Dh ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                          0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                          1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                          2 := 0))) \<tau> (x \<tau>))
+                          iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                          iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                          iX := 0))) \<tau> (x \<tau>))
                     \<le> Dg ((\<lambda>t v. vec_lambda ((\<lambda>k. 0)(
-                          0 := \<mu>1 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                          1 := \<theta> * vec_nth v 2 - \<eta> * vec_nth v 0 * vec_nth v 1,
-                          2 := 0))) \<tau> (x \<tau>))\<close>
-        apply (rule exI[where x=\<open>\<lambda>v. vec_nth v 0 - vec_nth v 1\<close>])
+                          iZ1 := \<mu>1 - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                          iZ2 := \<theta> * vec_nth v iX - \<eta> * vec_nth v iZ1 * vec_nth v iZ2,
+                          iX := 0))) \<tau> (x \<tau>))\<close>
+        apply (rule exI[where x=\<open>\<lambda>v. vec_nth v iZ1 - vec_nth v iZ2\<close>])
         apply (rule exI[where x=\<open>\<lambda>v. 0\<close>])
         apply (rule conjI)
         apply (intro has_derivative_diff has_derivative_vec_nth)
@@ -4544,9 +4630,9 @@ proof -
     (* WE APPLY DI_Vect for direction Z\<^sub>1(t) - Z\<^sub>2(t) \<le> c *)
     show ?thesis 
        by (auto intro!: antisym 
-                        DI_Vect[where h = \<open>\<lambda>v. vec_nth v 0 - vec_nth v 1\<close> and g = \<open>\<lambda>v. c\<close>,
+                        DI_Vect[where h = \<open>\<lambda>v. vec_nth v iZ1 - vec_nth v iZ2\<close> and g = \<open>\<lambda>v. c\<close>,
                                 OF iv_le x_sol induct_step_le t]
-                        DI_Vect[where h = \<open>\<lambda>v. c\<close> and g = \<open>\<lambda>v. vec_nth v 0 - vec_nth v 1\<close>,
+                        DI_Vect[where h = \<open>\<lambda>v. c\<close> and g = \<open>\<lambda>v. vec_nth v iZ1 - vec_nth v iZ2\<close>,
                                 OF iv_ge x_sol induct_step_ge t]
           )
   qed
@@ -4643,7 +4729,7 @@ text \<open>
     it cannot fall back below c. This is the analog of write-once memory.
 
     Proof method: PROPERTY 1 gives monotonic progress, then DC strengthens
-    the domain by adding the \{v. v\_2 >= c\} constraint. This is a direct
+    the domain by adding the \{v. vec\_nth v iZ >= c\} constraint. This is a direct
     application of the DC axiom in the correctness layer.
 
   PROPERTY 5 , EQUILIBRIUM CORRECTNESS  (algebraic on conservation laws)
@@ -4677,13 +4763,13 @@ subsubsection \<open>Property 1: monotonic progress (direct use of DI\_Vect)\<cl
 
 text \<open>
   We prove [Z](t) >= [Z](0) by a FRESH DI\_Vect application with:
-    h(v) = vec\_nth (y 0) 2     (constant: the initial value of Z)
-    g(v) = vec\_nth v 2          (current value of Z)
+    h(v) = vec\_nth (y 0) iZ     (constant: the initial value of Z)
+    g(v) = vec\_nth v iZ          (current value of Z)
 
   Initial condition:  Z(0) <= Z(0)  trivially
   Lie derivative check:
     Dh(field) = 0
-    Dg(field) = field[2] = k*X*Y
+    Dg(field) = field[iZ] = k*X*Y
   Need: 0 <= k*X*Y, which holds when k >= 0 and X(tau), Y(tau) >= 0.
 
   Limitation: the non-negativity of X and Y along the trajectory
@@ -4693,25 +4779,28 @@ text \<open>
 \<close>
 
 lemma crn_min_Z_monotonic:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes k :: real
+  fixes iX iY iZ :: 'p
+  assumes coords: \<open>iX \<noteq> iY\<close> \<open>iX \<noteq> iZ\<close> \<open>iY \<noteq> iZ\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                     vec_lambda ((\<lambda>i. 0)(
-                                      0 := -k * vec_nth v 0 * vec_nth v 1,
-                                      1 := -k * vec_nth v 0 * vec_nth v 1,
-                                      2 :=  k * vec_nth v 0 * vec_nth v 1))
+                                      iX := -k * vec_nth v iX * vec_nth v iY,
+                                      iY := -k * vec_nth v iX * vec_nth v iY,
+                                      iZ :=  k * vec_nth v iX * vec_nth v iY))
                                     )) {0..t} UNIV\<close>
   assumes t: \<open>0 \<le> t\<close>
   assumes k_nn: \<open>0 \<le> k\<close>
   \<comment> \<open>Non-negativity of X and Y along the trajectory is assumed; see the limitation stated above.\<close>
-  assumes X_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> vec_nth (y \<tau>) 0\<close>
-  assumes Y_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> vec_nth (y \<tau>) 1\<close>
-  shows \<open>vec_nth (y 0) 2 \<le> vec_nth (y t) 2\<close>
+  assumes X_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> vec_nth (y \<tau>) iX\<close>
+  assumes Y_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> 0 \<le> vec_nth (y \<tau>) iY\<close>
+  shows \<open>vec_nth (y 0) iZ \<le> vec_nth (y t) iZ\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* ==========================================================================
      PROOF STRATEGY: Apply DI_Vect with the invariant pair
-       h = \<lambda>v. vec_nth (y 0) 2  (constant: initial value of Z)
-       g = \<lambda>v. vec_nth v 2       (current value of Z)
+       h = \<lambda>v. vec_nth (y 0) iZ  (constant: initial value of Z)
+       g = \<lambda>v. vec_nth v iZ       (current value of Z)
      The conclusion h(y t) \<le> g(y t) unfolds to Z(0) \<le> Z(t), which is the 
      monotonicity claim.
      
@@ -4720,7 +4809,7 @@ proof -
      ========================================================================== *)
 
   (* PROOF OBLIGATION 1 (iv): initial condition h(y 0) \<le> g(y 0), i.e., Z(0) \<le> Z(0) *)
-  have iv: \<open>(\<lambda>v. vec_nth (y 0) 2) (y 0) \<le> (\<lambda>v. vec_nth v 2) (y 0)\<close>
+  have iv: \<open>(\<lambda>v. vec_nth (y 0) iZ) (y 0) \<le> (\<lambda>v. vec_nth v iZ) (y 0)\<close>
     by simp
 
   (* PROOF OBLIGATION 2 (ODE): the trajectory solves the ODE , directly from y_sol *)
@@ -4728,35 +4817,35 @@ proof -
 
   (* PROOF OBLIGATION 3 (induct_step): at every \<tau> \<in> [0..t], there exist Fr\<eacute>chet 
      derivatives Dh, Dg of h and g such that Dh(field) \<le> Dg(field). 
-     Here Dh = 0 (h is constant) and Dg = vec_nth \<sqdot> 2 (linear projection), 
-     so Dg(field) = field[2] = k\<sqdot>X(\<tau>)\<sqdot>Y(\<tau>) \<ge> 0 by k_nn, X_nn_along, Y_nn_along. *)
+     Here Dh = 0 (h is constant) and Dg = vec_nth \<sqdot> iZ (linear projection), 
+     so Dg(field) = field[iZ] = k\<sqdot>X(\<tau>)\<sqdot>Y(\<tau>) \<ge> 0 by k_nn, X_nn_along, Y_nn_along. *)
   have induct_step:
     \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
-         \<exists>Dh Dg. ((\<lambda>v. vec_nth (y 0) 2) has_derivative Dh) (at (y \<tau>)) \<and>
-                 ((\<lambda>v. vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+         \<exists>Dh Dg. ((\<lambda>v. vec_nth (y 0) iZ) has_derivative Dh) (at (y \<tau>)) \<and>
+                 ((\<lambda>v. vec_nth v iZ) has_derivative Dg) (at (y \<tau>)) \<and>
                  Dh ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                       0 := -k * vec_nth v 0 * vec_nth v 1,
-                       1 := -k * vec_nth v 0 * vec_nth v 1,
-                       2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>)) \<le> 
+                       iX := -k * vec_nth v iX * vec_nth v iY,
+                       iY := -k * vec_nth v iX * vec_nth v iY,
+                       iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>)) \<le> 
                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                       0 := -k * vec_nth v 0 * vec_nth v 1,
-                       1 := -k * vec_nth v 0 * vec_nth v 1,
-                       2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                       iX := -k * vec_nth v iX * vec_nth v iY,
+                       iY := -k * vec_nth v iX * vec_nth v iY,
+                       iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>))\<close>
   proof -
     fix \<tau> :: real
     assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
-    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth (y 0) 2) has_derivative Dh) (at (y \<tau>)) \<and>
-                  ((\<lambda>v. vec_nth v 2) has_derivative Dg) (at (y \<tau>)) \<and>
+    show \<open>\<exists>Dh Dg. ((\<lambda>v. vec_nth (y 0) iZ) has_derivative Dh) (at (y \<tau>)) \<and>
+                  ((\<lambda>v. vec_nth v iZ) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                        0 := -k * vec_nth v 0 * vec_nth v 1,
-                        1 := -k * vec_nth v 0 * vec_nth v 1,
-                        2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>)) \<le>
+                        iX := -k * vec_nth v iX * vec_nth v iY,
+                        iY := -k * vec_nth v iX * vec_nth v iY,
+                        iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>)) \<le>
                   Dg ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                        0 := -k * vec_nth v 0 * vec_nth v 1,
-                        1 := -k * vec_nth v 0 * vec_nth v 1,
-                        2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau> (y \<tau>))\<close>
+                        iX := -k * vec_nth v iX * vec_nth v iY,
+                        iY := -k * vec_nth v iX * vec_nth v iY,
+                        iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau> (y \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
-      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v 2\<close>])
+      apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iZ\<close>])
       apply (rule conjI, rule has_derivative_const)
       apply (rule conjI, rule has_derivative_vec_nth)
       using k_nn X_nn_along[OF \<tau>_in] Y_nn_along[OF \<tau>_in]
@@ -4765,8 +4854,8 @@ proof -
   qed
   (* The conclusion of DI_Vect simplifies to the monotonicity claim *)
   show ?thesis 
-   using DI_Vect[where h = \<open>\<lambda>v. vec_nth (y 0) 2\<close> and 
-                       g = \<open>\<lambda>v. vec_nth v 2\<close>,
+   using DI_Vect[where h = \<open>\<lambda>v. vec_nth (y 0) iZ\<close> and 
+                       g = \<open>\<lambda>v. vec_nth v iZ\<close>,
                  OF iv y_sol induct_step t] .
 qed
 
@@ -4778,22 +4867,25 @@ text \<open>
 \<close>
 
 lemma crn_min_Z_monotonic_general:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
     and k :: real
+  fixes iX iY iZ :: 'p
+  assumes coords: \<open>iX \<noteq> iY\<close> \<open>iX \<noteq> iZ\<close> \<open>iY \<noteq> iZ\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
       vec_lambda ((\<lambda>i. 0)(
-        0 := -k * vec_nth v 0 * vec_nth v 1,
-        1 := -k * vec_nth v 0 * vec_nth v 1,
-        2 :=  k * vec_nth v 0 * vec_nth v 1))
+        iX := -k * vec_nth v iX * vec_nth v iY,
+        iY := -k * vec_nth v iX * vec_nth v iY,
+        iZ :=  k * vec_nth v iX * vec_nth v iY))
       )) {0..T} UNIV\<close>
     and t1_nn: \<open>0 \<le> t1\<close>
     and t1_le_t2: \<open>t1 \<le> t2\<close>
     and t2_le_T: \<open>t2 \<le> T\<close>
     and k_nn: \<open>k \<ge> 0\<close>
-    and X_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) 0 \<ge> 0\<close>
-    and Y_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) 1 \<ge> 0\<close>
-  shows \<open>vec_nth (y t1) 2 \<le> vec_nth (y t2) 2\<close>
+    and X_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) iX \<ge> 0\<close>
+    and Y_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) iY \<ge> 0\<close>
+  shows \<open>vec_nth (y t1) iZ \<le> vec_nth (y t2) iZ\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   let ?y' = \<open>\<lambda>s. y (t1 + s)\<close>
   define t' where \<open>t' = t2 - t1\<close>
   
@@ -4804,21 +4896,21 @@ proof -
   have time_inv: 
     \<open>\<And>\<tau>1 \<tau>2 v. 
         (\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                            0 := -k * vec_nth v 0 * vec_nth v 1,
-                            1 := -k * vec_nth v 0 * vec_nth v 1,
-                            2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau>1 v = 
+                            iX := -k * vec_nth v iX * vec_nth v iY,
+                            iY := -k * vec_nth v iX * vec_nth v iY,
+                            iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau>1 v = 
         (\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                            0 := -k * vec_nth v 0 * vec_nth v 1,
-                            1 := -k * vec_nth v 0 * vec_nth v 1,
-                            2 :=  k * vec_nth v 0 * vec_nth v 1))) \<tau>2 v\<close>
+                            iX := -k * vec_nth v iX * vec_nth v iY,
+                            iY := -k * vec_nth v iX * vec_nth v iY,
+                            iZ :=  k * vec_nth v iX * vec_nth v iY))) \<tau>2 v\<close>
     by simp
 
   (* Apply solves_ode_shift to get the shifted trajectory *)
   have y'_sol: \<open>(?y' solves_ode (\<lambda>t v.
       vec_lambda ((\<lambda>i. 0)(
-                  0 := -k * vec_nth v 0 * vec_nth v 1,
-                  1 := -k * vec_nth v 0 * vec_nth v 1,
-                  2 :=  k * vec_nth v 0 * vec_nth v 1))
+                  iX := -k * vec_nth v iX * vec_nth v iY,
+                  iY := -k * vec_nth v iX * vec_nth v iY,
+                  iZ :=  k * vec_nth v iX * vec_nth v iY))
                   )) {0..(T - t1)} UNIV\<close>
     using solves_ode_shift[OF y_sol t1_nn t1_le_T time_inv] .
 
@@ -4826,33 +4918,33 @@ proof -
   have t'_le: \<open>t' \<le> T - t1\<close> using t'_def t2_le_T by simp
   have y'_sol_t': \<open>(?y' solves_ode (\<lambda>t v.
       vec_lambda ((\<lambda>i. 0)(
-                   0 := -k * vec_nth v 0 * vec_nth v 1,
-                   1 := -k * vec_nth v 0 * vec_nth v 1,
-                   2 :=  k * vec_nth v 0 * vec_nth v 1))
+                   iX := -k * vec_nth v iX * vec_nth v iY,
+                   iY := -k * vec_nth v iX * vec_nth v iY,
+                   iZ :=  k * vec_nth v iX * vec_nth v iY))
                  )) {0..t'} UNIV\<close>
     using solves_ode_subset_ivl[OF y'_sol]  t'_nn t'_le by simp
 
   (* Non-negativity along the shifted trajectory follows from along [0..T] *)
-  have X_nn_y': \<open>\<And>\<tau>. \<tau> \<in> {0..t'} \<Longrightarrow> vec_nth (?y' \<tau>) 0 \<ge> 0\<close>
+  have X_nn_y': \<open>\<And>\<tau>. \<tau> \<in> {0..t'} \<Longrightarrow> vec_nth (?y' \<tau>) iX \<ge> 0\<close>
   proof -
     fix \<tau> assume h\<tau>: \<open>\<tau> \<in> {0..t'}\<close>
     hence \<open>t1 + \<tau> \<in> {0..T}\<close>
       using t1_nn t1_le_t2 t2_le_T t'_def by auto
-    thus \<open>vec_nth (?y' \<tau>) 0 \<ge> 0\<close>
+    thus \<open>vec_nth (?y' \<tau>) iX \<ge> 0\<close>
       using X_nn_along by simp
   qed
-  have Y_nn_y': \<open>\<And>\<tau>. \<tau> \<in> {0..t'} \<Longrightarrow> vec_nth (?y' \<tau>) 1 \<ge> 0\<close>
+  have Y_nn_y': \<open>\<And>\<tau>. \<tau> \<in> {0..t'} \<Longrightarrow> vec_nth (?y' \<tau>) iY \<ge> 0\<close>
   proof -
     fix \<tau> assume h\<tau>: \<open>\<tau> \<in> {0..t'}\<close>
     hence \<open>t1 + \<tau> \<in> {0..T}\<close>
       using t1_nn t1_le_t2 t2_le_T t'_def by auto
-    thus \<open>vec_nth (?y' \<tau>) 1 \<ge> 0\<close>
+    thus \<open>vec_nth (?y' \<tau>) iY \<ge> 0\<close>
       using Y_nn_along by simp
   qed
 
   (* Apply the basic monotonicity lemma to the shifted trajectory *)
-  have \<open>vec_nth (?y' t') 2 \<ge> vec_nth (?y' 0) 2\<close>
-    using crn_min_Z_monotonic[OF y'_sol_t' t'_nn k_nn X_nn_y' Y_nn_y'] .
+  have \<open>vec_nth (?y' t') iZ \<ge> vec_nth (?y' 0) iZ\<close>
+    using crn_min_Z_monotonic[OF coords y'_sol_t' t'_nn k_nn X_nn_y' Y_nn_y'] .
 
   (* Translate back: ?y' 0 = y t1 and ?y' t' = y (t1 + (t2 - t1)) = y t2 *)
   thus ?thesis by (simp add: t'_def)
@@ -4865,29 +4957,32 @@ text \<open>
 \<close>
 
 lemma crn_min_Z_upper_bound_via_DI:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
     and k x0 y0 :: real
+  fixes iX iY iZ :: 'p
+  assumes coords: \<open>iX \<noteq> iY\<close> \<open>iX \<noteq> iZ\<close> \<open>iY \<noteq> iZ\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
       vec_lambda ((\<lambda>i. 0)(
-        0 := -k * vec_nth v 0 * vec_nth v 1,
-        1 := -k * vec_nth v 0 * vec_nth v 1,
-        2 :=  k * vec_nth v 0 * vec_nth v 1))
+        iX := -k * vec_nth v iX * vec_nth v iY,
+        iY := -k * vec_nth v iX * vec_nth v iY,
+        iZ :=  k * vec_nth v iX * vec_nth v iY))
       )) {0..t} UNIV\<close>
-    and iv_x: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 = x0\<close>
-    and iv_y: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 = y0\<close>
+    and iv_x: \<open>vec_nth (y 0) iX + vec_nth (y 0) iZ = x0\<close>
+    and iv_y: \<open>vec_nth (y 0) iY + vec_nth (y 0) iZ = y0\<close>
     and t: \<open>t \<ge> 0\<close>
-    and X_nn_t: \<open>vec_nth (y t) 0 \<ge> 0\<close>
-    and Y_nn_t: \<open>vec_nth (y t) 1 \<ge> 0\<close>
-  shows \<open>vec_nth (y t) 2 \<le> min x0 y0\<close>
+    and X_nn_t: \<open>vec_nth (y t) iX \<ge> 0\<close>
+    and Y_nn_t: \<open>vec_nth (y t) iY \<ge> 0\<close>
+  shows \<open>vec_nth (y t) iZ \<le> min x0 y0\<close>
 proof -
-  have X_cons: \<open>vec_nth (y t) 0 + vec_nth (y t) 2 = x0\<close>
-    using crn_min_X_conservation[OF y_sol iv_x t] .
-  have Y_cons: \<open>vec_nth (y t) 1 + vec_nth (y t) 2 = y0\<close>
-    using crn_min_Y_conservation[OF y_sol iv_y t] .
+  note coords_neq [simp] = coords coords[THEN not_sym]
+  have X_cons: \<open>vec_nth (y t) iX + vec_nth (y t) iZ = x0\<close>
+    using crn_min_X_conservation[OF coords y_sol iv_x t] .
+  have Y_cons: \<open>vec_nth (y t) iY + vec_nth (y t) iZ = y0\<close>
+    using crn_min_Y_conservation[OF coords y_sol iv_y t] .
   
-  have Z_le_x0: \<open>vec_nth (y t) 2 \<le> x0\<close>
+  have Z_le_x0: \<open>vec_nth (y t) iZ \<le> x0\<close>
     using X_nn_t X_cons by linarith
-  have Z_le_y0: \<open>vec_nth (y t) 2 \<le> y0\<close>
+  have Z_le_y0: \<open>vec_nth (y t) iZ \<le> y0\<close>
     using Y_nn_t Y_cons by linarith
   
   show ?thesis
@@ -4899,7 +4994,7 @@ subsubsection \<open>Property 3: commitment (direct use of DC)\<close>
 
 text \<open>
   Once Z(0) >= c, we use DC to strengthen the ODE's domain so that the
-  trajectory is constrained to \{v. vec\_nth v 2 >= c\}. This is the
+  trajectory is constrained to \{v. vec\_nth v iZ >= c\}. This is the
   WRITE-ONCE / COMMITTED property: once the output crosses a threshold,
   it stays above that threshold , the computational analog of
   write-once memory.
@@ -4922,43 +5017,46 @@ text \<open>
 \<close>
 
 lemma crn_min_Z_committed_via_DC:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
     and k c :: real
+  fixes iX iY iZ :: 'p
+  assumes coords: \<open>iX \<noteq> iY\<close> \<open>iX \<noteq> iZ\<close> \<open>iY \<noteq> iZ\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
       vec_lambda ((\<lambda>i. 0)(
-        0 := -k * vec_nth v 0 * vec_nth v 1,
-        1 := -k * vec_nth v 0 * vec_nth v 1,
-        2 :=  k * vec_nth v 0 * vec_nth v 1))
+        iX := -k * vec_nth v iX * vec_nth v iY,
+        iY := -k * vec_nth v iX * vec_nth v iY,
+        iZ :=  k * vec_nth v iX * vec_nth v iY))
       )) {0..t} UNIV\<close>
     and t: \<open>t \<ge> 0\<close>
     and k_nn: \<open>k \<ge> 0\<close>
-    and Z_init_at_c: \<open>vec_nth (y 0) 2 \<ge> c\<close>
-    and X_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> vec_nth (y \<tau>) 0 \<ge> 0\<close>
-    and Y_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> vec_nth (y \<tau>) 1 \<ge> 0\<close>
+    and Z_init_at_c: \<open>vec_nth (y 0) iZ \<ge> c\<close>
+    and X_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> vec_nth (y \<tau>) iX \<ge> 0\<close>
+    and Y_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> vec_nth (y \<tau>) iY \<ge> 0\<close>
   shows \<open>(y solves_ode (\<lambda>t v.
       vec_lambda ((\<lambda>i. 0)(
-        0 := -k * vec_nth v 0 * vec_nth v 1,
-        1 := -k * vec_nth v 0 * vec_nth v 1,
-        2 :=  k * vec_nth v 0 * vec_nth v 1))
-      )) {0..t} (UNIV \<inter> {v. vec_nth v 2 \<ge> c})\<close>
+        iX := -k * vec_nth v iX * vec_nth v iY,
+        iY := -k * vec_nth v iX * vec_nth v iY,
+        iZ :=  k * vec_nth v iX * vec_nth v iY))
+      )) {0..t} (UNIV \<inter> {v. vec_nth v iZ \<ge> c})\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* STEP 1: Use PROPERTY 1 (monotonicity) to establish Z(\<tau>) \<ge> c at every \<tau> *)
-  have Z_at_c: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> vec_nth (y \<tau>) 2 \<ge> c\<close>
+  have Z_at_c: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> vec_nth (y \<tau>) iZ \<ge> c\<close>
   proof -
     fix \<tau> assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
     (* WE restrict the ODE to {0..\<tau>} so we can apply monotonicity at \<tau> *)
     have y_sol_\<tau>: \<open>(y solves_ode (\<lambda>t v.
       vec_lambda ((\<lambda>i. 0)(
-        0 := -k * vec_nth v 0 * vec_nth v 1,
-        1 := -k * vec_nth v 0 * vec_nth v 1,
-        2 :=  k * vec_nth v 0 * vec_nth v 1))
+        iX := -k * vec_nth v iX * vec_nth v iY,
+        iY := -k * vec_nth v iX * vec_nth v iY,
+        iZ :=  k * vec_nth v iX * vec_nth v iY))
       )) {0..\<tau>} UNIV\<close>
       using solves_ode_subset_ivl[OF y_sol \<tau>_in] .    
     (* We apply PROPERTY 1 (monotonicity) *)
-    have \<open>vec_nth (y \<tau>) 2 \<ge> vec_nth (y 0) 2\<close>
-      using crn_min_Z_monotonic[OF y_sol_\<tau>  ] k_nn \<tau>_in
-      using assms(5) assms(6) atLeastAtMost_iff order_trans by auto
-    thus \<open>vec_nth (y \<tau>) 2 \<ge> c\<close>
+    have \<open>vec_nth (y \<tau>) iZ \<ge> vec_nth (y 0) iZ\<close>
+      using crn_min_Z_monotonic[OF coords y_sol_\<tau>  ] k_nn \<tau>_in
+      using X_nn_along Y_nn_along atLeastAtMost_iff order_trans by auto
+    thus \<open>vec_nth (y \<tau>) iZ \<ge> c\<close>
       using Z_init_at_c by linarith
   qed 
   (* STEP 2: DC strengthens the ODE's domain with the commitment invariant *)
@@ -4999,47 +5097,50 @@ text \<open>
 \<close>
 
 lemma crn_min_Z_equilibrium_correct:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
     and k x0 y0 :: real
+  fixes iX iY iZ :: 'p
+  assumes coords: \<open>iX \<noteq> iY\<close> \<open>iX \<noteq> iZ\<close> \<open>iY \<noteq> iZ\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
       vec_lambda ((\<lambda>i. 0)(
-        0 := -k * vec_nth v 0 * vec_nth v 1,
-        1 := -k * vec_nth v 0 * vec_nth v 1,
-        2 :=  k * vec_nth v 0 * vec_nth v 1))
+        iX := -k * vec_nth v iX * vec_nth v iY,
+        iY := -k * vec_nth v iX * vec_nth v iY,
+        iZ :=  k * vec_nth v iX * vec_nth v iY))
       )) {0..t} UNIV\<close>
-    and iv_x: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 = x0\<close>
-    and iv_y: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 = y0\<close>
+    and iv_x: \<open>vec_nth (y 0) iX + vec_nth (y 0) iZ = x0\<close>
+    and iv_y: \<open>vec_nth (y 0) iY + vec_nth (y 0) iZ = y0\<close>
     and t: \<open>t \<ge> 0\<close>
-    and X_nn_t: \<open>vec_nth (y t) 0 \<ge> 0\<close>
-    and Y_nn_t: \<open>vec_nth (y t) 1 \<ge> 0\<close>
-    and equilibrium: \<open>vec_nth (y t) 0 * vec_nth (y t) 1 = 0\<close>
-  shows \<open>vec_nth (y t) 2 = min x0 y0\<close>
+    and X_nn_t: \<open>vec_nth (y t) iX \<ge> 0\<close>
+    and Y_nn_t: \<open>vec_nth (y t) iY \<ge> 0\<close>
+    and equilibrium: \<open>vec_nth (y t) iX * vec_nth (y t) iY = 0\<close>
+  shows \<open>vec_nth (y t) iZ = min x0 y0\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   (* We apply the conservation laws (each proved via DI_Vect) *)
-  have X_cons: \<open>vec_nth (y t) 0 + vec_nth (y t) 2 = x0\<close>
-    using crn_min_X_conservation[OF y_sol iv_x t] .
-  have Y_cons: \<open>vec_nth (y t) 1 + vec_nth (y t) 2 = y0\<close>
-    using crn_min_Y_conservation[OF y_sol iv_y t] .
+  have X_cons: \<open>vec_nth (y t) iX + vec_nth (y t) iZ = x0\<close>
+    using crn_min_X_conservation[OF coords y_sol iv_x t] .
+  have Y_cons: \<open>vec_nth (y t) iY + vec_nth (y t) iZ = y0\<close>
+    using crn_min_Y_conservation[OF coords y_sol iv_y t] .
                       
   (* From X\<sqdot>Y = 0, either X = 0 or Y = 0 *)
-  from equilibrium have \<open>vec_nth (y t) 0 = 0 \<or> vec_nth (y t) 1 = 0\<close>
+  from equilibrium have \<open>vec_nth (y t) iX = 0 \<or> vec_nth (y t) iY = 0\<close>
     by simp
 
   thus ?thesis
   proof
     (* CASE: X = 0 *)
-    assume X_zero: \<open>vec_nth (y t) 0 = 0\<close>
-    from X_zero X_cons have Z_eq_x0: \<open>vec_nth (y t) 2 = x0\<close> by linarith
-    from Z_eq_x0 Y_cons have Y_eq: \<open>vec_nth (y t) 1 = y0 - x0\<close> by linarith
+    assume X_zero: \<open>vec_nth (y t) iX = 0\<close>
+    from X_zero X_cons have Z_eq_x0: \<open>vec_nth (y t) iZ = x0\<close> by linarith
+    from Z_eq_x0 Y_cons have Y_eq: \<open>vec_nth (y t) iY = y0 - x0\<close> by linarith
     from Y_eq Y_nn_t have x0_le_y0: \<open>x0 \<le> y0\<close> by linarith
-    from x0_le_y0 Z_eq_x0 show \<open>vec_nth (y t) 2 = min x0 y0\<close> by simp
+    from x0_le_y0 Z_eq_x0 show \<open>vec_nth (y t) iZ = min x0 y0\<close> by simp
   next
     (* CASE: Y = 0 (symmetric) *)
-    assume Y_zero: \<open>vec_nth (y t) 1 = 0\<close>
-    from Y_zero Y_cons have Z_eq_y0: \<open>vec_nth (y t) 2 = y0\<close> by linarith
-    from Z_eq_y0 X_cons have X_eq: \<open>vec_nth (y t) 0 = x0 - y0\<close> by linarith
+    assume Y_zero: \<open>vec_nth (y t) iY = 0\<close>
+    from Y_zero Y_cons have Z_eq_y0: \<open>vec_nth (y t) iZ = y0\<close> by linarith
+    from Z_eq_y0 X_cons have X_eq: \<open>vec_nth (y t) iX = x0 - y0\<close> by linarith
     from X_eq X_nn_t have y0_le_x0: \<open>y0 \<le> x0\<close> by linarith
-    from y0_le_x0 Z_eq_y0 show \<open>vec_nth (y t) 2 = min x0 y0\<close> by simp
+    from y0_le_x0 Z_eq_y0 show \<open>vec_nth (y t) iZ = min x0 y0\<close> by simp
   qed
 qed
 
@@ -5133,66 +5234,69 @@ text \<open>
 
 
 lemma crn_min_Z_epsilon_convergence_via_axiom:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes k x0 y0 \<epsilon> T :: real
+  fixes iX iY iZ :: 'p
+  assumes coords: \<open>iX \<noteq> iY\<close> \<open>iX \<noteq> iZ\<close> \<open>iY \<noteq> iZ\<close>
   assumes y_sol: 
          \<open>(y solves_ode (\<lambda>t v.
                            vec_lambda ((\<lambda>i. 0)(
-                             0 := -k * vec_nth v 0 * vec_nth v 1,
-                             1 := -k * vec_nth v 0 * vec_nth v 1,
-                             2 :=  k * vec_nth v 0 * vec_nth v 1))
+                             iX := -k * vec_nth v iX * vec_nth v iY,
+                             iY := -k * vec_nth v iX * vec_nth v iY,
+                             iZ :=  k * vec_nth v iX * vec_nth v iY))
                            )) {0..T} UNIV\<close>
-  assumes iv_x: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 = x0\<close>
-  assumes iv_y: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 = y0\<close>
+  assumes iv_x: \<open>vec_nth (y 0) iX + vec_nth (y 0) iZ = x0\<close>
+  assumes iv_y: \<open>vec_nth (y 0) iY + vec_nth (y 0) iZ = y0\<close>
   assumes T_nn: \<open>T \<ge> 0\<close>
   assumes k_pos: \<open>k > 0\<close>
   assumes \<epsilon>_pos: \<open>\<epsilon> > 0\<close>
-  assumes X_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) 0 \<ge> 0\<close>
-  assumes Y_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) 1 \<ge> 0\<close>
-  assumes T_large: \<open>T > (min x0 y0 - \<epsilon> - vec_nth (y 0) 2) / (k * \<epsilon>^2)\<close>
-  shows \<open>vec_nth (y T) 2 > min x0 y0 - \<epsilon>\<close>
+  assumes X_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) iX \<ge> 0\<close>
+  assumes Y_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) iY \<ge> 0\<close>
+  assumes T_large: \<open>T > (min x0 y0 - \<epsilon> - vec_nth (y 0) iZ) / (k * \<epsilon>^2)\<close>
+  shows \<open>vec_nth (y T) iZ > min x0 y0 - \<epsilon>\<close>
 proof -
+  note coords_neq [simp] = coords coords[THEN not_sym]
   have k_nn: \<open>k \<ge> 0\<close> using k_pos by simp
   have \<delta>_pos: \<open>0 < k * \<epsilon>^2\<close> using k_pos \<epsilon>_pos by simp
 
   (* Discharge `monotone` via the existing crn_min_Z_monotonic_general *)
-  have below_final: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) 2 \<le> vec_nth (y T) 2\<close>
-    using crn_min_Z_monotonic_general[OF y_sol _ _ _ k_nn X_nn_along Y_nn_along]
+  have below_final: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) iZ \<le> vec_nth (y T) iZ\<close>
+    using crn_min_Z_monotonic_general[OF coords y_sol _ _ _ k_nn X_nn_along Y_nn_along]
     by auto
 
  \<comment> \<open>The vector field, bound once so it need not be repeated.
       Must match y\_sol's inline lambda EXACTLY.\<close>
-  let ?F = \<open>\<lambda>(t::real) (v::(real,4) vec). vec_lambda ((\<lambda>i. 0)(
-              0 := -k * vec_nth v 0 * vec_nth v 1,
-              1 := -k * vec_nth v 0 * vec_nth v 1,
-              2 :=  k * vec_nth v 0 * vec_nth v 1))\<close>
+  let ?F = \<open>\<lambda>(t::real) (v::(real,'p) vec). vec_lambda ((\<lambda>i. 0)(
+              iX := -k * vec_nth v iX * vec_nth v iY,
+              iY := -k * vec_nth v iX * vec_nth v iY,
+              iZ :=  k * vec_nth v iX * vec_nth v iY))\<close>
 
 (* rate_below_target: when Z(\<tau>) \<le> min - \<epsilon>, conservation
      laws give X(\<tau>), Y(\<tau>) \<ge> \<epsilon>, so the rate k\<cdot>X\<cdot>Y \<ge> k\<cdot>\<epsilon>² *)
   have rate_below_target: 
-    \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) 2 \<le> min x0 y0 - \<epsilon> \<Longrightarrow>
-         k * vec_nth (y \<tau>) 0 * vec_nth (y \<tau>) 1 \<ge> k * \<epsilon>^2\<close>
+    \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) iZ \<le> min x0 y0 - \<epsilon> \<Longrightarrow>
+         k * vec_nth (y \<tau>) iX * vec_nth (y \<tau>) iY \<ge> k * \<epsilon>^2\<close>
   proof -
-    fix \<tau> assume \<tau>_in: \<open>\<tau> \<in> {0..T}\<close> and Z_low: \<open>vec_nth (y \<tau>) 2 \<le> min x0 y0 - \<epsilon>\<close>
+    fix \<tau> assume \<tau>_in: \<open>\<tau> \<in> {0..T}\<close> and Z_low: \<open>vec_nth (y \<tau>) iZ \<le> min x0 y0 - \<epsilon>\<close>
     then have \<tau>_nn: \<open>0 \<le> \<tau>\<close> and \<tau>_le: \<open>\<tau> \<le> T\<close> by auto
     
     have y_sol_\<tau>: \<open>(y solves_ode (\<lambda>t v.
                                   vec_lambda ((\<lambda>i. 0)(
-                                    0 := -k * vec_nth v 0 * vec_nth v 1,
-                                    1 := -k * vec_nth v 0 * vec_nth v 1,
-                                    2 :=  k * vec_nth v 0 * vec_nth v 1))
+                                    iX := -k * vec_nth v iX * vec_nth v iY,
+                                    iY := -k * vec_nth v iX * vec_nth v iY,
+                                    iZ :=  k * vec_nth v iX * vec_nth v iY))
                                   )) {0..\<tau>} UNIV\<close>
       using solves_ode_subset_ivl[OF y_sol \<tau>_in] .
 
-    have X_cons: \<open>vec_nth (y \<tau>) 0 + vec_nth (y \<tau>) 2 = x0\<close>
-      using crn_min_X_conservation[OF y_sol_\<tau> iv_x \<tau>_nn] .
-    have Y_cons: \<open>vec_nth (y \<tau>) 1 + vec_nth (y \<tau>) 2 = y0\<close>
-      using crn_min_Y_conservation[OF y_sol_\<tau> iv_y \<tau>_nn] .
+    have X_cons: \<open>vec_nth (y \<tau>) iX + vec_nth (y \<tau>) iZ = x0\<close>
+      using crn_min_X_conservation[OF coords y_sol_\<tau> iv_x \<tau>_nn] .
+    have Y_cons: \<open>vec_nth (y \<tau>) iY + vec_nth (y \<tau>) iZ = y0\<close>
+      using crn_min_Y_conservation[OF coords y_sol_\<tau> iv_y \<tau>_nn] .
 
-    have X_ge: \<open>vec_nth (y \<tau>) 0 \<ge> \<epsilon>\<close> using X_cons Z_low by linarith
-    have Y_ge: \<open>vec_nth (y \<tau>) 1 \<ge> \<epsilon>\<close> using Y_cons Z_low by linarith
+    have X_ge: \<open>vec_nth (y \<tau>) iX \<ge> \<epsilon>\<close> using X_cons Z_low by linarith
+    have Y_ge: \<open>vec_nth (y \<tau>) iY \<ge> \<epsilon>\<close> using Y_cons Z_low by linarith
 
-    show \<open>k * vec_nth (y \<tau>) 0 * vec_nth (y \<tau>) 1 \<ge> k * \<epsilon>^2\<close>
+    show \<open>k * vec_nth (y \<tau>) iX * vec_nth (y \<tau>) iY \<ge> k * \<epsilon>^2\<close>
       using X_ge Y_ge k_pos \<epsilon>_pos
       by (simp add: mult_mono' power2_eq_square)
   qed
@@ -5200,29 +5304,29 @@ proof -
       Frechet derivative is itself (has\_derivative\_vec\_nth); the Lie
       derivative is then just the field's 2-component, namely k*X*Y.\<close>
   have induct_step: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow>
-      \<exists> Dquant. ((\<lambda>v::(real,4) vec. vec_nth v 2) has_derivative Dquant) (at (y \<tau>)) \<and>
-                (vec_nth (y \<tau>) 2 \<le> min x0 y0 - \<epsilon> \<longrightarrow>
+      \<exists> Dquant. ((\<lambda>v::(real,'p) vec. vec_nth v iZ) has_derivative Dquant) (at (y \<tau>)) \<and>
+                (vec_nth (y \<tau>) iZ \<le> min x0 y0 - \<epsilon> \<longrightarrow>
                  k * \<epsilon>^2 \<le> Dquant (?F \<tau> (y \<tau>)))\<close>
   proof -
     fix \<tau> assume h\<tau>: \<open>\<tau> \<in> {0..T}\<close>
 
-    have deriv: \<open>((\<lambda>v::(real,4) vec. vec_nth v 2)
-                   has_derivative (\<lambda>w. vec_nth w 2)) (at (y \<tau>))\<close>
+    have deriv: \<open>((\<lambda>v::(real,'p) vec. vec_nth v iZ)
+                   has_derivative (\<lambda>w. vec_nth w iZ)) (at (y \<tau>))\<close>
       by (rule has_derivative_vec_nth)
 
-    have rate: \<open>vec_nth (y \<tau>) 2 \<le> min x0 y0 - \<epsilon> \<longrightarrow>
-                k * \<epsilon>^2 \<le> vec_nth (?F \<tau> (y \<tau>)) 2\<close>
+    have rate: \<open>vec_nth (y \<tau>) iZ \<le> min x0 y0 - \<epsilon> \<longrightarrow>
+                k * \<epsilon>^2 \<le> vec_nth (?F \<tau> (y \<tau>)) iZ\<close>
     proof
-      assume below: \<open>vec_nth (y \<tau>) 2 \<le> min x0 y0 - \<epsilon>\<close>
-      have field_2: \<open>vec_nth (?F \<tau> (y \<tau>)) 2
-                     = k * vec_nth (y \<tau>) 0 * vec_nth (y \<tau>) 1\<close>
+      assume below: \<open>vec_nth (y \<tau>) iZ \<le> min x0 y0 - \<epsilon>\<close>
+      have field_2: \<open>vec_nth (?F \<tau> (y \<tau>)) iZ
+                     = k * vec_nth (y \<tau>) iX * vec_nth (y \<tau>) iY\<close>
         by (simp add: fun_upd_def)
-      show \<open>k * \<epsilon>^2 \<le> vec_nth (?F \<tau> (y \<tau>)) 2\<close>
+      show \<open>k * \<epsilon>^2 \<le> vec_nth (?F \<tau> (y \<tau>)) iZ\<close>
         using rate_below_target[OF h\<tau> below] field_2 
         by simp
     qed
-    show \<open>\<exists> Dquant. ((\<lambda>v::(real,4) vec. vec_nth v 2) has_derivative Dquant) (at (y \<tau>)) \<and>
-                (vec_nth (y \<tau>) 2 \<le> min x0 y0 - \<epsilon> \<longrightarrow>
+    show \<open>\<exists> Dquant. ((\<lambda>v::(real,'p) vec. vec_nth v iZ) has_derivative Dquant) (at (y \<tau>)) \<and>
+                (vec_nth (y \<tau>) iZ \<le> min x0 y0 - \<epsilon> \<longrightarrow>
                  k * \<epsilon>^2 \<le> Dquant (?F \<tau> (y \<tau>)))\<close>
       using deriv rate 
       by blast
@@ -5230,7 +5334,7 @@ proof -
 
   show ?thesis
     using DI_convergence_rate[where
-            quant  = \<open>\<lambda>v::(real,4) vec. vec_nth v 2\<close> and
+            quant  = \<open>\<lambda>v::(real,'p) vec. vec_nth v iZ\<close> and
             Ltarget = \<open>min x0 y0 - \<epsilon>\<close> and
             \<delta>      = \<open>k * \<epsilon>^2\<close> and
             T      = T,
@@ -5262,48 +5366,51 @@ text \<open>
 \<close>
 
 lemma crn_min_correctness_specification:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes k x0 y0 \<epsilon> T :: real
+  fixes iX iY iZ :: 'p
+  assumes coords: \<open>iX \<noteq> iY\<close> \<open>iX \<noteq> iZ\<close> \<open>iY \<noteq> iZ\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
       vec_lambda ((\<lambda>i. 0)(
-        0 := -k * vec_nth v 0 * vec_nth v 1,
-        1 := -k * vec_nth v 0 * vec_nth v 1,
-        2 :=  k * vec_nth v 0 * vec_nth v 1))
+        iX := -k * vec_nth v iX * vec_nth v iY,
+        iY := -k * vec_nth v iX * vec_nth v iY,
+        iZ :=  k * vec_nth v iX * vec_nth v iY))
       )) {0..T} UNIV\<close>
-  assumes iv_x: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 = x0\<close>
-  assumes iv_y: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 = y0\<close>
+  assumes iv_x: \<open>vec_nth (y 0) iX + vec_nth (y 0) iZ = x0\<close>
+  assumes iv_y: \<open>vec_nth (y 0) iY + vec_nth (y 0) iZ = y0\<close>
   assumes T_nn: \<open>T \<ge> 0\<close>
   assumes k_pos: \<open>k > 0\<close>
   assumes \<epsilon>_pos: \<open>\<epsilon> > 0\<close>
-  assumes X_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) 0 \<ge> 0\<close>
-  assumes Y_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) 1 \<ge> 0\<close>
-  assumes T_large: \<open>T > (min x0 y0 - \<epsilon> - vec_nth (y 0) 2) / (k * \<epsilon>^2)\<close>
-  shows \<open>vec_nth (y T) 2 \<ge> vec_nth (y 0) 2 \<and>
-         vec_nth (y T) 2 \<le> min x0 y0 \<and>
-         (vec_nth (y T) 0 * vec_nth (y T) 1 = 0 \<longrightarrow> vec_nth (y T) 2 = min x0 y0) \<and>
-         vec_nth (y T) 2 > min x0 y0 - \<epsilon>\<close>
+  assumes X_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) iX \<ge> 0\<close>
+  assumes Y_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) iY \<ge> 0\<close>
+  assumes T_large: \<open>T > (min x0 y0 - \<epsilon> - vec_nth (y 0) iZ) / (k * \<epsilon>^2)\<close>
+  shows \<open>vec_nth (y T) iZ \<ge> vec_nth (y 0) iZ \<and>
+         vec_nth (y T) iZ \<le> min x0 y0 \<and>
+         (vec_nth (y T) iX * vec_nth (y T) iY = 0 \<longrightarrow> vec_nth (y T) iZ = min x0 y0) \<and>
+         vec_nth (y T) iZ > min x0 y0 - \<epsilon>\<close>
 proof (intro conjI impI)
+  note coords_neq [simp] = coords coords[THEN not_sym]
   have k_nn: \<open>k \<ge> 0\<close> using k_pos by simp
-  have X_nn_T: \<open>vec_nth (y T) 0 \<ge> 0\<close> using X_nn_along T_nn by auto
-  have Y_nn_T: \<open>vec_nth (y T) 1 \<ge> 0\<close> using Y_nn_along T_nn by auto
+  have X_nn_T: \<open>vec_nth (y T) iX \<ge> 0\<close> using X_nn_along T_nn by auto
+  have Y_nn_T: \<open>vec_nth (y T) iY \<ge> 0\<close> using Y_nn_along T_nn by auto
 
   (* PROPERTY 1: monotonic progress *)
-  show \<open>vec_nth (y T) 2 \<ge> vec_nth (y 0) 2\<close>
-    using crn_min_Z_monotonic[OF y_sol T_nn k_nn X_nn_along Y_nn_along] .
+  show \<open>vec_nth (y T) iZ \<ge> vec_nth (y 0) iZ\<close>
+    using crn_min_Z_monotonic[OF coords y_sol T_nn k_nn X_nn_along Y_nn_along] .
 
   (* PROPERTY 2: bounded output *)
-  show \<open>vec_nth (y T) 2 \<le> min x0 y0\<close>
-    using crn_min_Z_upper_bound_via_DI[OF y_sol iv_x iv_y T_nn X_nn_T Y_nn_T] .
+  show \<open>vec_nth (y T) iZ \<le> min x0 y0\<close>
+    using crn_min_Z_upper_bound_via_DI[OF coords y_sol iv_x iv_y T_nn X_nn_T Y_nn_T] .
 
   (* PROPERTY 4: equilibrium correctness (conditional) *)
-  assume equil: \<open>vec_nth (y T) 0 * vec_nth (y T) 1 = 0\<close>
-  show \<open>vec_nth (y T) 2 = min x0 y0\<close>
-    using crn_min_Z_equilibrium_correct[OF y_sol iv_x iv_y T_nn X_nn_T Y_nn_T equil] .
+  assume equil: \<open>vec_nth (y T) iX * vec_nth (y T) iY = 0\<close>
+  show \<open>vec_nth (y T) iZ = min x0 y0\<close>
+    using crn_min_Z_equilibrium_correct[OF coords y_sol iv_x iv_y T_nn X_nn_T Y_nn_T equil] .
 
 next
   (* PROPERTY 5: \<epsilon>-convergence *)
-  show \<open>vec_nth (y T) 2 > min x0 y0 - \<epsilon>\<close>
-    using crn_min_Z_epsilon_convergence_via_axiom[OF 
+  show \<open>vec_nth (y T) iZ > min x0 y0 - \<epsilon>\<close>
+    using crn_min_Z_epsilon_convergence_via_axiom[OF coords 
             y_sol iv_x iv_y T_nn k_pos \<epsilon>_pos X_nn_along Y_nn_along T_large] .
 qed
 text \<open>
@@ -5328,70 +5435,92 @@ text \<open>
 \<close>
 
 theorem crn_min_correctness_full:
-  fixes y :: \<open>real \<Rightarrow> (real, 4) vec\<close>
+  fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes k x0 y0 \<epsilon> T :: real
+  fixes iX iY iZ :: 'p
+  assumes coords: \<open>iX \<noteq> iY\<close> \<open>iX \<noteq> iZ\<close> \<open>iY \<noteq> iZ\<close>
   assumes y_sol: \<open>(y solves_ode (\<lambda>t v.
                                     vec_lambda 
                                     ((\<lambda>i. 0)
-                                     (0 := -k * vec_nth v 0 * vec_nth v 1,
-                                      1 := -k * vec_nth v 0 * vec_nth v 1,
-                                      2 :=  k * vec_nth v 0 * vec_nth v 1))
+                                     (iX := -k * vec_nth v iX * vec_nth v iY,
+                                      iY := -k * vec_nth v iX * vec_nth v iY,
+                                      iZ :=  k * vec_nth v iX * vec_nth v iY))
                                     )) {0..T} UNIV\<close>
-  assumes iv_x: \<open>vec_nth (y 0) 0 + vec_nth (y 0) 2 = x0\<close>
-  assumes iv_y: \<open>vec_nth (y 0) 1 + vec_nth (y 0) 2 = y0\<close>
+  assumes iv_x: \<open>vec_nth (y 0) iX + vec_nth (y 0) iZ = x0\<close>
+  assumes iv_y: \<open>vec_nth (y 0) iY + vec_nth (y 0) iZ = y0\<close>
   assumes T_nn: \<open>T \<ge> 0\<close>
   assumes k_pos: \<open>k > 0\<close>
   assumes \<epsilon>_pos: \<open>\<epsilon> > 0\<close>
-  assumes X_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) 0 \<ge> 0\<close>
-  assumes Y_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) 1 \<ge> 0\<close>
-  assumes T_large: \<open>T > (min x0 y0 - \<epsilon> - vec_nth (y 0) 2) / (k * \<epsilon>^2)\<close>
-  shows \<open>vec_nth (y T) 2 \<ge> vec_nth (y 0) 2 \<and>
-         vec_nth (y T) 2 \<le> min x0 y0 \<and>
-         (\<forall>c. vec_nth (y 0) 2 \<ge> c \<longrightarrow> (\<forall>\<tau>\<in>{0..T}. vec_nth (y \<tau>) 2 \<ge> c)) \<and>
-         (vec_nth (y T) 0 * vec_nth (y T) 1 = 0 \<longrightarrow> vec_nth (y T) 2 = min x0 y0) \<and>
-         vec_nth (y T) 2 > min x0 y0 - \<epsilon>\<close>
+  assumes X_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) iX \<ge> 0\<close>
+  assumes Y_nn_along: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) iY \<ge> 0\<close>
+  assumes T_large: \<open>T > (min x0 y0 - \<epsilon> - vec_nth (y 0) iZ) / (k * \<epsilon>^2)\<close>
+  shows \<open>vec_nth (y T) iZ \<ge> vec_nth (y 0) iZ \<and>
+         vec_nth (y T) iZ \<le> min x0 y0 \<and>
+         (\<forall>c. vec_nth (y 0) iZ \<ge> c \<longrightarrow> (\<forall>\<tau>\<in>{0..T}. vec_nth (y \<tau>) iZ \<ge> c)) \<and>
+         (vec_nth (y T) iX * vec_nth (y T) iY = 0 \<longrightarrow> vec_nth (y T) iZ = min x0 y0) \<and>
+         vec_nth (y T) iZ > min x0 y0 - \<epsilon>\<close>
 proof (intro conjI impI ballI allI)
+  note coords_neq [simp] = coords coords[THEN not_sym]
   have k_nn: \<open>k \<ge> 0\<close> using k_pos by simp
-  have X_nn_T: \<open>vec_nth (y T) 0 \<ge> 0\<close> using X_nn_along T_nn by auto
-  have Y_nn_T: \<open>vec_nth (y T) 1 \<ge> 0\<close> using Y_nn_along T_nn by auto
+  have X_nn_T: \<open>vec_nth (y T) iX \<ge> 0\<close> using X_nn_along T_nn by auto
+  have Y_nn_T: \<open>vec_nth (y T) iY \<ge> 0\<close> using Y_nn_along T_nn by auto
 
   (* PROPERTY 1: monotonic progress *)
-  show \<open>vec_nth (y T) 2 \<ge> vec_nth (y 0) 2\<close>
-    using crn_min_Z_monotonic[OF y_sol T_nn k_nn X_nn_along Y_nn_along] .
+  show \<open>vec_nth (y T) iZ \<ge> vec_nth (y 0) iZ\<close>
+    using crn_min_Z_monotonic[OF coords y_sol T_nn k_nn X_nn_along Y_nn_along] .
 
   (* PROPERTY 2: bounded output *)
-  show \<open>vec_nth (y T) 2 \<le> min x0 y0\<close>
-    using crn_min_Z_upper_bound_via_DI[OF y_sol iv_x iv_y T_nn X_nn_T Y_nn_T] .
+  show \<open>vec_nth (y T) iZ \<le> min x0 y0\<close>
+    using crn_min_Z_upper_bound_via_DI[OF coords y_sol iv_x iv_y T_nn X_nn_T Y_nn_T] .
 
   (* PROPERTY 3: commitment (scalar form) , for any c \<le> Z(0), every Z(\<tau>) \<ge> c.
      This is the trajectory-pointwise content of crn_min_Z_committed_via_DC. *)
   fix c :: real
   fix \<tau> :: real
-  assume Z0_ge_c: \<open>vec_nth (y 0) 2 \<ge> c\<close>
+  assume Z0_ge_c: \<open>vec_nth (y 0) iZ \<ge> c\<close>
   assume \<tau>_in: \<open>\<tau> \<in> {0..T}\<close>
   then have \<tau>_nn: \<open>0 \<le> \<tau>\<close> and \<tau>_le: \<open>\<tau> \<le> T\<close> 
          by auto
-  have \<open>vec_nth (y \<tau>) 2 \<ge> vec_nth (y 0) 2\<close>
-    using crn_min_Z_monotonic_general[OF y_sol order_refl \<tau>_nn \<tau>_le k_nn X_nn_along Y_nn_along] .
-  thus \<open>vec_nth (y \<tau>) 2 \<ge> c\<close>
+  have \<open>vec_nth (y \<tau>) iZ \<ge> vec_nth (y 0) iZ\<close>
+    using crn_min_Z_monotonic_general[OF coords y_sol order_refl \<tau>_nn \<tau>_le k_nn X_nn_along Y_nn_along] .
+  thus \<open>vec_nth (y \<tau>) iZ \<ge> c\<close>
     using Z0_ge_c 
     by linarith
 
 next
   (* PROPERTY 4: equilibrium correctness (conditional) *)
-  have X_nn_T: \<open>vec_nth (y T) 0 \<ge> 0\<close> using X_nn_along T_nn 
+  have X_nn_T: \<open>vec_nth (y T) iX \<ge> 0\<close> using X_nn_along T_nn 
     by auto
-  have Y_nn_T: \<open>vec_nth (y T) 1 \<ge> 0\<close> using Y_nn_along T_nn 
+  have Y_nn_T: \<open>vec_nth (y T) iY \<ge> 0\<close> using Y_nn_along T_nn 
     by auto
-  assume equil: \<open>vec_nth (y T) 0 * vec_nth (y T) 1 = 0\<close>
-  show \<open>vec_nth (y T) 2 = min x0 y0\<close>
-    using crn_min_Z_equilibrium_correct[OF y_sol iv_x iv_y T_nn X_nn_T Y_nn_T equil] .
+  assume equil: \<open>vec_nth (y T) iX * vec_nth (y T) iY = 0\<close>
+  show \<open>vec_nth (y T) iZ = min x0 y0\<close>
+    using crn_min_Z_equilibrium_correct[OF coords y_sol iv_x iv_y T_nn X_nn_T Y_nn_T equil] .
 
 next
   (* PROPERTY 5: \<epsilon>-convergence *)
-  show \<open>vec_nth (y T) 2 > min x0 y0 - \<epsilon>\<close>
-    using crn_min_Z_epsilon_convergence_via_axiom[OF 
+  show \<open>vec_nth (y T) iZ > min x0 y0 - \<epsilon>\<close>
+    using crn_min_Z_epsilon_convergence_via_axiom[OF coords 
             y_sol iv_x iv_y T_nn k_pos \<epsilon>_pos X_nn_along Y_nn_along T_large] .
 qed
+
+
+text \<open>
+  Two entries at concrete state spaces: the min(x, y) network in R\textasciicircum{}3,
+  with X, Y and Z at the coordinates 0, 1 and 2, and the repressilator in
+  R\textasciicircum{}4, with u, v and w at the coordinates 0, 1 and 2 and its ghost at 3.
+  The distinctness assumptions are discharged once for each space.
+\<close>
+
+lemma coordinates_R3: \<open>(0::3) \<noteq> 1\<close> \<open>(0::3) \<noteq> 2\<close> \<open>(1::3) \<noteq> 2\<close>
+  by simp_all
+
+lemma coordinates_R4:
+  \<open>(0::4) \<noteq> 1\<close> \<open>(0::4) \<noteq> 2\<close> \<open>(0::4) \<noteq> 3\<close>
+  \<open>(1::4) \<noteq> 2\<close> \<open>(1::4) \<noteq> 3\<close> \<open>(2::4) \<noteq> 3\<close>
+  by simp_all
+
+lemmas crn_min_correctness_full_R3 = crn_min_correctness_full[OF coordinates_R3]
+lemmas repressilator_all_positive_R4 = repressilator_all_positive[OF coordinates_R4]
 
 end

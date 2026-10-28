@@ -11,33 +11,10 @@
 (***************************************************************)
 theory Real_Analysis_More
 
-imports "Ordinary_Differential_Equations.ODE_Analysis" "HOL-Library.Numeral_Type"
+imports "Ordinary_Differential_Equations.ODE_Analysis"
 begin
 
 section \<open>Algebraic and Calculus Helpers\<close>
-
-subsection \<open>State spaces of the models\<close>
-
-text \<open>
-  Every model in this development is a system of ODEs over a state space
-  R\textasciicircum{}n, written (real, n) vec, where the index type n is one of
-  the numeral types 2, 3 or 4 of HOL-Library.Numeral\_Type.  Coordinate i of a
-  state v is vec\_nth v i.  A model uses the smallest numeral type that has an
-  index for each of its species and for each differential ghost its proof
-  introduces.  The vector fields are written by function update at the numerals
-  0, 1, 2 and 3, so their proofs need these numerals to denote distinct
-  indices.  The two lemmas below give the simplifier that fact.
-\<close>
-
-lemma state_index_3_distinct [simp]:
-  \<open>(0::3) \<noteq> 2\<close> \<open>(2::3) \<noteq> 0\<close> \<open>(1::3) \<noteq> 2\<close> \<open>(2::3) \<noteq> 1\<close>
-  by simp_all
-
-lemma state_index_4_distinct [simp]:
-  \<open>(0::4) \<noteq> 2\<close> \<open>(2::4) \<noteq> 0\<close> \<open>(0::4) \<noteq> 3\<close> \<open>(3::4) \<noteq> 0\<close>
-  \<open>(1::4) \<noteq> 2\<close> \<open>(2::4) \<noteq> 1\<close> \<open>(1::4) \<noteq> 3\<close> \<open>(3::4) \<noteq> 1\<close>
-  \<open>(2::4) \<noteq> 3\<close> \<open>(3::4) \<noteq> 2\<close>
-  by simp_all
 
 subsection \<open>Vectors Algebra\<close>
 
@@ -307,16 +284,16 @@ lemma sum3_components_has_derivative:
   for i j k and p :: \<open>(real, 'a::finite) vec\<close>
   by (intro has_derivative_add has_derivative_vec_nth)
 
-text \<open>Helper: derivative of vec\_nth v 0 + 2 * vec\_nth v 1 as a function of v.\<close>
+text \<open>Helper: derivative of vec\_nth v i + 2 * vec\_nth v j as a function of v.\<close>
 lemma weighted_sum_has_derivative:
-  \<open>((\<lambda>v. vec_nth v 0 + 2 * vec_nth v 1) has_derivative 
-    (\<lambda>w. vec_nth w 0 + 2 * vec_nth w 1)) (at p)\<close>
-  for p :: \<open>(real, 'a:: {finite,one,zero}) vec\<close>
+  \<open>((\<lambda>v. vec_nth v i + 2 * vec_nth v j) has_derivative 
+    (\<lambda>w. vec_nth w i + 2 * vec_nth w j)) (at p)\<close>
+  for i j and p :: \<open>(real, 'a::finite) vec\<close>
 proof -
-  have \<open>((\<lambda>v. vec_nth v 0) has_derivative (\<lambda>w. vec_nth w 0)) (at p)\<close>
+  have \<open>((\<lambda>v. vec_nth v i) has_derivative (\<lambda>w. vec_nth w i)) (at p)\<close>
     by (rule has_derivative_vec_nth)
-  moreover have \<open>((\<lambda>v. 2 * vec_nth v 1) has_derivative (\<lambda>w. 2 * vec_nth w 1)) (at p)\<close>
-    using has_derivative_vec_nth[where x=1]
+  moreover have \<open>((\<lambda>v. 2 * vec_nth v j) has_derivative (\<lambda>w. 2 * vec_nth w j)) (at p)\<close>
+    using has_derivative_vec_nth[where x=j]
     using has_derivative_mult_right by blast
   ultimately show ?thesis
     by (intro has_derivative_add)
