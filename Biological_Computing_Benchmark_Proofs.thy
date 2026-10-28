@@ -5,7 +5,7 @@
 (** Email:     Yakoub.Nemouchi@nlr.gov                        **)
 (**            Peter.Graf@nlr.gov                             **)
 (**                                                           **)
-(** Copyright © 2026 Alliance for Energy Innovation, LLC.     **)
+(** Copyright \<copyright> 2026 Alliance for Energy Innovation, LLC.     **)
 (** License: BSD 3-Clause, see LICENSE.                       **)
 (** See CONTRIBUTORS and CITATION files for details.          **)
 (***************************************************************)
@@ -105,7 +105,7 @@ text \<open>
   Since the derivative is zero and the quantity starts at total0, it
   remains at total0 forever. This is proved WITHOUT solving the ODE.
 
-  ASSUMPTIONS
+    \textbf{ASSUMPTIONS}\\
   The proof assumes:
 \begin{enumerate}
 \item The solution y exists and satisfies the ODE on [0,t] (from solves\_ode)
@@ -115,7 +115,7 @@ text \<open>
   (the conservation law holds regardless of their values)
 \end{enumerate}
 
-  FORMALIZATION
+   \textbf{FORMALIZATION}\\
   We represent the three species as components of a state vector over an
   arbitrary finite index type 'p, at three pairwise distinct coordinates:
 \begin{itemize}
@@ -363,7 +363,7 @@ text \<open>
                        = (-k1*E*S + km1*ES) + (k1*E*S - (km1+k2)*ES) + k2*ES
                        = 0
 
-  FORMALIZATION
+  \textbf{FORMALIZATION}\\
   We represent the four species as components of a state vector over an
   arbitrary finite index type 'p, at four pairwise distinct coordinates:
     Coordinate iE:  [E]   (free enzyme)
@@ -661,7 +661,7 @@ qed
 subsubsection \<open>SIR epidemic model: population conservation\<close>
 
 text \<open>
-  CONTEXT
+  \textbf{BIOLOGICAL CONTEXT}\\
   The SIR model is one of the most fundamental models in epidemiology,
   proposed by Kermack and McKendrick in 1927. It divides a population
   into three compartments:
@@ -809,7 +809,7 @@ qed
 subsubsection \<open>Reversible binding: two conservation laws\<close>
 
 text \<open>
-  CONTEXT
+  \textbf{BIOLOGICAL CONTEXT}\\
   Reversible binding is the most basic reaction in chemistry and biology.
   A ligand A binds to a receptor B to form a complex C, and the complex
   can dissociate back:
@@ -1086,7 +1086,7 @@ qed
 subsubsection \<open>Dimerization: weighted conservation law\<close>
 
 text \<open>
-  CONTEXT
+  \textbf{BIOLOGICAL CONTEXT}\\
   Dimerization is when two identical molecules combine to form a dimer:
 
  2A  <=>  A2     (k1 forward, k-1 reverse)
@@ -1226,7 +1226,7 @@ qed
 subsubsection \<open>Simple decay: positivity via DG\<close>
 
 text \<open>
-  CONTEXT
+   \textbf{BIOLOGICAL CONTEXT}\\
   The simplest irreversible reaction: a species decays at a rate
   proportional to its concentration.
 

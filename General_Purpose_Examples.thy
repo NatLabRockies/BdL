@@ -5,7 +5,7 @@
 (** Email:     Yakoub.Nemouchi@nlr.gov                        **)
 (**            Peter.Graf@nlr.gov                             **)
 (**                                                           **)
-(** Copyright © 2026 Alliance for Energy Innovation, LLC.     **)
+(** Copyright \<copyright> 2026 Alliance for Energy Innovation, LLC.     **)
 (** License: BSD 3-Clause, see LICENSE.                       **)
 (** See CONTRIBUTORS and CITATION files for details.          **)
 (***************************************************************)
@@ -87,10 +87,10 @@ proof -
                   ((\<lambda>v. (vec_nth v iX)^2 + (vec_nth v iY)^2) has_derivative Dg) (at (y \<tau>)) \<and>
                   Dh ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
                         iX := -\<omega> * (vec_nth v iY),
-                        iY :=  \<omega> * (vec_nth v iX)))) \<tau> (y \<tau>))
-                  \<le> Dg ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
-                        iX := -\<omega> * (vec_nth v iY),
-                        iY :=  \<omega> * (vec_nth v iX)))) \<tau> (y \<tau>))\<close>
+                        iY :=  \<omega> * (vec_nth v iX)))) \<tau> (y \<tau>)) \<le>
+                  Dg ((\<lambda>t v. vec_lambda ((\<lambda>i. 0)(
+                       iX := -\<omega> * (vec_nth v iY),
+                       iY :=  \<omega> * (vec_nth v iX)))) \<tau> (y \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
       apply (rule exI[where x = \<open>\<lambda>v. 2 * (vec_nth (y \<tau>) iX) * (vec_nth v iX) +
                                      2 * (vec_nth (y \<tau>) iY) * (vec_nth v iY)\<close>])
