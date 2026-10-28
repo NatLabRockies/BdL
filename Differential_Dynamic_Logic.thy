@@ -33,12 +33,12 @@ proof -
   proof
     fix x assume hx: \<open>x \<in> {0..t}\<close>
     then have hx0: \<open>0 \<le> x\<close> and hxt: \<open>x \<le> t\<close> 
-           by auto
+      by auto
     obtain Dinvar where
       invar_at_x: "(invar has_derivative Dinvar) (at (y x))" and
       ineq:       "Dinvar (f x (y x)) \<ge> 0"
       using induct_step hx 
-        by blast
+      by blast
     have Dinvar_eq: \<open>(SOME Dinvar. (invar has_derivative Dinvar) (at (y x))) = Dinvar\<close>
       using invar_at_x
       by (metis frechet_derivative_at frechet_derivative_def)
@@ -80,7 +80,8 @@ proof -
       using invar_at_x
       by (metis frechet_derivative_at frechet_derivative_def)
     show \<open>0 \<le> (SOME Dinvar. (invar has_derivative Dinvar) (at (y x))) (f x (y x))\<close>
-      using ineq Dinvar_eq by simp
+      using ineq Dinvar_eq
+      by simp
   qed
   have Fx: \<open>invar (y t) - invar (y 0) =
             integral {0..t} (\<lambda>x.
@@ -132,7 +133,9 @@ proof -
     by blast
   have main: \<open>0 \<le> invar (y t)\<close>
     using DI_Generic[OF iv ODE step' t] .
-  have endpoint: \<open>y t \<in> Q\<close> using y_in_Q[of t] t by simp
+  have endpoint: \<open>y t \<in> Q\<close>
+    using y_in_Q[of t] t
+    by simp
   show ?thesis 
     using endpoint main 
     by simp
@@ -161,7 +164,8 @@ proof -
      subgoal for \<tau>
        proof -
          assume h_\<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
-         then have h_\<tau>_t0: \<open>0 \<le> \<tau>\<close> and h_\<tau>_t: \<open>\<tau> \<le> t\<close> by auto
+         then have h_\<tau>_t0: \<open>0 \<le> \<tau>\<close> and h_\<tau>_t: \<open>\<tau> \<le> t\<close>
+           by auto
          obtain Dh Dg where
            h_at_\<tau>: "(h has_derivative Dh) (at (y \<tau>))" and
            g_at_\<tau>: "(g has_derivative Dg) (at (y \<tau>))" and
@@ -177,12 +181,12 @@ proof -
            apply simp
            done
        qed
-       apply (rule t)
-       done
-     show ?thesis 
-       using geq0 
-       by simp
-   qed
+    apply (rule t)
+    done
+  show ?thesis
+    using geq0
+    by simp
+qed
 
 
 text \<open>
@@ -215,7 +219,8 @@ proof -
             \<exists> Dh Dg. (h has_derivative Dh) (at (y \<tau>)) \<and>
                      (g has_derivative Dg) (at (y \<tau>)) \<and>
                      Dh (f \<tau> (y \<tau>)) \<le> Dg (f \<tau> (y \<tau>))\<close>
-    using induct_step y_in_Q by blast
+    using induct_step y_in_Q
+    by blast
   have ineq: \<open>h (y t) \<le> g (y t)\<close>
     using DI_Vect[OF iv ODE step' t] .
   have endpoint: \<open>y t \<in> Q\<close> 
@@ -287,9 +292,14 @@ proof -
     done
 
   have ineq: \<open>h (y t) \<le> g (y t)\<close>
-    using gap integral_nn iv by linarith
-  have endpoint: \<open>y t \<in> Q\<close> using y_in_Q[of t] t by simp
-  show ?thesis using endpoint ineq by simp
+    using gap integral_nn iv
+    by linarith
+  have endpoint: \<open>y t \<in> Q\<close>
+    using y_in_Q[of t] t
+    by simp
+  show ?thesis
+    using endpoint ineq
+    by simp
 qed
 
 subsection \<open>Differential Ghost\<close>
@@ -419,7 +429,7 @@ proof -
       then have \<open>((\<lambda>\<tau>. y0 + I \<tau>) has_vector_derivative (0 + b \<tau> * exp (- A \<tau>))) (at \<tau> within {0..t})\<close>
         by (intro has_vector_derivative_add has_vector_derivative_const)
       then show ?thesis 
-           by simp
+        by simp
     qed
 
     (* Apply product rule *)
@@ -460,8 +470,7 @@ lemma assemble_test:
   fixes gi :: 'a
   assumes x_deriv: \<open>(x has_derivative Dx) (at \<tau> within S)\<close>
   assumes y_deriv: \<open>(y has_derivative Dy) (at \<tau> within S)\<close>
-  shows \<open>((\<lambda>\<tau>. (vec_lambda) ((\<lambda>i. vec_nth (x \<tau>) i) (gi:= y \<tau>))) 
-          has_derivative
+  shows \<open>((\<lambda>\<tau>. (vec_lambda) ((\<lambda>i. vec_nth (x \<tau>) i) (gi:= y \<tau>))) has_derivative
           (\<lambda>h. (vec_lambda) ((\<lambda>i. vec_nth (Dx h) i) (gi:= Dy h))))
           (at \<tau> within S)\<close>
 proof -
@@ -536,8 +545,7 @@ lemma DG:
   assumes gi_fresh: \<open>\<And>\<tau> v w. (\<forall>i. i \<noteq> gi \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow> f \<tau> v = f \<tau> w\<close>
   shows 
     \<open>\<exists> yi. yi 0 = y0 \<and>
-         ((\<lambda>\<tau>. (vec_lambda) ((\<lambda>i. vec_nth (y \<tau>) i) (gi:= yi \<tau>)))
-           solves_ode 
+         ((\<lambda>\<tau>. (vec_lambda) ((\<lambda>i. vec_nth (y \<tau>) i) (gi:= yi \<tau>))) solves_ode
           (\<lambda>\<tau> v. f \<tau> v + ((vec_lambda) ((\<lambda>i. 0) (gi:= a \<tau> * vec_nth v gi + b \<tau>))))) {0..t} UNIV\<close>
 proof -
   (* ---- Step 1: Get ghost trajectory from linear_ode_solution ---- *)
@@ -554,7 +562,8 @@ proof -
 
   (* ---- Step 3: ?z agrees with x on non-ghost components ---- *)
   have z_eq_x: \<open>\<forall>i. i \<noteq> gi \<longrightarrow> vec_nth (?z \<tau>) i = vec_nth (y \<tau>) i\<close>
-    for \<tau> by simp
+    for \<tau>
+    by simp
 
   (* ---- Step 4: f \<tau> (?z \<tau>) = f \<tau> (x \<tau>) ---- *)
   have f_eq: \<open>f \<tau> (?z \<tau>) = f \<tau> (y \<tau>)\<close> for \<tau>
@@ -563,7 +572,8 @@ proof -
 
   (* ---- Step 5: target equation for the extended vector field ---- *)
   have target_eq: \<open>?g \<tau> (?z \<tau>) = ((vec_lambda) ((\<lambda>i. vec_nth (f \<tau> (y \<tau>)) i) (gi:= a \<tau> * yi \<tau> + b \<tau>)))\<close> 
-    for \<tau> by (simp add: assms(4) f_eq vec_eq_iff)
+    for \<tau>
+    by (simp add: assms(4) f_eq vec_eq_iff)
 
   (* ---- Step 6: For any t, show ?z solves_ode ?g on {0..t} ---- *)
   have z_sol: \<open>(?z solves_ode ?g) {0..t} UNIV\<close>
@@ -615,7 +625,8 @@ proof -
         by (auto simp: vec_eq_iff fun_eq_iff scaleR_vec_def)
 
       ultimately show \<open>((?z) has_derivative (\<lambda>xa. xa *\<^sub>R ?g \<tau> (?z \<tau>))) 
-          (at \<tau> within {0..t})\<close> unfolding fun_upd_def
+          (at \<tau> within {0..t})\<close>
+        unfolding fun_upd_def
         by simp
     qed
 
@@ -645,16 +656,15 @@ lemma DG_backward:
   assumes gi_fresh: \<open>\<And>\<tau> v w. (\<forall>i. i \<noteq> gi \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow> f \<tau> v = f \<tau> w\<close>
   assumes ghost_step: 
           \<open>\<And>y. y 0 = y0 \<Longrightarrow>
-              ((\<lambda>\<tau>. (vec_lambda) ((\<lambda>i. vec_nth (x \<tau>) i) (gi:= y \<tau>)))
-                solves_ode 
+              ((\<lambda>\<tau>. (vec_lambda) ((\<lambda>i. vec_nth (x \<tau>) i) (gi:= y \<tau>))) solves_ode
               (\<lambda>\<tau> v. f \<tau> v + ((vec_lambda) ((\<lambda>i. 0) (gi:= a \<tau> * vec_nth v gi + b \<tau>))))) 
              {0..t} UNIV \<Longrightarrow> P (x t)\<close>
   shows \<open>P (x t)\<close>
 proof -
   obtain y where y_init: \<open>y 0 = y0\<close> and
     combined_sol: 
-      \<open>((\<lambda>\<tau>. (vec_lambda) ((\<lambda>i. vec_nth (x \<tau>) i) (gi:= y \<tau>)))
-        solves_ode (\<lambda>\<tau> v. f \<tau> v + ((vec_lambda) ((\<lambda>i. 0) (gi:= a \<tau> * vec_nth v gi + b \<tau>))))) 
+      \<open>((\<lambda>\<tau>. (vec_lambda) ((\<lambda>i. vec_nth (x \<tau>) i) (gi:= y \<tau>))) solves_ode
+        (\<lambda>\<tau> v. f \<tau> v + ((vec_lambda) ((\<lambda>i. 0) (gi:= a \<tau> * vec_nth v gi + b \<tau>)))))
        {0..t} UNIV\<close>
     using DG[OF x_sol a_cont b_cont gi_zero gi_fresh] 
     by auto
@@ -670,17 +680,15 @@ lemma DG_elim:
   assumes gi_zero: \<open>\<And>\<tau> v. vec_nth (f \<tau> v) gi = 0\<close>
   assumes gi_fresh: \<open>\<And>\<tau> v w. (\<forall>i. i \<noteq> gi \<longrightarrow> vec_nth v i = vec_nth w i) \<Longrightarrow> f \<tau> v = f \<tau> w\<close>
   assumes ghost_step: \<open>\<And>y. y 0 = y0 \<Longrightarrow>
-             ((\<lambda>\<tau>. (vec_lambda) ((\<lambda>i. vec_nth (x \<tau>) i) (gi:= y \<tau>)))
-              solves_ode 
+             ((\<lambda>\<tau>. (vec_lambda) ((\<lambda>i. vec_nth (x \<tau>) i) (gi:= y \<tau>))) solves_ode
              (\<lambda>\<tau> v. f \<tau> v + ((vec_lambda) ((\<lambda>i. 0) (gi:= a \<tau> * vec_nth v gi + b \<tau>))))) 
-             {0..t} UNIV
-            \<Longrightarrow> thesis\<close>
+             {0..t} UNIV \<Longrightarrow>
+            thesis\<close>
   shows \<open>thesis\<close>
 proof -
   obtain y where y_init: \<open>y 0 = y0\<close> and
     combined_sol: 
-     \<open>((\<lambda>\<tau>. (vec_lambda) ((\<lambda>i. vec_nth (x \<tau>) i) (gi:= y \<tau>)))
-       solves_ode 
+     \<open>((\<lambda>\<tau>. (vec_lambda) ((\<lambda>i. vec_nth (x \<tau>) i) (gi:= y \<tau>))) solves_ode
       (\<lambda>\<tau> v. f \<tau> v + ((vec_lambda) ((\<lambda>i. 0) (gi:= a \<tau> * vec_nth v gi + b \<tau>))))) 
       {0..t} UNIV\<close>
     using DG[OF x_sol a_cont b_cont gi_zero gi_fresh] 
@@ -890,7 +898,8 @@ proof (rule ccontr)
     proof -
       fix \<tau> assume h\<tau>: \<open>\<tau> \<in> {0..t}\<close>
       have y_cont_at_\<tau>: \<open>continuous (at \<tau> within {0..t}) y\<close>
-        using y_cont h\<tau> by (simp add: continuous_on_eq_continuous_within)
+        using y_cont h\<tau>
+        by (simp add: continuous_on_eq_continuous_within)
       have invar_cont: \<open>continuous (at (y \<tau>)) invar\<close>
         using invar_cont_at_y[OF h\<tau>] .
       show \<open>continuous (at \<tau> within {0..t}) ?g\<close>
@@ -914,13 +923,15 @@ proof (rule ccontr)
   define \<tau>_star where \<open>\<tau>_star = Inf S\<close>
 
   have \<tau>_star_lb: \<open>\<And>\<tau>. \<tau> \<in> S \<Longrightarrow> \<tau>_star \<le> \<tau>\<close>
-    unfolding \<tau>_star_def using S_bdd 
+    unfolding \<tau>_star_def
+    using S_bdd
     by (auto intro: cInf_lower)
 
   have \<tau>_star_in_interval: \<open>\<tau>_star \<in> {0..t}\<close>
   proof -
     have \<open>0 \<le> \<tau>_star\<close>
-      unfolding \<tau>_star_def using S_bdd S_subset
+      unfolding \<tau>_star_def
+      using S_bdd S_subset
       by (meson atLeastAtMost_iff cInf_greatest S_nonempty subsetD)
     moreover have \<open>\<tau>_star \<le> t\<close>
       using S_nonempty t g_t_neg S_def \<tau>_star_def \<tau>_star_lb
@@ -944,14 +955,16 @@ proof (rule ccontr)
       unfolding \<tau>_star_def
       by (metis closure_sequential)
     have \<open>\<And>n. ?g (seq n) < 0\<close>
-      using seq_in_S by (auto simp: S_def)
+      using seq_in_S
+      by (auto simp: S_def)
     moreover have \<open>(\<lambda>n. ?g (seq n)) \<longlonglongrightarrow> ?g \<tau>_star\<close>
     proof -
       have seq_in: \<open>\<forall>n. seq n \<in> {0..t}\<close>
         using seq_in_S S_subset 
         by blast
       have ev_in: \<open>eventually (\<lambda>n. seq n \<in> {0..t}) sequentially\<close>
-        using seq_in by simp
+        using seq_in
+        by simp
       show ?thesis
         using continuous_on_tendsto_compose[OF g_cont seq_lim \<open>\<tau>_star \<in> {0..t}\<close> ev_in] 
         by blast
@@ -966,7 +979,8 @@ proof (rule ccontr)
     show ?thesis
     proof (cases \<open>\<tau>_star = 0\<close>)
       case True
-      thus ?thesis using iv 
+      thus ?thesis
+        using iv
         by simp
     next
       case False
@@ -1011,7 +1025,8 @@ proof (rule ccontr)
             using s_lt 
             by linarith
           have hi: \<open>\<tau>_star - \<tau>_star/(real (Suc (Suc n))) \<le> t\<close>
-            using \<open>\<tau>_star \<in> {0..t}\<close> s_pos by auto
+            using \<open>\<tau>_star \<in> {0..t}\<close> s_pos
+            by auto
           show \<open>\<tau>_star - \<tau>_star/(real (Suc (Suc n))) \<in> {0..t}\<close>
             using lo hi 
             by simp
@@ -1179,7 +1194,8 @@ proof (rule ccontr)
       using S_nonempty S_bdd \<epsilon>_pos cInf_lessD
       by (metis \<tau>_star_def less_add_same_cancel1)
 
-    then obtain \<tau> where \<tau>_in_S: \<open>\<tau> \<in> S\<close> and \<tau>_close: \<open>\<tau> < \<tau>_star + \<epsilon>\<close> by blast
+    then obtain \<tau> where \<tau>_in_S: \<open>\<tau> \<in> S\<close> and \<tau>_close: \<open>\<tau> < \<tau>_star + \<epsilon>\<close>
+      by blast
 
     (* \<tau>_star \<le> \<tau> because \<tau>_star is a lower bound of S *)
     have \<tau>_ge_\<tau>_star: \<open>\<tau>_star \<le> \<tau>\<close>
@@ -1227,7 +1243,8 @@ proof (rule ccontr)
     (* Direct contradiction: g(\<tau>_star) = 0 but g(t) < 0 *)
     assume \<tau>_star_eq_t: \<open>\<tau>_star = t\<close>
     have \<open>?g t = 0\<close>
-      using g_at_\<tau>_star_eq_0 \<tau>_star_eq_t by simp
+      using g_at_\<tau>_star_eq_0 \<tau>_star_eq_t
+      by simp
     moreover have \<open>?g t < 0\<close>
       using g_t_neg .
     ultimately show False 
@@ -1260,7 +1277,8 @@ proof -
   have boundary_step': \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> invar (y \<tau>) = 0 \<Longrightarrow>
         \<exists> Dinvar. (invar has_derivative Dinvar) (at (y \<tau>)) \<and>
                   0 < Dinvar (f \<tau> (y \<tau>))\<close>
-    using boundary_step y_in_Q by blast
+    using boundary_step y_in_Q
+    by blast
   have main: \<open>0 \<le> invar (y t)\<close>
     using DI_boundary[OF iv ODE t invar_diff boundary_step'] .
   have endpoint: \<open>y t \<in> Q\<close> 
@@ -1292,14 +1310,17 @@ lemma convergence_rate_core:
   shows \<open>Ltarget < u T\<close>
 proof (rule ccontr)
   assume neg: \<open>\<not> Ltarget < u T \<close>
-  hence u_T_low: \<open>u T \<le> Ltarget\<close> by simp
+  hence u_T_low: \<open>u T \<le> Ltarget\<close>
+    by simp
 
   \<comment> \<open>Step 1: monotonicity propagates the assumed failure backwards.\<close>
   have u_below: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> u \<tau> \<le> Ltarget\<close>
   proof -
     fix \<tau> assume h\<tau>: \<open>\<tau> \<in> {0..T}\<close>
-    have \<open>u \<tau> \<le> u T\<close> using below_final[OF h\<tau>] .
-    thus \<open>u \<tau> \<le> Ltarget\<close> using u_T_low 
+    have \<open>u \<tau> \<le> u T\<close>
+      using below_final[OF h\<tau>] .
+    thus \<open>u \<tau> \<le> Ltarget\<close>
+      using u_T_low
       by linarith
   qed
 
@@ -1544,8 +1565,11 @@ proof -
     by blast
   have main: \<open>Ltarget < quant (y T)\<close>
     using DI_convergence_rate[OF ODE T_nn \<delta>_pos below_final step' T_large] .
-  have endpoint: \<open>y T \<in> Q\<close> using y_in_Q[of T] T_nn by simp
-  show ?thesis using endpoint main 
+  have endpoint: \<open>y T \<in> Q\<close>
+    using y_in_Q[of T] T_nn
+    by simp
+  show ?thesis
+    using endpoint main
     by simp
 qed
 
@@ -1641,8 +1665,11 @@ proof -
     \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> (\<phi> \<tau> + \<delta> * u \<tau>) * exp (\<delta> * \<tau>) \<le> 0\<close>
   proof -
     fix \<tau> assume h\<tau>: \<open>\<tau> \<in> {0..T}\<close>
-    have a: \<open>\<phi> \<tau> + \<delta> * u \<tau> \<le> 0\<close> using rate_sum_nonpos h\<tau> .
-    have b: \<open>0 \<le> exp (\<delta> * \<tau>)\<close> using exp_pos by (simp add: less_imp_le)
+    have a: \<open>\<phi> \<tau> + \<delta> * u \<tau> \<le> 0\<close>
+      using rate_sum_nonpos h\<tau> .
+    have b: \<open>0 \<le> exp (\<delta> * \<tau>)\<close>
+      using exp_pos
+      by (simp add: less_imp_le)
     show \<open>(\<phi> \<tau> + \<delta> * u \<tau>) * exp (\<delta> * \<tau>) \<le> 0\<close>
       using a b 
       by (simp add: mult_nonpos_nonneg)
@@ -1662,8 +1689,8 @@ proof -
     have integral_nonpos:
       \<open>integral {0..T} (\<lambda>\<tau>. (\<phi> \<tau> + \<delta> * u \<tau>) * exp (\<delta> * \<tau>)) \<le> 0\<close>
     proof -
-      have \<open>integral {0..T} (\<lambda>\<tau>. (\<phi> \<tau> + \<delta> * u \<tau>) * exp (\<delta> * \<tau>))
-            \<le> integral {0..T} (\<lambda>\<tau>::real. 0)\<close>
+      have \<open>integral {0..T} (\<lambda>\<tau>. (\<phi> \<tau> + \<delta> * u \<tau>) * exp (\<delta> * \<tau>)) \<le>
+            integral {0..T} (\<lambda>\<tau>::real. 0)\<close>
         apply (rule integral_le)
           apply (use integrand_nonpos in auto)
         using T_nn fundamental_theorem_of_calculus' g_vderiv
@@ -1672,7 +1699,8 @@ proof -
       thus ?thesis 
         by simp
     qed
-    from ftc integral_nonpos have \<open>?g T - ?g 0 \<le> 0\<close> by simp
+    from ftc integral_nonpos have \<open>?g T - ?g 0 \<le> 0\<close>
+      by simp
     thus ?thesis 
       by simp
   qed
@@ -1773,7 +1801,8 @@ proof -
       using induct_step h\<tau> 
       by blast
     have DV_eq: \<open>DV \<tau> = D\<close>
-      unfolding DV_def using V_at
+      unfolding DV_def
+      using V_at
       by (metis frechet_derivative_at frechet_derivative_def)
     show \<open>(V has_derivative (DV \<tau>)) (at (y \<tau>)) \<and>
           DV \<tau> (f \<tau> (y \<tau>)) \<le> -\<delta> * V (y \<tau>)\<close>
@@ -1858,7 +1887,9 @@ proof -
     by blast
   have main: \<open>V (y T) \<le> V (y 0) * exp (-\<delta> * T)\<close>
     using REACH_lyapunov[OF ODE T_nn step'] .
-  have endpoint: \<open>y T \<in> Q\<close> using y_in_Q[of T] T_nn by simp
+  have endpoint: \<open>y T \<in> Q\<close>
+    using y_in_Q[of T] T_nn
+    by simp
   show ?thesis 
     using endpoint main 
     by simp
@@ -1880,9 +1911,10 @@ corollary REACH_lyapunov_sublevel_dom:
 proof -
   have main: \<open>y T \<in> Q \<and> V (y T) \<le> V (y 0) * exp (-\<delta> * T)\<close>
     using REACH_lyapunov_dom[OF ODE T_nn induct_step] .
-  hence \<open>V (y T) \<le> V (y 0) * exp (-\<delta> * T)\<close> by simp
+  hence \<open>V (y T) \<le> V (y 0) * exp (-\<delta> * T)\<close>
+    by simp
   also have \<open>\<dots> \<le> L\<close> 
-         using sublevel_reached .
+    using sublevel_reached .
   finally have \<open>V (y T) \<le> L\<close> .
   thus ?thesis 
     using main 
@@ -1958,12 +1990,14 @@ proof -
         by simp
     qed
     have \<open>open_box = (\<Inter>i\<in>UNIV. {v. lo i < vec_nth v i} \<inter> {v. vec_nth v i < hi i})\<close>
-      unfolding open_box_def by blast
-    moreover have \<open>open (\<Inter>i\<in>UNIV. {v :: (real, 'a) vec. lo i < vec_nth v i} 
-                                  \<inter> {v. vec_nth v i < hi i})\<close>
+      unfolding open_box_def
+      by blast
+    moreover have \<open>open (\<Inter>i\<in>UNIV. {v :: (real, 'a) vec. lo i < vec_nth v i} \<inter>
+                                  {v. vec_nth v i < hi i})\<close>
       using lo_open hi_open 
       by (auto simp: open_INT open_Int)
-    ultimately show ?thesis by simp
+    ultimately show ?thesis
+      by simp
   qed
 
   (* y \<tau>_star is in the open box *)
@@ -1991,17 +2025,20 @@ proof -
   (* Translate the ball condition into an \<epsilon>-\<delta> statement *)
   show ?thesis
   proof (rule exI[where x=\<delta>], intro conjI)
-    show \<open>0 < \<delta>\<close> using \<delta>_pos .
+    show \<open>0 < \<delta>\<close>
+      using \<delta>_pos .
   next
     show \<open>\<forall>\<tau> \<in> {0..t}. \<bar>\<tau> - \<tau>_star\<bar> < \<delta> \<longrightarrow> 
           (\<forall>i. lo i < vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i < hi i)\<close>
     proof (intro ballI impI)
       fix \<tau> assume \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close> and \<tau>_close: \<open>\<bar>\<tau> - \<tau>_star\<bar> < \<delta>\<close>
       have \<open>\<tau> \<in> ball \<tau>_star \<delta>\<close>
-        using \<tau>_close by (simp add: dist_real_def)
+        using \<tau>_close
+        by (simp add: dist_real_def)
       with \<tau>_in_t \<delta>_ball have \<open>\<tau> \<in> y -` open_box\<close>
         by blast
-      hence \<open>y \<tau> \<in> open_box\<close> by auto
+      hence \<open>y \<tau> \<in> open_box\<close>
+        by auto
       thus \<open>\<forall>i. lo i < vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i < hi i\<close>
         unfolding open_box_def 
         by blast
@@ -2029,7 +2066,8 @@ proof -
     by blast
   show ?thesis
   proof (intro exI[where x=d] conjI)
-    show \<open>0 < d\<close> using d_pos .
+    show \<open>0 < d\<close>
+      using d_pos .
   next
     show \<open>\<forall>\<tau> \<in> S. \<bar>\<tau> - x\<bar> < d \<longrightarrow> c < \<phi> \<tau>\<close>
     proof (intro ballI impI)
@@ -2055,7 +2093,10 @@ lemma continuous_within_lt_neighborhood:
   shows \<open>\<exists>d > 0. \<forall>\<tau> \<in> S. \<bar>\<tau> - x\<bar> < d \<longrightarrow> \<phi> \<tau> < c\<close>
 proof -
   define \<epsilon> where \<open>\<epsilon> = c - \<phi> x\<close>
-  have \<epsilon>_pos: \<open>0 < \<epsilon>\<close> using bound unfolding \<epsilon>_def by simp
+  have \<epsilon>_pos: \<open>0 < \<epsilon>\<close>
+    using bound
+    unfolding \<epsilon>_def
+    by simp
   from cont have \<open>\<exists>d > 0. \<forall>\<tau> \<in> S. dist \<tau> x < d \<longrightarrow> dist (\<phi> \<tau>) (\<phi> x) < \<epsilon>\<close>
     unfolding continuous_within_eps_delta 
     using \<epsilon>_pos 
@@ -2065,7 +2106,8 @@ proof -
     by blast
   show ?thesis
   proof (intro exI[where x=d] conjI)
-    show \<open>0 < d\<close> using d_pos .
+    show \<open>0 < d\<close>
+      using d_pos .
   next
     show \<open>\<forall>\<tau> \<in> S. \<bar>\<tau> - x\<bar> < d \<longrightarrow> \<phi> \<tau> < c\<close>
     proof (intro ballI impI)
@@ -2120,13 +2162,16 @@ proof -
     define \<phi>'_val where \<open>\<phi>'_val = vec_nth (f \<tau>_star (y \<tau>_star)) i\<close>
 
     have \<phi>_cont: \<open>continuous_on {0..t} \<phi>\<close>
-      unfolding \<phi>_def using y_cont
+      unfolding \<phi>_def
+      using y_cont
       by (auto intro: continuous_on_compose2[OF continuous_on_component])
 
     have \<phi>_deriv: \<open>(\<phi> has_real_derivative \<phi>'_val) (at \<tau>_star within {0..t})\<close>
     proof -
       have y_at: \<open>(y has_vector_derivative f \<tau>_star (y \<tau>_star)) (at \<tau>_star within {0..t})\<close>
-        using y_vderiv \<tau>_in unfolding has_vderiv_on_def by blast
+        using y_vderiv \<tau>_in
+        unfolding has_vderiv_on_def
+        by blast
       hence y_deriv: \<open>(y has_derivative (\<lambda>h. h *\<^sub>R f \<tau>_star (y \<tau>_star))) 
                       (at \<tau>_star within {0..t})\<close>
         unfolding has_vector_derivative_def 
@@ -2136,7 +2181,8 @@ proof -
       have composed: \<open>((\<lambda>\<tau>. vec_nth (y \<tau>) i) has_derivative 
                        (\<lambda>h. vec_nth (h *\<^sub>R f \<tau>_star (y \<tau>_star)) i)) 
                       (at \<tau>_star within {0..t})\<close>
-        using has_derivative_compose[OF y_deriv proj] by simp
+        using has_derivative_compose[OF y_deriv proj]
+        by simp
       have eq: \<open>(\<lambda>h. vec_nth (h *\<^sub>R f \<tau>_star (y \<tau>_star)) i) = (\<lambda>h. h * \<phi>'_val)\<close>
         unfolding \<phi>'_val_def 
         by auto
@@ -2147,7 +2193,9 @@ proof -
     qed
 
     have lo_bound: \<open>lo i \<le> \<phi> \<tau>_star\<close> and hi_bound: \<open>\<phi> \<tau>_star \<le> hi i\<close>
-      unfolding \<phi>_def using in_box_at by auto
+      unfolding \<phi>_def
+      using in_box_at
+      by auto
 
     have \<phi>_cont_at: \<open>continuous (at \<tau>_star within {0..t}) \<phi>\<close>
       using \<phi>_cont \<tau>_in
@@ -2157,15 +2205,18 @@ proof -
                         lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
     proof (cases \<open>\<phi> \<tau>_star = lo i\<close>; cases \<open>\<phi> \<tau>_star = hi i\<close>)
       assume at_lo: \<open>\<phi> \<tau>_star = lo i\<close> and at_hi: \<open>\<phi> \<tau>_star = hi i\<close>
-      have \<open>0 < \<phi>'_val\<close> using lower_edge_inward_at at_lo unfolding \<phi>_def \<phi>'_val_def by simp
+      have \<open>0 < \<phi>'_val\<close>
+        using lower_edge_inward_at at_lo
+        unfolding \<phi>_def \<phi>'_val_def
+        by simp
       moreover have \<open>\<phi>'_val < 0\<close> 
         using upper_edge_inward_at at_hi 
         unfolding \<phi>_def \<phi>'_val_def 
         by simp
       ultimately have False 
-                   by simp
+        by simp
       thus ?thesis 
-             by blast
+        by blast
     next
       assume at_lo: \<open>\<phi> \<tau>_star = lo i\<close> and not_hi: \<open>\<phi> \<tau>_star \<noteq> hi i\<close>
       have \<phi>'_pos: \<open>0 < \<phi>'_val\<close>
@@ -2177,7 +2228,9 @@ proof -
                                         \<phi> \<tau>_star < \<phi> (\<tau>_star + h)\<close>
         using has_real_derivative_pos_inc_right[OF \<phi>_deriv \<phi>'_pos]
         by metis
-      have \<phi>_lt_hi: \<open>\<phi> \<tau>_star < hi i\<close> using hi_bound not_hi by auto
+      have \<phi>_lt_hi: \<open>\<phi> \<tau>_star < hi i\<close>
+        using hi_bound not_hi
+        by auto
       obtain d_hi where d_hi_pos: \<open>0 < d_hi\<close>
                     and d_hi_prop: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> \<bar>\<tau> - \<tau>_star\<bar> < d_hi \<Longrightarrow> \<phi> \<tau> < hi i\<close>
         using continuous_within_lt_neighborhood[OF \<phi>_cont_at \<phi>_lt_hi] 
@@ -2228,7 +2281,7 @@ proof -
             unfolding \<phi>_def 
             by fastforce
           from lo_ok hi_ok 
-            show \<open>lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close> 
+          show \<open>lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
             by blast
         qed
       qed
@@ -2240,15 +2293,20 @@ proof -
         by simp
       define \<psi> where \<open>\<psi> = (\<lambda>\<tau>. - \<phi> \<tau>)\<close>
       have \<psi>_deriv: \<open>(\<psi> has_real_derivative (- \<phi>'_val)) (at \<tau>_star within {0..t})\<close>
-        unfolding \<psi>_def using \<phi>_deriv  Deriv.field_differentiable_minus
+        unfolding \<psi>_def
+        using \<phi>_deriv  Deriv.field_differentiable_minus
         by blast
-      have neg_pos: \<open>0 < - \<phi>'_val\<close> using \<phi>'_neg by simp
+      have neg_pos: \<open>0 < - \<phi>'_val\<close>
+        using \<phi>'_neg
+        by simp
       obtain d_hi where d_hi_pos: \<open>0 < d_hi\<close>
                     and d_hi_prop: \<open>\<And>h. 0 < h \<Longrightarrow> \<tau>_star + h \<in> {0..t} \<Longrightarrow> h < d_hi \<Longrightarrow> 
                                         \<psi> \<tau>_star < \<psi> (\<tau>_star + h)\<close>
         using has_real_derivative_pos_inc_right[OF \<psi>_deriv neg_pos]
         by metis
-      have \<phi>_gt_lo: \<open>lo i < \<phi> \<tau>_star\<close> using lo_bound not_lo by auto
+      have \<phi>_gt_lo: \<open>lo i < \<phi> \<tau>_star\<close>
+        using lo_bound not_lo
+        by auto
       obtain d_lo where d_lo_pos: \<open>0 < d_lo\<close>
                     and d_lo_prop: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> \<bar>\<tau> - \<tau>_star\<bar> < d_lo \<Longrightarrow> lo i < \<phi> \<tau>\<close>
         using continuous_within_gt_neighborhood[OF \<phi>_cont_at \<phi>_gt_lo] 
@@ -2291,13 +2349,15 @@ proof -
             unfolding \<psi>_def \<phi>_def 
             by simp
           have \<open>\<bar>\<tau> - \<tau>_star\<bar> < d_lo\<close> 
-            using h unfolding \<delta>_i_def 
+            using h
+            unfolding \<delta>_i_def
             by auto
           hence lo_ok: \<open>lo i \<le> vec_nth (y \<tau>) i\<close>
-            using d_lo_prop \<tau>_in_t unfolding \<phi>_def
+            using d_lo_prop \<tau>_in_t
+            unfolding \<phi>_def
             by fastforce
           from lo_ok hi_ok 
-            show \<open>lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close> 
+          show \<open>lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
             by blast
         qed
       qed
@@ -2324,7 +2384,8 @@ proof -
         by simp
       show ?thesis
       proof (intro exI[where x=\<delta>_i] conjI)
-        show \<open>0 < \<delta>_i\<close> using \<delta>_i_pos .
+        show \<open>0 < \<delta>_i\<close>
+          using \<delta>_i_pos .
       next
         show \<open>\<forall>\<tau>. \<tau>_star < \<tau> \<and> \<tau> < \<tau>_star + \<delta>_i \<and> \<tau> \<le> t \<longrightarrow> 
                   lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
@@ -2348,7 +2409,7 @@ proof -
             unfolding \<phi>_def \<delta>_i_def 
             by fastforce
           from lo_ok hi_ok 
-            show \<open>lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close> 
+          show \<open>lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
             by blast
         qed
       qed
@@ -2393,23 +2454,25 @@ proof -
       by simp
     show ?thesis
     proof (rule exI[where x=\<epsilon>], intro conjI)
-      show \<open>0 < \<epsilon>\<close> using \<epsilon>_pos .
+      show \<open>0 < \<epsilon>\<close>
+        using \<epsilon>_pos .
     next
       show \<open>\<forall>i \<tau>. \<tau>_star < \<tau> \<and> \<tau> < \<tau>_star + \<epsilon> \<and> \<tau> \<le> t \<longrightarrow> 
                   lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
       proof (intro allI impI)
         fix i \<tau> assume h: \<open>\<tau>_star < \<tau> \<and> \<tau> < \<tau>_star + \<epsilon> \<and> \<tau> \<le> t\<close>
-        have \<open>\<tau> < \<tau>_star + \<delta>_fun i\<close> using h \<epsilon>_le[of i] 
+        have \<open>\<tau> < \<tau>_star + \<delta>_fun i\<close>
+          using h \<epsilon>_le[of i]
           by auto
         with h \<delta>_fun_spec[of i]
         show \<open>lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
           by blast
       qed
     qed (* STEP B: take Min over all \<delta>_i's *)
-qed
-show ?thesis
-  using ex_global 
-  by blast
+  qed
+  show ?thesis
+    using ex_global
+    by blast
 qed
 
 lemma DI_Rec_Box:
@@ -2456,7 +2519,8 @@ proof -
        is outside the box, and show it is non-empty *)
     define S where \<open>S = {\<tau>. \<tau> \<in> {0..t} \<and> \<not> in_box (y \<tau>)}\<close>
     have S_nonempty: \<open>S \<noteq> {}\<close>
-      using \<tau>_bad_in \<tau>_bad_out by (auto simp: S_def)
+      using \<tau>_bad_in \<tau>_bad_out
+      by (auto simp: S_def)
     have S_subset: \<open>S \<subseteq> {0..t}\<close>
       by (auto simp: S_def)
     have S_bdd: \<open>bdd_below S\<close>
@@ -2511,8 +2575,8 @@ proof -
               (\<Inter>i\<in>UNIV. {v. lo i \<le> vec_nth v i} \<inter> {v. vec_nth v i \<le> hi i})\<close>
           unfolding in_box_def 
           by blast
-        moreover have \<open>closed (\<Inter>i\<in>UNIV. {v :: (real, 'a) vec. lo i \<le> vec_nth v i} 
-                                      \<inter> {v. vec_nth v i \<le> hi i})\<close>
+        moreover have \<open>closed (\<Inter>i\<in>UNIV. {v :: (real, 'a) vec. lo i \<le> vec_nth v i} \<inter>
+                                      {v. vec_nth v i \<le> hi i})\<close>
           using lo_closed hi_closed 
           by (auto simp: closed_INT closed_Int)
         ultimately show ?thesis 
@@ -2525,7 +2589,8 @@ proof -
           unfolding in_box_def 
           using iv 
           by blast
-        thus ?thesis using True 
+        thus ?thesis
+          using True
           by simp
       next
         case False
@@ -2623,7 +2688,8 @@ proof -
     have \<tau>_exit_lt_t: \<open>\<tau>_exit < t\<close>
     proof (rule ccontr)
       assume \<open>\<not> \<tau>_exit < t\<close>
-      with \<tau>_exit_in_interval have \<tau>_exit_eq_t: \<open>\<tau>_exit = t\<close> by simp
+      with \<tau>_exit_in_interval have \<tau>_exit_eq_t: \<open>\<tau>_exit = t\<close>
+        by simp
           (* Every element of S is \<le> t and \<ge> \<tau>_exit = t, so S = {t} *)
       have \<open>\<And>\<tau>. \<tau> \<in> S \<Longrightarrow> \<tau> = t\<close>
       proof -
@@ -2647,7 +2713,8 @@ proof -
         using y_\<tau>_exit_in_box \<tau>_exit_eq_t 
         by simp
           (* Contradiction with t \<in> S *)
-      thus False using t_in_S 
+      thus False
+        using t_in_S
         by (simp add: S_def)
     qed
       (* Step 5: Case split on whether y \<tau>_exit is at an edge or strictly interior *)
@@ -2694,7 +2761,9 @@ proof -
         and \<tau>_s_lt: \<open>\<tau>_s < \<tau>_exit + \<delta>/2\<close>
       proof -
         have \<open>Inf S < \<tau>_exit + \<delta>/2\<close>
-          unfolding \<tau>_exit_def[symmetric] using \<delta>_pos by simp
+          unfolding \<tau>_exit_def[symmetric]
+          using \<delta>_pos
+          by simp
         with S_nonempty S_bdd obtain \<tau>_s where 
           \<open>\<tau>_s \<in> S\<close> and \<open>\<tau>_s < \<tau>_exit + \<delta>/2\<close>
           by (metis cInf_lessD)
@@ -2786,7 +2855,8 @@ proof -
       moreover have \<open>\<not> in_box (y \<tau>_s)\<close>
         using \<tau>_s_in_S 
         by (simp add: S_def)
-      ultimately show False by blast
+      ultimately show False
+        by blast
     qed
   qed
   show \<open>\<And>\<tau> i. \<tau> \<in> {0..t} \<Longrightarrow> 
@@ -2831,12 +2901,14 @@ proof -
         by simp
     qed
     have \<open>open_box_active = (\<Inter>i\<in>active. {v. lo i < vec_nth v i} \<inter> {v. vec_nth v i < hi i})\<close>
-      unfolding open_box_active_def by blast
-    moreover have \<open>open (\<Inter>i\<in>active. {v :: (real, 'a) vec. lo i < vec_nth v i} 
-                                   \<inter> {v. vec_nth v i < hi i})\<close>
+      unfolding open_box_active_def
+      by blast
+    moreover have \<open>open (\<Inter>i\<in>active. {v :: (real, 'a) vec. lo i < vec_nth v i} \<inter>
+                                   {v. vec_nth v i < hi i})\<close>
       using lo_open hi_open 
-        by (auto simp: open_INT open_Int)
-    ultimately show ?thesis by simp
+      by (auto simp: open_INT open_Int)
+    ultimately show ?thesis
+      by simp
   qed
 
   have y_\<tau>_star_in: \<open>y \<tau>_star \<in> open_box_active\<close>
@@ -2859,7 +2931,8 @@ proof -
 
   show ?thesis
   proof (rule exI[where x=\<delta>], intro conjI)
-    show \<open>0 < \<delta>\<close> using \<delta>_pos .
+    show \<open>0 < \<delta>\<close>
+      using \<delta>_pos .
   next
     show \<open>\<forall>\<tau> \<in> {0..t}. \<bar>\<tau> - \<tau>_star\<bar> < \<delta> \<longrightarrow> 
           (\<forall>i \<in> active. lo i < vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i < hi i)\<close>
@@ -2876,7 +2949,8 @@ proof -
       hence \<open>y \<tau> \<in> open_box_active\<close> 
         by auto
       thus \<open>lo i < vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i < hi i\<close>
-        using i_in unfolding open_box_active_def 
+        using i_in
+        unfolding open_box_active_def
         by blast
     qed
   qed
@@ -2965,12 +3039,14 @@ proof -
         unfolding \<phi>_def \<phi>'_val_def 
         by simp
       moreover 
-        have \<open>\<phi>'_val < 0\<close> 
+      have \<open>\<phi>'_val < 0\<close>
         using upper_edge_inward_at[OF i_act] at_hi 
         unfolding \<phi>_def \<phi>'_val_def 
         by simp
-      ultimately have False by simp
-      thus ?thesis by blast
+      ultimately have False
+        by simp
+      thus ?thesis
+        by blast
     next
       assume at_lo: \<open>\<phi> \<tau>_star = lo i\<close> and not_hi: \<open>\<phi> \<tau>_star \<noteq> hi i\<close>
       have \<phi>'_pos: \<open>0 < \<phi>'_val\<close>
@@ -2982,7 +3058,9 @@ proof -
                                         \<phi> \<tau>_star < \<phi> (\<tau>_star + h)\<close>
         using has_real_derivative_pos_inc_right[OF \<phi>_deriv \<phi>'_pos]
         by metis
-      have \<phi>_lt_hi: \<open>\<phi> \<tau>_star < hi i\<close> using hi_bound not_hi by auto
+      have \<phi>_lt_hi: \<open>\<phi> \<tau>_star < hi i\<close>
+        using hi_bound not_hi
+        by auto
       obtain d_hi where d_hi_pos: \<open>0 < d_hi\<close>
                     and d_hi_prop: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> \<bar>\<tau> - \<tau>_star\<bar> < d_hi \<Longrightarrow> \<phi> \<tau> < hi i\<close>
         using continuous_within_lt_neighborhood[OF \<phi>_cont_at \<phi>_lt_hi] 
@@ -2994,31 +3072,41 @@ proof -
         by simp
       show ?thesis
       proof (intro exI[where x=\<delta>_i] conjI)
-        show \<open>0 < \<delta>_i\<close> using \<delta>_i_pos .
+        show \<open>0 < \<delta>_i\<close>
+          using \<delta>_i_pos .
       next
         show \<open>\<forall>\<tau>. \<tau>_star < \<tau> \<and> \<tau> < \<tau>_star + \<delta>_i \<and> \<tau> \<le> t \<longrightarrow> 
                   lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
         proof (intro allI impI)
           fix \<tau> assume h: \<open>\<tau>_star < \<tau> \<and> \<tau> < \<tau>_star + \<delta>_i \<and> \<tau> \<le> t\<close>
-          have \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close> using h \<tau>_in by auto
-          have h_val: \<open>\<tau> - \<tau>_star > 0\<close> using h by auto
+          have \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
+            using h \<tau>_in
+            by auto
+          have h_val: \<open>\<tau> - \<tau>_star > 0\<close>
+            using h
+            by auto
           have \<open>\<phi> \<tau>_star < \<phi> \<tau>\<close>
           proof -
             have \<open>\<tau>_star + (\<tau> - \<tau>_star) \<in> {0..t}\<close> 
               using \<tau>_in_t 
               by simp
             moreover 
-              have \<open>\<tau> - \<tau>_star < d_lo\<close> 
-                using h 
-                unfolding \<delta>_i_def 
-                by linarith
-            ultimately show ?thesis using d_lo_prop[of \<open>\<tau> - \<tau>_star\<close>] h_val by simp
+            have \<open>\<tau> - \<tau>_star < d_lo\<close>
+              using h
+              unfolding \<delta>_i_def
+              by linarith
+            ultimately show ?thesis
+              using d_lo_prop[of \<open>\<tau> - \<tau>_star\<close>] h_val
+              by simp
           qed
           hence lo_ok: \<open>lo i \<le> vec_nth (y \<tau>) i\<close> 
             using at_lo 
             unfolding \<phi>_def 
             by simp
-          have \<open>\<bar>\<tau> - \<tau>_star\<bar> < d_hi\<close> using h unfolding \<delta>_i_def by auto
+          have \<open>\<bar>\<tau> - \<tau>_star\<bar> < d_hi\<close>
+            using h
+            unfolding \<delta>_i_def
+            by auto
           hence hi_ok: \<open>vec_nth (y \<tau>) i \<le> hi i\<close>
             using d_hi_prop \<tau>_in_t 
             unfolding \<phi>_def 
@@ -3039,24 +3127,30 @@ proof -
         unfolding \<psi>_def 
         using \<phi>_deriv Deriv.field_differentiable_minus 
         by blast
-      have neg_pos: \<open>0 < - \<phi>'_val\<close> using \<phi>'_neg by simp
+      have neg_pos: \<open>0 < - \<phi>'_val\<close>
+        using \<phi>'_neg
+        by simp
       obtain d_hi where d_hi_pos: \<open>0 < d_hi\<close>
                     and d_hi_prop: \<open>\<And>h. 0 < h \<Longrightarrow> \<tau>_star + h \<in> {0..t} \<Longrightarrow> h < d_hi \<Longrightarrow> 
                                         \<psi> \<tau>_star < \<psi> (\<tau>_star + h)\<close>
         using has_real_derivative_pos_inc_right[OF \<psi>_deriv neg_pos]
         by metis
-      have \<phi>_gt_lo: \<open>lo i < \<phi> \<tau>_star\<close> using lo_bound not_lo by auto
+      have \<phi>_gt_lo: \<open>lo i < \<phi> \<tau>_star\<close>
+        using lo_bound not_lo
+        by auto
       obtain d_lo where d_lo_pos: \<open>0 < d_lo\<close>
                     and d_lo_prop: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> \<bar>\<tau> - \<tau>_star\<bar> < d_lo \<Longrightarrow> lo i < \<phi> \<tau>\<close>
         using continuous_within_gt_neighborhood[OF \<phi>_cont_at \<phi>_gt_lo] 
         by blast
       define \<delta>_i where \<open>\<delta>_i = min d_lo d_hi\<close>
-      have \<delta>_i_pos: \<open>0 < \<delta>_i\<close> using d_lo_pos d_hi_pos 
+      have \<delta>_i_pos: \<open>0 < \<delta>_i\<close>
+        using d_lo_pos d_hi_pos
         unfolding \<delta>_i_def 
         by simp
       show ?thesis
       proof (intro exI[where x=\<delta>_i] conjI)
-        show \<open>0 < \<delta>_i\<close> using \<delta>_i_pos .
+        show \<open>0 < \<delta>_i\<close>
+          using \<delta>_i_pos .
       next
         show \<open>\<forall>\<tau>. \<tau>_star < \<tau> \<and> \<tau> < \<tau>_star + \<delta>_i \<and> \<tau> \<le> t \<longrightarrow> 
                   lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
@@ -3073,8 +3167,13 @@ proof -
             have \<open>\<tau>_star + (\<tau> - \<tau>_star) \<in> {0..t}\<close> 
               using \<tau>_in_t 
               by simp
-            moreover have \<open>\<tau> - \<tau>_star < d_hi\<close> using h unfolding \<delta>_i_def by linarith
-            ultimately show ?thesis using d_hi_prop[of \<open>\<tau> - \<tau>_star\<close>] h_val by simp
+            moreover have \<open>\<tau> - \<tau>_star < d_hi\<close>
+              using h
+              unfolding \<delta>_i_def
+              by linarith
+            ultimately show ?thesis
+              using d_hi_prop[of \<open>\<tau> - \<tau>_star\<close>] h_val
+              by simp
           qed
           hence hi_ok: \<open>vec_nth (y \<tau>) i \<le> hi i\<close>
             using at_hi 
@@ -3095,8 +3194,12 @@ proof -
       qed
     next
       assume not_lo: \<open>\<not> (\<phi> \<tau>_star = lo i)\<close> and not_hi: \<open>\<not> (\<phi> \<tau>_star = hi i)\<close>
-      have \<phi>_gt_lo: \<open>lo i < \<phi> \<tau>_star\<close> using lo_bound not_lo by auto
-      have \<phi>_lt_hi: \<open>\<phi> \<tau>_star < hi i\<close> using hi_bound not_hi by auto
+      have \<phi>_gt_lo: \<open>lo i < \<phi> \<tau>_star\<close>
+        using lo_bound not_lo
+        by auto
+      have \<phi>_lt_hi: \<open>\<phi> \<tau>_star < hi i\<close>
+        using hi_bound not_hi
+        by auto
       obtain d_lo where d_lo_pos: \<open>0 < d_lo\<close>
                     and d_lo_prop: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> \<bar>\<tau> - \<tau>_star\<bar> < d_lo \<Longrightarrow> lo i < \<phi> \<tau>\<close>
         using continuous_within_gt_neighborhood[OF \<phi>_cont_at \<phi>_gt_lo] 
@@ -3112,14 +3215,19 @@ proof -
         by simp
       show ?thesis
       proof (intro exI[where x=\<delta>_i] conjI)
-        show \<open>0 < \<delta>_i\<close> using \<delta>_i_pos .
+        show \<open>0 < \<delta>_i\<close>
+          using \<delta>_i_pos .
       next
         show \<open>\<forall>\<tau>. \<tau>_star < \<tau> \<and> \<tau> < \<tau>_star + \<delta>_i \<and> \<tau> \<le> t \<longrightarrow> 
                   lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
         proof (intro allI impI)
           fix \<tau> assume h: \<open>\<tau>_star < \<tau> \<and> \<tau> < \<tau>_star + \<delta>_i \<and> \<tau> \<le> t\<close>
-          have \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close> using h \<tau>_in by auto
-          have \<open>\<bar>\<tau> - \<tau>_star\<bar> < \<delta>_i\<close> using h by auto
+          have \<tau>_in_t: \<open>\<tau> \<in> {0..t}\<close>
+            using h \<tau>_in
+            by auto
+          have \<open>\<bar>\<tau> - \<tau>_star\<bar> < \<delta>_i\<close>
+            using h
+            by auto
           hence lo_ok: \<open>lo i \<le> vec_nth (y \<tau>) i\<close>
             using d_lo_prop \<tau>_in_t 
             unfolding \<phi>_def \<delta>_i_def 
@@ -3170,7 +3278,8 @@ proof -
     define \<epsilon> where \<open>\<epsilon> = Min (insert 1 (\<delta>_fun ` active))\<close>
     have \<epsilon>_pos: \<open>0 < \<epsilon>\<close>
     proof -
-      have \<open>0 < (1::real)\<close> by simp
+      have \<open>0 < (1::real)\<close>
+        by simp
       moreover have \<open>\<And>x. x \<in> \<delta>_fun ` active \<Longrightarrow> 0 < x\<close>
         using \<delta>_fun_spec 
         by auto
@@ -3181,9 +3290,10 @@ proof -
     have \<epsilon>_le: \<open>\<And>i. i \<in> active \<Longrightarrow> \<epsilon> \<le> \<delta>_fun i\<close>
       unfolding \<epsilon>_def 
       by simp
-   show ?thesis
+    show ?thesis
     proof (rule exI[where x=\<epsilon>], intro conjI)
-      show \<open>0 < \<epsilon>\<close> using \<epsilon>_pos .
+      show \<open>0 < \<epsilon>\<close>
+        using \<epsilon>_pos .
     next
       show \<open>\<forall>i \<in> active. \<forall>\<tau>. \<tau>_star < \<tau> \<and> \<tau> < \<tau>_star + \<epsilon> \<and> \<tau> \<le> t \<longrightarrow> 
                               lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
@@ -3191,7 +3301,9 @@ proof -
         fix i \<tau>
         assume i_act: \<open>i \<in> active\<close>
         assume h: \<open>\<tau>_star < \<tau> \<and> \<tau> < \<tau>_star + \<epsilon> \<and> \<tau> \<le> t\<close>
-        have \<open>\<tau> < \<tau>_star + \<delta>_fun i\<close> using h \<epsilon>_le[OF i_act] by auto
+        have \<open>\<tau> < \<tau>_star + \<delta>_fun i\<close>
+          using h \<epsilon>_le[OF i_act]
+          by auto
         with h \<delta>_fun_spec[OF i_act]
         show \<open>lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
           by blast
@@ -3302,8 +3414,8 @@ proof -
               (\<Inter>i\<in>active. {v. lo i \<le> vec_nth v i} \<inter> {v. vec_nth v i \<le> hi i})\<close>
           unfolding in_box_active_def 
           by blast
-        moreover have \<open>closed (\<Inter>i\<in>active. {v :: (real, 'a) vec. lo i \<le> vec_nth v i} 
-                                        \<inter> {v. vec_nth v i \<le> hi i})\<close>
+        moreover have \<open>closed (\<Inter>i\<in>active. {v :: (real, 'a) vec. lo i \<le> vec_nth v i} \<inter>
+                                        {v. vec_nth v i \<le> hi i})\<close>
           using lo_closed hi_closed 
           by (auto simp: closed_INT closed_Int)
         ultimately 
@@ -3479,11 +3591,14 @@ proof -
                    and \<tau>_s_lt: \<open>\<tau>_s < \<tau>_exit + \<delta>/2\<close>
       proof -
         have \<open>Inf S < \<tau>_exit + \<delta>/2\<close>
-          unfolding \<tau>_exit_def[symmetric] using \<delta>_pos by simp
+          unfolding \<tau>_exit_def[symmetric]
+          using \<delta>_pos
+          by simp
         with S_nonempty S_bdd obtain \<tau>_s where 
           \<open>\<tau>_s \<in> S\<close> and \<open>\<tau>_s < \<tau>_exit + \<delta>/2\<close>
           by (metis cInf_lessD)
-        thus ?thesis using that 
+        thus ?thesis
+          using that
           by blast
       qed
 
@@ -3498,7 +3613,8 @@ proof -
         by auto
 
       have \<open>in_box_active (y \<tau>_s)\<close>
-        using neighborhood_in_box \<tau>_s_in_t \<tau>_s_close by blast
+        using neighborhood_in_box \<tau>_s_in_t \<tau>_s_close
+        by blast
       moreover have \<open>\<not> in_box_active (y \<tau>_s)\<close>
         using \<tau>_s_in_S 
         by (simp add: S_def)
@@ -3588,22 +3704,29 @@ proof -
       qed
 
       have \<tau>_s_ge: \<open>\<tau>_exit \<le> \<tau>_s\<close>
-        using \<tau>_s_in_S \<tau>_exit_lb by blast
+        using \<tau>_s_in_S \<tau>_exit_lb
+        by blast
       have \<tau>_s_in_t: \<open>\<tau>_s \<in> {0..t}\<close>
-        using \<tau>_s_in_S S_subset by blast
+        using \<tau>_s_in_S S_subset
+        by blast
       have \<tau>_s_ne: \<open>\<tau>_s \<noteq> \<tau>_exit\<close>
-        using \<tau>_s_in_S y_\<tau>_exit_in_box by (auto simp: S_def)
+        using \<tau>_s_in_S y_\<tau>_exit_in_box
+        by (auto simp: S_def)
       have \<tau>_s_gt: \<open>\<tau>_exit < \<tau>_s\<close>
-        using \<tau>_s_ge \<tau>_s_ne by simp
+        using \<tau>_s_ge \<tau>_s_ne
+        by simp
       have \<tau>_s_lt_exit_\<epsilon>: \<open>\<tau>_s < \<tau>_exit + \<epsilon>\<close>
-        using \<tau>_s_lt \<epsilon>_pos by auto
+        using \<tau>_s_lt \<epsilon>_pos
+        by auto
 
       have \<open>in_box_active (y \<tau>_s)\<close>
         using neighborhood_in_box \<tau>_s_gt \<tau>_s_lt_exit_\<epsilon> \<tau>_s_in_t 
         by simp
       moreover have \<open>\<not> in_box_active (y \<tau>_s)\<close>
-        using \<tau>_s_in_S by (simp add: S_def)
-      ultimately show False by blast
+        using \<tau>_s_in_S
+        by (simp add: S_def)
+      ultimately show False
+        by blast
     qed
   qed
 
@@ -3688,9 +3811,9 @@ proof -
     using ODE solves_ode_continuous_on 
     by blast
 
- have y_in_Q: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> y \<tau> \<in> Q\<close>
-   using ODE 
-   by (auto simp add: solves_ode_def Pi_iff)
+  have y_in_Q: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> y \<tau> \<in> Q\<close>
+    using ODE
+    by (auto simp add: solves_ode_def Pi_iff)
 
   have active_main: \<open>\<forall>\<tau> \<in> {0..t}. in_box_active (y \<tau>)\<close>
   proof (rule ccontr)
@@ -3757,8 +3880,8 @@ proof -
           unfolding in_box_active_def 
           by blast
         moreover 
-        have \<open>closed (\<Inter>i\<in>active. {v :: (real, 'a) vec. lo i \<le> vec_nth v i} 
-                                        \<inter> {v. vec_nth v i \<le> hi i})\<close>
+        have \<open>closed (\<Inter>i\<in>active. {v :: (real, 'a) vec. lo i \<le> vec_nth v i} \<inter>
+                                        {v. vec_nth v i \<le> hi i})\<close>
           using lo_closed hi_closed 
           by (auto simp: closed_INT closed_Int)
         ultimately 
@@ -3865,17 +3988,29 @@ proof -
     have \<tau>_exit_lt_t: \<open>\<tau>_exit < t\<close>
     proof (rule ccontr)
       assume \<open>\<not> \<tau>_exit < t\<close>
-      with \<tau>_exit_in_interval have \<tau>_exit_eq_t: \<open>\<tau>_exit = t\<close> by simp
+      with \<tau>_exit_in_interval have \<tau>_exit_eq_t: \<open>\<tau>_exit = t\<close>
+        by simp
       have \<open>\<And>\<tau>. \<tau> \<in> S \<Longrightarrow> \<tau> = t\<close>
       proof -
         fix \<tau> assume \<tau>_in_S: \<open>\<tau> \<in> S\<close>
-        hence \<open>\<tau> \<in> {0..t}\<close> using S_subset by blast
-        moreover have \<open>\<tau>_exit \<le> \<tau>\<close> using \<tau>_in_S \<tau>_exit_lb by blast
-        ultimately show \<open>\<tau> = t\<close> using \<tau>_exit_eq_t by simp
+        hence \<open>\<tau> \<in> {0..t}\<close>
+          using S_subset
+          by blast
+        moreover have \<open>\<tau>_exit \<le> \<tau>\<close>
+          using \<tau>_in_S \<tau>_exit_lb
+          by blast
+        ultimately show \<open>\<tau> = t\<close>
+          using \<tau>_exit_eq_t
+          by simp
       qed
-      with S_nonempty have t_in_S: \<open>t \<in> S\<close> by blast
-      have \<open>in_box_active (y t)\<close> using y_\<tau>_exit_in_box \<tau>_exit_eq_t by simp
-      thus False using t_in_S by (simp add: S_def)
+      with S_nonempty have t_in_S: \<open>t \<in> S\<close>
+        by blast
+      have \<open>in_box_active (y t)\<close>
+        using y_\<tau>_exit_in_box \<tau>_exit_eq_t
+        by simp
+      thus False
+        using t_in_S
+        by (simp add: S_def)
     qed
 
     show False
@@ -3933,17 +4068,23 @@ proof -
       qed
 
       have \<tau>_s_ge: \<open>\<tau>_exit \<le> \<tau>_s\<close>
-        using \<tau>_s_in_S \<tau>_exit_lb by blast
+        using \<tau>_s_in_S \<tau>_exit_lb
+        by blast
       have \<tau>_s_in_t: \<open>\<tau>_s \<in> {0..t}\<close>
-        using \<tau>_s_in_S S_subset by blast
+        using \<tau>_s_in_S S_subset
+        by blast
       have \<tau>_s_close: \<open>\<bar>\<tau>_s - \<tau>_exit\<bar> < \<delta>\<close>
-        using \<tau>_s_ge \<tau>_s_lt \<delta>_pos by auto
+        using \<tau>_s_ge \<tau>_s_lt \<delta>_pos
+        by auto
 
       have \<open>in_box_active (y \<tau>_s)\<close>
-        using neighborhood_in_box \<tau>_s_in_t \<tau>_s_close by blast
+        using neighborhood_in_box \<tau>_s_in_t \<tau>_s_close
+        by blast
       moreover have \<open>\<not> in_box_active (y \<tau>_s)\<close>
-        using \<tau>_s_in_S by (simp add: S_def)
-      ultimately show False by blast
+        using \<tau>_s_in_S
+        by (simp add: S_def)
+      ultimately show False
+        by blast
     next
       case True
       have lower_at: \<open>\<And>i. i \<in> active \<Longrightarrow> vec_nth (y \<tau>_exit) i = lo i \<Longrightarrow> 
@@ -4018,7 +4159,9 @@ proof -
                    and \<tau>_s_lt: \<open>\<tau>_s < \<tau>_exit + \<epsilon>/2\<close>
       proof -
         have \<open>Inf S < \<tau>_exit + \<epsilon>/2\<close>
-          unfolding \<tau>_exit_def[symmetric] using \<epsilon>_pos by simp
+          unfolding \<tau>_exit_def[symmetric]
+          using \<epsilon>_pos
+          by simp
         with S_nonempty S_bdd obtain \<tau>_s where 
           \<open>\<tau>_s \<in> S\<close> and \<open>\<tau>_s < \<tau>_exit + \<epsilon>/2\<close>
           by (metis cInf_lessD)
@@ -4028,22 +4171,29 @@ proof -
       qed
 
       have \<tau>_s_ge: \<open>\<tau>_exit \<le> \<tau>_s\<close>
-        using \<tau>_s_in_S \<tau>_exit_lb by blast
+        using \<tau>_s_in_S \<tau>_exit_lb
+        by blast
       have \<tau>_s_in_t: \<open>\<tau>_s \<in> {0..t}\<close>
-        using \<tau>_s_in_S S_subset by blast
+        using \<tau>_s_in_S S_subset
+        by blast
       have \<tau>_s_ne: \<open>\<tau>_s \<noteq> \<tau>_exit\<close>
-        using \<tau>_s_in_S y_\<tau>_exit_in_box by (auto simp: S_def)
+        using \<tau>_s_in_S y_\<tau>_exit_in_box
+        by (auto simp: S_def)
       have \<tau>_s_gt: \<open>\<tau>_exit < \<tau>_s\<close>
-        using \<tau>_s_ge \<tau>_s_ne by simp
+        using \<tau>_s_ge \<tau>_s_ne
+        by simp
       have \<tau>_s_lt_exit_\<epsilon>: \<open>\<tau>_s < \<tau>_exit + \<epsilon>\<close>
-        using \<tau>_s_lt \<epsilon>_pos by auto
+        using \<tau>_s_lt \<epsilon>_pos
+        by auto
 
       have \<open>in_box_active (y \<tau>_s)\<close>
         using neighborhood_in_box \<tau>_s_gt \<tau>_s_lt_exit_\<epsilon> \<tau>_s_in_t 
         by simp 
       moreover have \<open>\<not> in_box_active (y \<tau>_s)\<close>
-        using \<tau>_s_in_S by (simp add: S_def)
-      ultimately show False by blast
+        using \<tau>_s_in_S
+        by (simp add: S_def)
+      ultimately show False
+        by blast
     qed
   qed
   show \<open>\<And>\<tau> i. \<tau> \<in> {0..t} \<Longrightarrow>
@@ -4051,7 +4201,8 @@ proof -
   proof -
     fix \<tau> i
     assume \<tau>_in: \<open>\<tau> \<in> {0..t}\<close>
-    have inQ: \<open>y \<tau> \<in> Q\<close> using y_in_Q[OF \<tau>_in] .
+    have inQ: \<open>y \<tau> \<in> Q\<close>
+      using y_in_Q[OF \<tau>_in] .
     have box: \<open>lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
     proof (cases \<open>i \<in> active\<close>)
       case True

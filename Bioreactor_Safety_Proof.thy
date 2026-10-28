@@ -51,8 +51,8 @@ where
     (\<lambda>t v.
       vec_lambda ((\<lambda>k_idx. 0)(
         iS := u - (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX,
-        iX := Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX 
-               * (K_I / (K_I + vec_nth v iZ)) -
+        iX := Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX *
+               (K_I / (K_I + vec_nth v iZ)) -
              d * vec_nth v iX,
         iZ := \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX -
              k * vec_nth v iZ / (K_Z + vec_nth v iZ))))\<close>
@@ -131,11 +131,16 @@ lemma monod_consumption_bound:
   assumes X_nn: \<open>0 \<le> X\<close>
   shows \<open>(\<mu>_max * S / (K_S + S)) * X \<le> \<mu>_max * X\<close>
 proof -
-  have denom_pos: \<open>0 < K_S + S\<close> using K_S_plus_S_pos[OF S_nn] .
+  have denom_pos: \<open>0 < K_S + S\<close>
+    using K_S_plus_S_pos[OF S_nn] .
   have frac_bound: \<open>S / (K_S + S) \<le> 1\<close>
   proof -
-    have \<open>S \<le> K_S + S\<close> using K_S_pos by simp
-    thus ?thesis using denom_pos by (simp add: divide_le_eq)
+    have \<open>S \<le> K_S + S\<close>
+      using K_S_pos
+      by simp
+    thus ?thesis
+      using denom_pos
+      by (simp add: divide_le_eq)
   qed
   have \<open>\<mu>_max * S / (K_S + S) \<le> \<mu>_max\<close>
     using \<mu>_max_pos frac_bound
@@ -153,10 +158,14 @@ lemma monod_consumption_nn:
   assumes X_nn: \<open>0 \<le> X\<close>
   shows \<open>0 \<le> (\<mu>_max * S / (K_S + S)) * X\<close>
 proof -
-  have denom_pos: \<open>0 < K_S + S\<close> using K_S_plus_S_pos[OF S_nn] .
-  have num_nn: \<open>0 \<le> \<mu>_max * S\<close> using \<mu>_max_pos S_nn by simp
+  have denom_pos: \<open>0 < K_S + S\<close>
+    using K_S_plus_S_pos[OF S_nn] .
+  have num_nn: \<open>0 \<le> \<mu>_max * S\<close>
+    using \<mu>_max_pos S_nn
+    by simp
   have \<open>0 \<le> \<mu>_max * S / (K_S + S)\<close>
-    using num_nn denom_pos by (simp add: divide_nonneg_pos)
+    using num_nn denom_pos
+    by (simp add: divide_nonneg_pos)
   thus ?thesis 
     using X_nn  mult_sign_intros(1)
     by blast
@@ -171,14 +180,22 @@ lemma growth_inhibition_bounds:
   assumes Z_nn: \<open>0 \<le> Z\<close>
   shows \<open>0 \<le> K_I / (K_I + Z) \<and> K_I / (K_I + Z) \<le> 1\<close>
 proof -
-  have denom_pos: \<open>0 < K_I + Z\<close> using K_I_plus_Z_pos[OF Z_nn] .
-  have num_nn: \<open>0 \<le> K_I\<close> using K_I_pos by simp
+  have denom_pos: \<open>0 < K_I + Z\<close>
+    using K_I_plus_Z_pos[OF Z_nn] .
+  have num_nn: \<open>0 \<le> K_I\<close>
+    using K_I_pos
+    by simp
   have lb: \<open>0 \<le> K_I / (K_I + Z)\<close>
-    using num_nn denom_pos by (simp add: divide_nonneg_pos)
-  have \<open>K_I \<le> K_I + Z\<close> using Z_nn by simp
+    using num_nn denom_pos
+    by (simp add: divide_nonneg_pos)
+  have \<open>K_I \<le> K_I + Z\<close>
+    using Z_nn
+    by simp
   hence ub: \<open>K_I / (K_I + Z) \<le> 1\<close> 
-    using denom_pos by (simp add: divide_le_eq)
-  from lb ub show ?thesis by blast
+    using denom_pos
+    by (simp add: divide_le_eq)
+  from lb ub show ?thesis
+    by blast
 qed
 
 text \<open>The Michaelis-Menten degradation rate k*Z/(K\_Z+Z) is bounded 
@@ -190,17 +207,27 @@ lemma mm_degradation_bounds:
   assumes Z_nn: \<open>0 \<le> Z\<close>
   shows \<open>0 \<le> k * Z / (K_Z + Z) \<and> k * Z / (K_Z + Z) \<le> k\<close>
 proof -
-  have denom_pos: \<open>0 < K_Z + Z\<close> using K_Z_plus_Z_pos[OF Z_nn] .
-  have num_nn: \<open>0 \<le> k * Z\<close> using k_pos Z_nn by simp
+  have denom_pos: \<open>0 < K_Z + Z\<close>
+    using K_Z_plus_Z_pos[OF Z_nn] .
+  have num_nn: \<open>0 \<le> k * Z\<close>
+    using k_pos Z_nn
+    by simp
   have lb: \<open>0 \<le> k * Z / (K_Z + Z)\<close>
-    using num_nn denom_pos by (simp add: divide_nonneg_pos)
-  have \<open>Z \<le> K_Z + Z\<close> using K_Z_pos by simp
-  hence \<open>Z / (K_Z + Z) \<le> 1\<close> using denom_pos by (simp add: divide_le_eq)
+    using num_nn denom_pos
+    by (simp add: divide_nonneg_pos)
+  have \<open>Z \<le> K_Z + Z\<close>
+    using K_Z_pos
+    by simp
+  hence \<open>Z / (K_Z + Z) \<le> 1\<close>
+    using denom_pos
+    by (simp add: divide_le_eq)
   hence \<open>k * (Z / (K_Z + Z)) \<le> k\<close> 
     using k_pos mult_left_le 
     by fastforce
-  hence ub: \<open>k * Z / (K_Z + Z) \<le> k\<close> by simp
-  from lb ub show ?thesis by blast
+  hence ub: \<open>k * Z / (K_Z + Z) \<le> k\<close>
+    by simp
+  from lb ub show ?thesis
+    by blast
 qed
 
 text \<open>MM degradation is monotone in Z: larger Z means faster degradation 
@@ -213,19 +240,32 @@ lemma mm_degradation_monotone:
   assumes Z1_le_Z2: \<open>Z1 \<le> Z2\<close>
   shows \<open>k * Z1 / (K_Z + Z1) \<le> k * Z2 / (K_Z + Z2)\<close>
 proof -
-  have Z2_nn: \<open>0 \<le> Z2\<close> using Z1_nn Z1_le_Z2 by linarith
-  have d1_pos: \<open>0 < K_Z + Z1\<close> using K_Z_plus_Z_pos[OF Z1_nn] .
-  have d2_pos: \<open>0 < K_Z + Z2\<close> using K_Z_plus_Z_pos[OF Z2_nn] .
-  have d12: \<open>K_Z + Z1 \<le> K_Z + Z2\<close> using Z1_le_Z2 by simp
+  have Z2_nn: \<open>0 \<le> Z2\<close>
+    using Z1_nn Z1_le_Z2
+    by linarith
+  have d1_pos: \<open>0 < K_Z + Z1\<close>
+    using K_Z_plus_Z_pos[OF Z1_nn] .
+  have d2_pos: \<open>0 < K_Z + Z2\<close>
+    using K_Z_plus_Z_pos[OF Z2_nn] .
+  have d12: \<open>K_Z + Z1 \<le> K_Z + Z2\<close>
+    using Z1_le_Z2
+    by simp
   (* k\<sqdot>Z/(K_Z+Z) = k - k\<sqdot>K_Z/(K_Z+Z); latter is decreasing in Z *)
   have rewrite1: \<open>k * Z1 / (K_Z + Z1) = k - k * K_Z / (K_Z + Z1)\<close>
-    using d1_pos K_Z_pos by (simp add: field_simps)
+    using d1_pos K_Z_pos
+    by (simp add: field_simps)
   have rewrite2: \<open>k * Z2 / (K_Z + Z2) = k - k * K_Z / (K_Z + Z2)\<close>
-    using d2_pos K_Z_pos by (simp add: field_simps)
-  have kKZ_pos: \<open>0 < k * K_Z\<close> using k_pos K_Z_pos by simp
+    using d2_pos K_Z_pos
+    by (simp add: field_simps)
+  have kKZ_pos: \<open>0 < k * K_Z\<close>
+    using k_pos K_Z_pos
+    by simp
   have \<open>k * K_Z / (K_Z + Z2) \<le> k * K_Z / (K_Z + Z1)\<close>
-    using kKZ_pos d12 d1_pos d2_pos by (simp add: frac_le)
-  thus ?thesis using rewrite1 rewrite2 by linarith
+    using kKZ_pos d12 d1_pos d2_pos
+    by (simp add: frac_le)
+  thus ?thesis
+    using rewrite1 rewrite2
+    by linarith
 qed
 
 text \<open>Monod uptake is monotone in S (at fixed X): larger substrate gives 
@@ -239,20 +279,33 @@ lemma monod_uptake_monotone_in_S:
   assumes X_nn: \<open>0 \<le> X\<close>
   shows \<open>(\<mu>_max * S1 / (K_S + S1)) * X \<le> (\<mu>_max * S2 / (K_S + S2)) * X\<close>
 proof -
-  have S2_nn: \<open>0 \<le> S2\<close> using S1_nn S1_le_S2 by linarith
-  have d1_pos: \<open>0 < K_S + S1\<close> using K_S_plus_S_pos[OF S1_nn] .
-  have d2_pos: \<open>0 < K_S + S2\<close> using K_S_plus_S_pos[OF S2_nn] .
-  have d12: \<open>K_S + S1 \<le> K_S + S2\<close> using S1_le_S2 by simp
+  have S2_nn: \<open>0 \<le> S2\<close>
+    using S1_nn S1_le_S2
+    by linarith
+  have d1_pos: \<open>0 < K_S + S1\<close>
+    using K_S_plus_S_pos[OF S1_nn] .
+  have d2_pos: \<open>0 < K_S + S2\<close>
+    using K_S_plus_S_pos[OF S2_nn] .
+  have d12: \<open>K_S + S1 \<le> K_S + S2\<close>
+    using S1_le_S2
+    by simp
   have rewrite1: \<open>\<mu>_max * S1 / (K_S + S1) = \<mu>_max - \<mu>_max * K_S / (K_S + S1)\<close>
-    using d1_pos K_S_pos by (simp add: field_simps)
+    using d1_pos K_S_pos
+    by (simp add: field_simps)
   have rewrite2: \<open>\<mu>_max * S2 / (K_S + S2) = \<mu>_max - \<mu>_max * K_S / (K_S + S2)\<close>
-    using d2_pos K_S_pos by (simp add: field_simps)
-  have \<mu>KS_pos: \<open>0 < \<mu>_max * K_S\<close> using \<mu>_max_pos K_S_pos by simp
+    using d2_pos K_S_pos
+    by (simp add: field_simps)
+  have \<mu>KS_pos: \<open>0 < \<mu>_max * K_S\<close>
+    using \<mu>_max_pos K_S_pos
+    by simp
   have \<open>\<mu>_max * K_S / (K_S + S2) \<le> \<mu>_max * K_S / (K_S + S1)\<close>
-    using \<mu>KS_pos d12 d1_pos d2_pos by (simp add: frac_le)
+    using \<mu>KS_pos d12 d1_pos d2_pos
+    by (simp add: frac_le)
   hence \<open>\<mu>_max * S1 / (K_S + S1) \<le> \<mu>_max * S2 / (K_S + S2)\<close>
-    using rewrite1 rewrite2 by linarith
-  thus ?thesis using X_nn mult_right_mono 
+    using rewrite1 rewrite2
+    by linarith
+  thus ?thesis
+    using X_nn mult_right_mono
     by blast
 qed
 
@@ -371,25 +424,29 @@ proof -
     proof (cases \<open>i = iS\<close>)
       case True
       with y0_in_safety show ?thesis 
-        unfolding in_safety_region_def lo_def hi_def by simp
+        unfolding in_safety_region_def lo_def hi_def
+        by simp
     next
       case False
       show ?thesis
       proof (cases \<open>i = iX\<close>)
         case True
         with y0_in_safety \<open>i \<noteq> iS\<close> show ?thesis 
-          unfolding in_safety_region_def lo_def hi_def by simp
+          unfolding in_safety_region_def lo_def hi_def
+          by simp
       next
         case False
         show ?thesis
         proof (cases \<open>i = iZ\<close>)
           case True
           with y0_in_safety \<open>i \<noteq> iS\<close> \<open>i \<noteq> iX\<close> show ?thesis 
-            unfolding in_safety_region_def lo_def hi_def by simp
+            unfolding in_safety_region_def lo_def hi_def
+            by simp
         next
           case False
           with \<open>i \<noteq> iS\<close> \<open>i \<noteq> iX\<close> show ?thesis 
-            unfolding lo_def hi_def by simp
+            unfolding lo_def hi_def
+            by simp
         qed
       qed
     qed
@@ -399,17 +456,28 @@ proof -
   have active_ord: \<open>\<And>i. i \<in> active \<Longrightarrow> lo i < hi i\<close>
   proof -
     fix i :: 'a assume \<open>i \<in> active\<close>
-    hence \<open>i = iS \<or> i = iX \<or> i = iZ\<close> unfolding active_def by blast
+    hence \<open>i = iS \<or> i = iX \<or> i = iZ\<close>
+      unfolding active_def
+      by blast
     thus \<open>lo i < hi i\<close>
     proof (elim disjE)
       assume \<open>i = iS\<close>
-      thus \<open>lo i < hi i\<close> unfolding lo_def hi_def using S_ordered by simp
+      thus \<open>lo i < hi i\<close>
+        unfolding lo_def hi_def
+        using S_ordered
+        by simp
     next
       assume \<open>i = iX\<close>
-      thus \<open>lo i < hi i\<close> unfolding lo_def hi_def using X_ordered by simp
+      thus \<open>lo i < hi i\<close>
+        unfolding lo_def hi_def
+        using X_ordered
+        by simp
     next
       assume \<open>i = iZ\<close>
-      thus \<open>lo i < hi i\<close> unfolding lo_def hi_def using Z_ordered by simp
+      thus \<open>lo i < hi i\<close>
+        unfolding lo_def hi_def
+        using Z_ordered
+        by simp
     qed
   qed
 
@@ -429,28 +497,46 @@ proof -
 
     \<comment> \<open>we extract scalar component bounds.\<close>
     have S_bounds: \<open>S_min \<le> vec_nth v iS\<close> \<open>vec_nth v iS \<le> S_max\<close>
-      using bounds[of iS] unfolding lo_def hi_def by simp_all
+      using bounds[of iS]
+      unfolding lo_def hi_def
+      by simp_all
     have X_bounds: \<open>X_min \<le> vec_nth v iX\<close> \<open>vec_nth v iX \<le> X_max\<close>
-      using bounds[of iX] unfolding lo_def hi_def by simp_all
+      using bounds[of iX]
+      unfolding lo_def hi_def
+      by simp_all
     have Z_bounds: \<open>Z_min \<le> vec_nth v iZ\<close> \<open>vec_nth v iZ \<le> Z_max\<close>
-      using bounds[of iZ] unfolding lo_def hi_def by simp_all
-    have S_nn: \<open>0 \<le> vec_nth v iS\<close> using S_bounds(1) S_min_pos by linarith
-    have X_nn: \<open>0 \<le> vec_nth v iX\<close> using X_bounds(1) X_min_pos by linarith
-    have Z_nn: \<open>0 \<le> vec_nth v iZ\<close> using Z_bounds(1) Z_min_pos by linarith
+      using bounds[of iZ]
+      unfolding lo_def hi_def
+      by simp_all
+    have S_nn: \<open>0 \<le> vec_nth v iS\<close>
+      using S_bounds(1) S_min_pos
+      by linarith
+    have X_nn: \<open>0 \<le> vec_nth v iX\<close>
+      using X_bounds(1) X_min_pos
+      by linarith
+    have Z_nn: \<open>0 \<le> vec_nth v iZ\<close>
+      using Z_bounds(1) Z_min_pos
+      by linarith
 
-    from i_act have \<open>i = iS \<or> i = iX \<or> i = iZ\<close> unfolding active_def by blast
+    from i_act have \<open>i = iS \<or> i = iX \<or> i = iZ\<close>
+      unfolding active_def
+      by blast
     thus \<open>0 < vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) i\<close>
     proof (elim disjE)
       \<comment> \<open>Case i = iS: S-lower edge.\<close>
       assume i_eq: \<open>i = iS\<close>
       have S_at_min: \<open>vec_nth v iS = S_min\<close>
-        using eq_lo i_eq unfolding lo_def by simp
+        using eq_lo i_eq
+        unfolding lo_def
+        by simp
       have field_eq: 
         \<open>vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) iS = 
          u - (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX\<close>
-        unfolding metabolic_field_def by (simp add: fun_upd_def)
+        unfolding metabolic_field_def
+        by (simp add: fun_upd_def)
       also have \<open>... = u - (\<mu>_max * S_min / (K_S + S_min)) * vec_nth v iX\<close>
-        using S_at_min by simp
+        using S_at_min
+        by simp
       finally have field_val: 
         \<open>vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) iS = 
          u - (\<mu>_max * S_min / (K_S + S_min)) * vec_nth v iX\<close> .
@@ -460,35 +546,44 @@ proof -
          (\<mu>_max * S_min / (K_S + S_min)) * X_max\<close>
       proof -
         have denom_pos: \<open>0 < K_S + S_min\<close> 
-          using K_S_plus_S_pos S_min_pos by simp
+          using K_S_plus_S_pos S_min_pos
+          by simp
         have rate_nn: \<open>0 \<le> \<mu>_max * S_min / (K_S + S_min)\<close>
-          using \<mu>_max_pos S_min_pos denom_pos by (simp add: divide_nonneg_pos)
+          using \<mu>_max_pos S_min_pos denom_pos
+          by (simp add: divide_nonneg_pos)
         show ?thesis
-          using rate_nn X_bounds(2) mult_left_mono by blast
+          using rate_nn X_bounds(2) mult_left_mono
+          by blast
       qed
       have \<open>(\<mu>_max * S_min / (K_S + S_min)) * vec_nth v iX < u\<close>
-        using consumption_le S_lower_inward by linarith
+        using consumption_le S_lower_inward
+        by linarith
       thus \<open>0 < vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) i\<close>
-        using field_val i_eq by simp
+        using field_val i_eq
+        by simp
     next
       \<comment> \<open>Case i = iX: X-lower edge.\<close>
       assume i_eq: \<open>i = iX\<close>
       have X_at_min: \<open>vec_nth v iX = X_min\<close>
-        using eq_lo i_eq unfolding lo_def by simp
+        using eq_lo i_eq
+        unfolding lo_def
+        by simp
       have field_eq: 
         \<open>vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) iX = 
-         Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX 
-             * (K_I / (K_I + vec_nth v iZ)) 
-           - d * vec_nth v iX\<close>
-        unfolding metabolic_field_def by (simp add: fun_upd_def)
+         Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX *
+             (K_I / (K_I + vec_nth v iZ)) -
+           d * vec_nth v iX\<close>
+        unfolding metabolic_field_def
+        by (simp add: fun_upd_def)
       \<comment> \<open>Factoring X\_min from the expression using X\_at\_min.\<close>
-      also have \<open>... = X_min * (Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) 
-                                  * (K_I / (K_I + vec_nth v iZ)) - d)\<close>
-        using X_at_min by (simp add: algebra_simps)
+      also have \<open>... = X_min * (Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) *
+                                  (K_I / (K_I + vec_nth v iZ)) - d)\<close>
+        using X_at_min
+        by (simp add: algebra_simps)
       finally have field_val: 
         \<open>vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) iX = 
-         X_min * (Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) 
-                    * (K_I / (K_I + vec_nth v iZ)) - d)\<close> .
+         X_min * (Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) *
+                    (K_I / (K_I + vec_nth v iZ)) - d)\<close> .
 
       \<comment> \<open>Key: Y*(mu\_max*S/(K\_S+S))*(K\_I/(K\_I+Z)) > d for any S in [S\_min, S\_max], Z in [Z\_min, Z\_max].
           The worst-case (minimum growth) is at S = S\_min, Z = Z\_max.\<close>
@@ -512,28 +607,41 @@ proof -
           \<open>K_I / (K_I + Z_max) \<le> K_I / (K_I + vec_nth v iZ)\<close>
         proof -
           have dmax_pos: \<open>0 < K_I + Z_max\<close> 
-            using K_I_pos Z_bounds(2) Z_nn by linarith
+            using K_I_pos Z_bounds(2) Z_nn
+            by linarith
           have dv_pos: \<open>0 < K_I + vec_nth v iZ\<close> 
             using K_I_plus_Z_pos[OF Z_nn] .
           have d_le: \<open>K_I + vec_nth v iZ \<le> K_I + Z_max\<close>
-            using Z_bounds(2) by simp
+            using Z_bounds(2)
+            by simp
           show ?thesis
-            using K_I_pos d_le dv_pos dmax_pos by (simp add: frac_le)
+            using K_I_pos d_le dv_pos dmax_pos
+            by (simp add: frac_le)
         qed
         \<comment> \<open>Combine both.\<close>
         have uptake_nn: \<open>0 \<le> \<mu>_max * S_min / (K_S + S_min)\<close>
         proof -
-          have \<open>0 < K_S + S_min\<close> using K_S_plus_S_pos S_min_pos by simp
-          thus ?thesis using \<mu>_max_pos S_min_pos by (simp add: divide_nonneg_pos)
+          have \<open>0 < K_S + S_min\<close>
+            using K_S_plus_S_pos S_min_pos
+            by simp
+          thus ?thesis
+            using \<mu>_max_pos S_min_pos
+            by (simp add: divide_nonneg_pos)
         qed
         have uptake_at_v_nn: \<open>0 \<le> \<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)\<close>
         proof -
-          have \<open>0 < K_S + vec_nth v iS\<close> using K_S_plus_S_pos[OF S_nn] .
-          thus ?thesis using \<mu>_max_pos S_nn by (simp add: divide_nonneg_pos)
+          have \<open>0 < K_S + vec_nth v iS\<close>
+            using K_S_plus_S_pos[OF S_nn] .
+          thus ?thesis
+            using \<mu>_max_pos S_nn
+            by (simp add: divide_nonneg_pos)
         qed
         have inh_at_v_nn: \<open>0 \<le> K_I / (K_I + vec_nth v iZ)\<close>
-          using growth_inhibition_bounds[OF Z_nn] by simp
-        have Y_nn: \<open>0 \<le> Y\<close> using Y_pos by simp
+          using growth_inhibition_bounds[OF Z_nn]
+          by simp
+        have Y_nn: \<open>0 \<le> Y\<close>
+          using Y_pos
+          by simp
         \<comment> \<open>Step 1: Y * (uptake at S\_min) * (inhibition at Z\_max) <= Y * (uptake at v) * (inhibition at Z\_max).\<close>
         have step1: 
           \<open>Y * (\<mu>_max * S_min / (K_S + S_min)) * (K_I / (K_I + Z_max)) \<le>
@@ -545,7 +653,8 @@ proof -
             using uptake_mono Y_nn Y_pos mult_le_cancel_left_pos 
             by blast
           have inh_max_nn: \<open>0 \<le> K_I / (K_I + Z_max)\<close>
-            using K_I_pos Z_bounds(2) Z_nn by (simp add: divide_nonneg_pos)
+            using K_I_pos Z_bounds(2) Z_nn
+            by (simp add: divide_nonneg_pos)
           show ?thesis
             using Y_uptake_mono inh_max_nn 
             using landau_omega.R_mult_right_mono 
@@ -563,38 +672,46 @@ proof -
             using prod_nn inhibition_mono landau_omega.R_mult_left_mono 
             by blast
         qed
-        from step1 step2 show ?thesis by linarith
+        from step1 step2 show ?thesis
+          by linarith
       qed
 
       \<comment> \<open>The design constraint X\_lower\_growth\_exceeds\_decay gives us d < Y*...\<close>
       have growth_gt_decay: 
-        \<open>d < Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) 
-             * (K_I / (K_I + vec_nth v iZ))\<close>
-        using X_lower_growth_exceeds_decay growth_rate_bound by linarith
+        \<open>d < Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) *
+             (K_I / (K_I + vec_nth v iZ))\<close>
+        using X_lower_growth_exceeds_decay growth_rate_bound
+        by linarith
 
       \<comment> \<open>Multiplied by X\_min > 0, gives us the strict positivity.\<close>
-      have \<open>0 < X_min * (Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) 
-                           * (K_I / (K_I + vec_nth v iZ)) - d)\<close>
-        using X_min_pos growth_gt_decay by simp 
+      have \<open>0 < X_min * (Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) *
+                           (K_I / (K_I + vec_nth v iZ)) - d)\<close>
+        using X_min_pos growth_gt_decay
+        by simp
       thus \<open>0 < vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) i\<close>
-        using field_val i_eq by simp
+        using field_val i_eq
+        by simp
     next
       \<comment> \<open>Case i = iZ: Z-lower edge.\<close>
       assume i_eq: \<open>i = iZ\<close>
       have Z_at_min: \<open>vec_nth v iZ = Z_min\<close>
-        using eq_lo i_eq unfolding lo_def by simp
+        using eq_lo i_eq
+        unfolding lo_def
+        by simp
       have field_eq: 
         \<open>vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) iZ = 
-         \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX 
-         - k * vec_nth v iZ / (K_Z + vec_nth v iZ)\<close>
-        unfolding metabolic_field_def by (simp add: fun_upd_def)
-      also have \<open>... = \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX 
-                       - k * Z_min / (K_Z + Z_min)\<close>
-        using Z_at_min by simp
+         \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX -
+         k * vec_nth v iZ / (K_Z + vec_nth v iZ)\<close>
+        unfolding metabolic_field_def
+        by (simp add: fun_upd_def)
+      also have \<open>... = \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX -
+                       k * Z_min / (K_Z + Z_min)\<close>
+        using Z_at_min
+        by simp
       finally have field_val: 
         \<open>vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) iZ = 
-         \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX 
-         - k * Z_min / (K_Z + Z_min)\<close> .
+         \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX -
+         k * Z_min / (K_Z + Z_min)\<close> .
 
       \<comment> \<open>Production at (v\_0, v\_1) >= production at (S\_min, X\_min) by monotonicity.\<close>
       have production_ge:
@@ -609,14 +726,20 @@ proof -
             using S_bounds(1) S_min_pos less_imp_le
                   monod_uptake_monotone_in_S rel_simps(44) 
             by blast
-          thus ?thesis by simp
+          thus ?thesis
+            by simp
         qed
         have uptake_at_v_nn: \<open>0 \<le> \<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)\<close>
         proof -
-          have \<open>0 < K_S + vec_nth v iS\<close> using K_S_plus_S_pos[OF S_nn] .
-          thus ?thesis using \<mu>_max_pos S_nn by (simp add: divide_nonneg_pos)
+          have \<open>0 < K_S + vec_nth v iS\<close>
+            using K_S_plus_S_pos[OF S_nn] .
+          thus ?thesis
+            using \<mu>_max_pos S_nn
+            by (simp add: divide_nonneg_pos)
         qed
-        have \<alpha>_nn: \<open>0 \<le> \<alpha>\<close> using \<alpha>_pos by simp
+        have \<alpha>_nn: \<open>0 \<le> \<alpha>\<close>
+          using \<alpha>_pos
+          by simp
         have \<alpha>_uptake_mono: 
           \<open>\<alpha> * (\<mu>_max * S_min / (K_S + S_min)) \<le> 
            \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS))\<close>
@@ -637,13 +760,16 @@ proof -
           using \<alpha>u_v_nn X_bounds(1)
                 ordered_comm_semiring_class.comm_mult_left_mono 
           by blast
-        from step1 step2 show ?thesis by linarith
+        from step1 step2 show ?thesis
+          by linarith
       qed
       have \<open>k * Z_min / (K_Z + Z_min) < 
             \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX\<close>
-        using Z_lower_production_exceeds_degradation production_ge by linarith
+        using Z_lower_production_exceeds_degradation production_ge
+        by linarith
       thus \<open>0 < vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) i\<close>
-        using field_val i_eq by simp
+        using field_val i_eq
+        by simp
     qed
   qed
 
@@ -662,26 +788,43 @@ proof -
     assume eq_hi: \<open>vec_nth v i = hi i\<close>
 
     have S_bounds: \<open>S_min \<le> vec_nth v iS\<close> \<open>vec_nth v iS \<le> S_max\<close>
-      using bounds[of iS] unfolding lo_def hi_def by simp_all
+      using bounds[of iS]
+      unfolding lo_def hi_def
+      by simp_all
     have X_bounds: \<open>X_min \<le> vec_nth v iX\<close> \<open>vec_nth v iX \<le> X_max\<close>
-      using bounds[of iX] unfolding lo_def hi_def by simp_all
+      using bounds[of iX]
+      unfolding lo_def hi_def
+      by simp_all
     have Z_bounds: \<open>Z_min \<le> vec_nth v iZ\<close> \<open>vec_nth v iZ \<le> Z_max\<close>
-      using bounds[of iZ] unfolding lo_def hi_def by simp_all
-    have S_nn: \<open>0 \<le> vec_nth v iS\<close> using S_bounds(1) S_min_pos by linarith
-    have X_nn: \<open>0 \<le> vec_nth v iX\<close> using X_bounds(1) X_min_pos by linarith
-    have Z_nn: \<open>0 \<le> vec_nth v iZ\<close> using Z_bounds(1) Z_min_pos by linarith
+      using bounds[of iZ]
+      unfolding lo_def hi_def
+      by simp_all
+    have S_nn: \<open>0 \<le> vec_nth v iS\<close>
+      using S_bounds(1) S_min_pos
+      by linarith
+    have X_nn: \<open>0 \<le> vec_nth v iX\<close>
+      using X_bounds(1) X_min_pos
+      by linarith
+    have Z_nn: \<open>0 \<le> vec_nth v iZ\<close>
+      using Z_bounds(1) Z_min_pos
+      by linarith
 
-    from i_act have \<open>i = iS \<or> i = iX \<or> i = iZ\<close> unfolding active_def by blast
+    from i_act have \<open>i = iS \<or> i = iX \<or> i = iZ\<close>
+      unfolding active_def
+      by blast
     thus \<open>vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) i < 0\<close>
     proof (elim disjE)
       \<comment> \<open>Case i = iS: S-upper edge.\<close>
       assume i_eq: \<open>i = iS\<close>
       have S_at_max: \<open>vec_nth v iS = S_max\<close>
-        using eq_hi i_eq unfolding hi_def by simp
+        using eq_hi i_eq
+        unfolding hi_def
+        by simp
       have field_eq: 
         \<open>vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) iS = 
          u - (\<mu>_max * S_max / (K_S + S_max)) * vec_nth v iX\<close>
-        unfolding metabolic_field_def using S_at_max 
+        unfolding metabolic_field_def
+        using S_at_max
         by (simp add: fun_upd_def)
 
       \<comment> \<open>At X >= X\_min we have (mu\_max*S\_max/(K\_S+S\_max))*X >= ... * X\_min > u.\<close>
@@ -690,7 +833,8 @@ proof -
          (\<mu>_max * S_max / (K_S + S_max)) * vec_nth v iX\<close>
       proof -
         have denom_pos: \<open>0 < K_S + S_max\<close> 
-          using K_S_plus_S_pos S_bounds S_nn by simp
+          using K_S_plus_S_pos S_bounds S_nn
+          by simp
         have rate_nn: \<open>0 \<le> \<mu>_max * S_max / (K_S + S_max)\<close>
           using \<mu>_max_pos S_bounds S_nn denom_pos 
           by (simp add: divide_nonneg_pos)
@@ -699,27 +843,33 @@ proof -
           by blast
       qed
       have \<open>u < (\<mu>_max * S_max / (K_S + S_max)) * vec_nth v iX\<close>
-        using S_upper_inward consumption_ge by linarith
+        using S_upper_inward consumption_ge
+        by linarith
       thus \<open>vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) i < 0\<close>
-        using field_eq i_eq by simp
+        using field_eq i_eq
+        by simp
     next
       \<comment> \<open>Case i = iX: X-upper edge.\<close>
       assume i_eq: \<open>i = iX\<close>
       have X_at_max: \<open>vec_nth v iX = X_max\<close>
-        using eq_hi i_eq unfolding hi_def by simp
+        using eq_hi i_eq
+        unfolding hi_def
+        by simp
       have field_eq: 
         \<open>vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) iX = 
-         X_max * (Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) 
-                    * (K_I / (K_I + vec_nth v iZ)) - d)\<close>
+         X_max * (Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) *
+                    (K_I / (K_I + vec_nth v iZ)) - d)\<close>
       proof -
         have \<open>vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) iX = 
-              Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX 
-                  * (K_I / (K_I + vec_nth v iZ)) 
-                - d * vec_nth v iX\<close>
-          unfolding metabolic_field_def by (simp add: fun_upd_def)
-        also have \<open>... = X_max * (Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) 
-                                    * (K_I / (K_I + vec_nth v iZ)) - d)\<close>
-          using X_at_max by (simp add: algebra_simps)
+              Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX *
+                  (K_I / (K_I + vec_nth v iZ)) -
+                d * vec_nth v iX\<close>
+          unfolding metabolic_field_def
+          by (simp add: fun_upd_def)
+        also have \<open>... = X_max * (Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) *
+                                    (K_I / (K_I + vec_nth v iZ)) - d)\<close>
+          using X_at_max
+          by (simp add: algebra_simps)
         finally show ?thesis .
       qed
 
@@ -733,7 +883,8 @@ proof -
         proof -
           have \<open>(\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * 1 \<le> 
                 (\<mu>_max * S_max / (K_S + S_max)) * 1\<close>
-            using monod_uptake_monotone_in_S[OF S_nn S_bounds(2), of 1] by simp
+            using monod_uptake_monotone_in_S[OF S_nn S_bounds(2), of 1]
+            by simp
           thus ?thesis 
             by simp
         qed
@@ -741,23 +892,29 @@ proof -
           \<open>K_I / (K_I + vec_nth v iZ) \<le> K_I / (K_I + Z_min)\<close>
         proof -
           have dmin_pos: \<open>0 < K_I + Z_min\<close> 
-            using K_I_pos Z_min_pos by simp
+            using K_I_pos Z_min_pos
+            by simp
           have dv_pos: \<open>0 < K_I + vec_nth v iZ\<close> 
             using K_I_plus_Z_pos[OF Z_nn] .
           have d_le: \<open>K_I + Z_min \<le> K_I + vec_nth v iZ\<close>
-            using Z_bounds(1) by simp
+            using Z_bounds(1)
+            by simp
           show ?thesis
             using K_I_pos d_le dmin_pos dv_pos 
             by (simp add: frac_le)
         qed
         have uptake_max_nn: \<open>0 \<le> \<mu>_max * S_max / (K_S + S_max)\<close>
         proof -
-          have \<open>0 < K_S + S_max\<close> using K_S_plus_S_pos S_bounds S_nn by simp
-          thus ?thesis using \<mu>_max_pos S_bounds S_nn 
+          have \<open>0 < K_S + S_max\<close>
+            using K_S_plus_S_pos S_bounds S_nn
+            by simp
+          thus ?thesis
+            using \<mu>_max_pos S_bounds S_nn
             by (simp add: divide_nonneg_pos)
         qed
         have inh_at_v_nn: \<open>0 \<le> K_I / (K_I + vec_nth v iZ)\<close>
-          using growth_inhibition_bounds[OF Z_nn] by simp
+          using growth_inhibition_bounds[OF Z_nn]
+          by simp
         have Y_nn: \<open>0 \<le> Y\<close> 
           using Y_pos 
           by simp
@@ -786,7 +943,8 @@ proof -
                   landau_o.R_mult_left_mono 
             by blast
         qed
-        from step1 step2 show ?thesis by linarith
+        from step1 step2 show ?thesis
+          by linarith
       qed
 
       have growth_lt_decay: 
@@ -797,7 +955,9 @@ proof -
       have \<open>X_max * (Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * 
             (K_I / (K_I + vec_nth v iZ)) - d) < 0\<close>
       proof -
-        have X_max_pos: \<open>0 < X_max\<close> using X_min_pos X_ordered by linarith
+        have X_max_pos: \<open>0 < X_max\<close>
+          using X_min_pos X_ordered
+          by linarith
         have \<open>Y * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * 
               (K_I / (K_I + vec_nth v iZ)) - d < 0\<close>
           using growth_lt_decay 
@@ -813,12 +973,15 @@ proof -
       \<comment> \<open>Case i = iZ: Z-upper edge.\<close>
       assume i_eq: \<open>i = iZ\<close>
       have Z_at_max: \<open>vec_nth v iZ = Z_max\<close>
-        using eq_hi i_eq unfolding hi_def by simp
+        using eq_hi i_eq
+        unfolding hi_def
+        by simp
       have field_eq: 
         \<open>vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) iZ = 
-         \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX 
-         - k * Z_max / (K_Z + Z_max)\<close>
-        unfolding metabolic_field_def using Z_at_max 
+         \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX -
+         k * Z_max / (K_Z + Z_max)\<close>
+        unfolding metabolic_field_def
+        using Z_at_max
         by (simp add: fun_upd_def)
 
       \<comment> \<open>Production at (v\_0, v\_1) <= production at (S\_max, X\_max) by monotonicity.\<close>
@@ -871,8 +1034,8 @@ proof -
           by linarith
       qed
 
-      have \<open>\<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX 
-            < k * Z_max / (K_Z + Z_max)\<close>
+      have \<open>\<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX <
+            k * Z_max / (K_Z + Z_max)\<close>
         using Z_upper_degradation_exceeds_production production_le 
         by linarith
       thus \<open>vec_nth (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) i < 0\<close>
@@ -942,7 +1105,8 @@ proof -
           show \<open>((\<lambda>\<tau>. vec_nth (y \<tau>) i) has_derivative 
                  (\<lambda>h. vec_nth (h *\<^sub>R metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau>' (y \<tau>')) i)) 
                    (at \<tau>' within {0..t})\<close>
-            using has_derivative_compose[OF step2[OF \<tau>'_in] proj] by simp
+            using has_derivative_compose[OF step2[OF \<tau>'_in] proj]
+            by simp
         qed
         show ?thesis
           unfolding has_vderiv_on_def has_vector_derivative_def
@@ -1062,11 +1226,12 @@ text \<open>
   degradation\_exceeds\_production.\<close>
 
 lemma gap_at_alarm_nn:
-  \<open>0 \<le> k * Z_alarm / (K_Z + Z_alarm) 
-       - \<alpha> * (\<mu>_max * S_hi / (K_S + S_hi)) * X_hi\<close>
+  \<open>0 \<le> k * Z_alarm / (K_Z + Z_alarm) -
+       \<alpha> * (\<mu>_max * S_hi / (K_S + S_hi)) * X_hi\<close>
 proof -
   have \<open>0 < \<delta>_Z * (Z_alarm - Z_eq)\<close>
-    using \<delta>_Z_pos Z_alarm_above_eq by simp
+    using \<delta>_Z_pos Z_alarm_above_eq
+    by simp
   thus ?thesis 
     using degradation_exceeds_production 
     by linarith
@@ -1083,11 +1248,11 @@ lemma V_Z_has_derivative:
   fixes p :: \<open>(real, 'a) vec\<close>
   shows \<open>(V_Z has_derivative (\<lambda>w. (vec_nth p iZ - Z_eq) * vec_nth w iZ)) (at p)\<close>
 proof -
-  have proj: \<open>((\<lambda>v::(real,'a) vec. vec_nth v iZ)
-                 has_derivative (\<lambda>w. vec_nth w iZ)) (at p)\<close>
+  have proj: \<open>((\<lambda>v::(real,'a) vec. vec_nth v iZ) has_derivative
+                 (\<lambda>w. vec_nth w iZ)) (at p)\<close>
     by (rule has_derivative_vec_nth)
-  have sq: \<open>((\<lambda>z::real. (z - Z_eq)^2 / 2)
-              has_derivative (\<lambda>h. (vec_nth p iZ - Z_eq) * h))
+  have sq: \<open>((\<lambda>z::real. (z - Z_eq)^2 / 2) has_derivative
+              (\<lambda>h. (vec_nth p iZ - Z_eq) * h))
             (at (vec_nth p iZ))\<close>
     by (auto intro!: derivative_eq_intros)
   show ?thesis
@@ -1102,10 +1267,10 @@ lemma V_Z_induct_step:
   assumes rate_bound:
     \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow>
          (vec_nth (y \<tau>) iZ - Z_eq) *
-         (\<alpha> * (\<mu>_max * vec_nth (y \<tau>) iS / (K_S + vec_nth (y \<tau>) iS))
-            * vec_nth (y \<tau>) iX
-          - k * vec_nth (y \<tau>) iZ / (K_Z + vec_nth (y \<tau>) iZ))
-         \<le> -\<delta>_Z * V_Z (y \<tau>)\<close>
+         (\<alpha> * (\<mu>_max * vec_nth (y \<tau>) iS / (K_S + vec_nth (y \<tau>) iS)) *
+            vec_nth (y \<tau>) iX -
+          k * vec_nth (y \<tau>) iZ / (K_Z + vec_nth (y \<tau>) iZ)) \<le>
+         -\<delta>_Z * V_Z (y \<tau>)\<close>
   shows \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow>
          \<exists>DV. (V_Z has_derivative DV) (at (y \<tau>)) \<and>
               DV (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> (y \<tau>)) \<le>
@@ -1117,9 +1282,10 @@ proof -
   have lie: \<open>(\<lambda>w. (vec_nth (y \<tau>) iZ - Z_eq) * vec_nth w iZ)
                (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> (y \<tau>)) =
               (vec_nth (y \<tau>) iZ - Z_eq) *
-               (\<alpha> * (\<mu>_max * vec_nth (y \<tau>) iS / (K_S + vec_nth (y \<tau>) iS))
-                  * vec_nth (y \<tau>) iX - k * vec_nth (y \<tau>) iZ / (K_Z + vec_nth (y \<tau>) iZ))\<close>
-    unfolding metabolic_field_def by (simp add: fun_upd_def)
+               (\<alpha> * (\<mu>_max * vec_nth (y \<tau>) iS / (K_S + vec_nth (y \<tau>) iS)) *
+                  vec_nth (y \<tau>) iX - k * vec_nth (y \<tau>) iZ / (K_Z + vec_nth (y \<tau>) iZ))\<close>
+    unfolding metabolic_field_def
+    by (simp add: fun_upd_def)
   show \<open>\<exists>DV. (V_Z has_derivative DV) (at (y \<tau>)) \<and>
              DV (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> (y \<tau>)) \<le> -\<delta>_Z * V_Z (y \<tau>)\<close>
     using V_Z_has_derivative[of \<open>y \<tau>\<close>] rate_bound[OF h\<tau>] lie 
@@ -1153,8 +1319,8 @@ lemma V_Z_Lie_decrease:
   assumes Z_above_alarm: \<open>Z_alarm \<le> vec_nth v iZ\<close>
   assumes Z_below_max: \<open>vec_nth v iZ \<le> Z_max\<close>
   shows \<open>(vec_nth v iZ - Z_eq) * 
-         (\<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX 
-          - k * vec_nth v iZ / (K_Z + vec_nth v iZ)) \<le> -\<delta>_Z * V_Z v\<close>
+         (\<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX -
+          k * vec_nth v iZ / (K_Z + vec_nth v iZ)) \<le> -\<delta>_Z * V_Z v\<close>
 proof -
   define S where \<open>S = vec_nth v iS\<close>
   define X where \<open>X = vec_nth v iX\<close>
@@ -1173,13 +1339,22 @@ proof -
     unfolding Z_def 
     by simp_all
 
-  have S_nn: \<open>0 \<le> S\<close> using S_in(1) S_lo_pos by linarith
-  have X_nn: \<open>0 \<le> X\<close> using X_in(1) X_lo_pos by linarith
-  have Z_nn: \<open>0 \<le> Z\<close> using Z_in(1) Z_alarm_above_eq Z_eq_pos by linarith
+  have S_nn: \<open>0 \<le> S\<close>
+    using S_in(1) S_lo_pos
+    by linarith
+  have X_nn: \<open>0 \<le> X\<close>
+    using X_in(1) X_lo_pos
+    by linarith
+  have Z_nn: \<open>0 \<le> Z\<close>
+    using Z_in(1) Z_alarm_above_eq Z_eq_pos
+    by linarith
 
   have Z_minus_eq_pos: \<open>0 < Z - Z_eq\<close>
-    using Z_in(1) Z_alarm_above_eq by linarith
-  have Z_minus_eq_nn: \<open>0 \<le> Z - Z_eq\<close> using Z_minus_eq_pos by linarith
+    using Z_in(1) Z_alarm_above_eq
+    by linarith
+  have Z_minus_eq_nn: \<open>0 \<le> Z - Z_eq\<close>
+    using Z_minus_eq_pos
+    by linarith
 
   \<comment> \<open>(i) Production bound: P(S, X) <= P(S\_hi, X\_hi).\<close>
   have P_bound: 
@@ -1189,18 +1364,23 @@ proof -
       \<open>\<mu>_max * S / (K_S + S) \<le> \<mu>_max * S_hi / (K_S + S_hi)\<close>
     proof -
       have \<open>(\<mu>_max * S / (K_S + S)) * 1 \<le> (\<mu>_max * S_hi / (K_S + S_hi)) * 1\<close>
-        using monod_uptake_monotone_in_S[OF S_nn S_in(2), of 1] by simp
+        using monod_uptake_monotone_in_S[OF S_nn S_in(2), of 1]
+        by simp
       thus ?thesis 
         by simp
     qed
-    have \<alpha>_nn: \<open>0 \<le> \<alpha>\<close> using \<alpha>_pos by simp
+    have \<alpha>_nn: \<open>0 \<le> \<alpha>\<close>
+      using \<alpha>_pos
+      by simp
     have \<alpha>_uptake_mono:
       \<open>\<alpha> * (\<mu>_max * S / (K_S + S)) \<le> \<alpha> * (\<mu>_max * S_hi / (K_S + S_hi))\<close>
       using uptake_mono \<alpha>_nn mult_left_mono 
       by blast
     have uptake_hi_nn: \<open>0 \<le> \<mu>_max * S_hi / (K_S + S_hi)\<close>
     proof -
-      have \<open>0 < K_S + S_hi\<close> using K_S_plus_S_pos S_in(2) S_nn by simp
+      have \<open>0 < K_S + S_hi\<close>
+        using K_S_plus_S_pos S_in(2) S_nn
+        by simp
       thus ?thesis 
         using \<mu>_max_pos S_in(2) S_nn 
         by (simp add: divide_nonneg_pos)
@@ -1308,10 +1488,12 @@ proof -
     by linarith
 
   have V_Z_eq: \<open>V_Z v = (Z - Z_eq)^2 / 2\<close>
-    unfolding V_Z_def Z_def by simp
+    unfolding V_Z_def Z_def
+    by simp
 
   have \<open>-(\<delta>_Z * ((Z - Z_eq)^2 / 2)) = -\<delta>_Z * V_Z v\<close>
-    unfolding V_Z_eq by simp
+    unfolding V_Z_eq
+    by simp
 
   with main_bound show ?thesis
     unfolding S_def X_def Z_def 
@@ -1342,9 +1524,9 @@ proof -
   have rate_bound: 
     \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> 
          (vec_nth (y \<tau>) iZ - Z_eq) * 
-         (\<alpha> * (\<mu>_max * vec_nth (y \<tau>) iS / (K_S + vec_nth (y \<tau>) iS)) 
-            * vec_nth (y \<tau>) iX 
-          - k * vec_nth (y \<tau>) iZ / (K_Z + vec_nth (y \<tau>) iZ)) \<le>
+         (\<alpha> * (\<mu>_max * vec_nth (y \<tau>) iS / (K_S + vec_nth (y \<tau>) iS)) *
+            vec_nth (y \<tau>) iX -
+          k * vec_nth (y \<tau>) iZ / (K_Z + vec_nth (y \<tau>) iZ)) \<le>
           -\<delta>_Z * V_Z (y \<tau>)\<close>
   proof -
     fix \<tau> assume \<tau>_in: \<open>\<tau> \<in> {0..T}\<close>
@@ -1354,9 +1536,9 @@ proof -
       \<open>Z_alarm \<le> vec_nth (y \<tau>) iZ\<close> \<open>vec_nth (y \<tau>) iZ \<le> Z_max\<close>
       by auto
     show \<open>(vec_nth (y \<tau>) iZ - Z_eq) * 
-          (\<alpha> * (\<mu>_max * vec_nth (y \<tau>) iS / (K_S + vec_nth (y \<tau>) iS)) 
-             * vec_nth (y \<tau>) iX 
-           - k * vec_nth (y \<tau>) iZ / (K_Z + vec_nth (y \<tau>) iZ)) \<le> 
+          (\<alpha> * (\<mu>_max * vec_nth (y \<tau>) iS / (K_S + vec_nth (y \<tau>) iS)) *
+             vec_nth (y \<tau>) iX -
+           k * vec_nth (y \<tau>) iZ / (K_Z + vec_nth (y \<tau>) iZ)) \<le>
            -\<delta>_Z * V_Z (y \<tau>)\<close>
       using V_Z_Lie_decrease[OF \<open>S_lo \<le> _\<close> \<open>_ \<le> S_hi\<close> \<open>X_lo \<le> _\<close> \<open>_ \<le> X_hi\<close>
                                 \<open>Z_alarm \<le> _\<close> \<open>_ \<le> Z_max\<close>] .
@@ -1370,7 +1552,7 @@ proof -
                      \<exists>DV. (V_Z has_derivative DV) (at (y \<tau>)) \<and>
                           DV (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> (y \<tau>)) \<le> 
                           -\<delta>_Z * V_Z (y \<tau>)\<close>
-   using V_Z_induct_step[OF rate_bound] .
+    using V_Z_induct_step[OF rate_bound] .
   show ?thesis
     using REACH_lyapunov[where V = V_Z and \<delta> = \<delta>_Z,
                          OF y_sol T_nn induct_step]
@@ -1500,8 +1682,8 @@ lemma V_Z_Lie_decrease_lower:
   assumes Z_above_eq:    \<open>Z_eq \<le> vec_nth v iZ\<close>
   assumes Z_below_alarm: \<open>vec_nth v iZ \<le> Z_alarm\<close>
   shows \<open>(vec_nth v iZ - Z_eq) *
-         (\<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX
-          - k * vec_nth v iZ / (K_Z + vec_nth v iZ)) \<le>
+         (\<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX -
+          k * vec_nth v iZ / (K_Z + vec_nth v iZ)) \<le>
           -\<delta>_Z * V_Z v\<close>
 proof -
   define S where \<open>S = vec_nth v iS\<close>
@@ -1521,10 +1703,18 @@ proof -
     unfolding Z_def 
     by simp_all
 
-  have S_nn: \<open>0 \<le> S\<close> using S_in(1) S_lo_pos by linarith
-  have X_nn: \<open>0 \<le> X\<close> using X_in(1) X_lo_pos by linarith
-  have Z_nn: \<open>0 \<le> Z\<close> using Z_in(1) Z_eq_pos by linarith
-  have Z_minus_eq_nn: \<open>0 \<le> Z - Z_eq\<close> using Z_in(1) by linarith
+  have S_nn: \<open>0 \<le> S\<close>
+    using S_in(1) S_lo_pos
+    by linarith
+  have X_nn: \<open>0 \<le> X\<close>
+    using X_in(1) X_lo_pos
+    by linarith
+  have Z_nn: \<open>0 \<le> Z\<close>
+    using Z_in(1) Z_eq_pos
+    by linarith
+  have Z_minus_eq_nn: \<open>0 \<le> Z - Z_eq\<close>
+    using Z_in(1)
+    by linarith
 
   \<comment> \<open>(i) Production bound: P(S, X) <= P(S\_hi, X\_hi).  (Identical to the
       upper-band proof.)\<close>
@@ -1587,9 +1777,9 @@ proof -
     \<open>k * Z / (K_Z + Z) - k * Z_eq / (K_Z + Z_eq) =
      k * K_Z * (Z - Z_eq) / ((K_Z + Z) * (K_Z + Z_eq))\<close>
   proof -
-    have \<open>k * Z / (K_Z + Z) - k * Z_eq / (K_Z + Z_eq)
-          = (k * Z * (K_Z + Z_eq) - k * Z_eq * (K_Z + Z))
-            / ((K_Z + Z) * (K_Z + Z_eq))\<close>
+    have \<open>k * Z / (K_Z + Z) - k * Z_eq / (K_Z + Z_eq) =
+          (k * Z * (K_Z + Z_eq) - k * Z_eq * (K_Z + Z)) /
+            ((K_Z + Z) * (K_Z + Z_eq))\<close>
       using K_Z_Z_pos K_Z_Z_eq_pos 
       by (simp add: field_simps)
     also have \<open>... = k * K_Z * (Z - Z_eq) / ((K_Z + Z) * (K_Z + Z_eq))\<close>
@@ -1614,15 +1804,18 @@ proof -
     by simp
 
   have slope_bound:
-    \<open>k * K_Z * (Z - Z_eq) / ((K_Z + Z_alarm) * (K_Z + Z_eq))
-     \<le> k * Z / (K_Z + Z) - k * Z_eq / (K_Z + Z_eq)\<close>
+    \<open>k * K_Z * (Z - Z_eq) / ((K_Z + Z_alarm) * (K_Z + Z_eq)) \<le>
+     k * Z / (K_Z + Z) - k * Z_eq / (K_Z + Z_eq)\<close>
   proof -
-    have \<open>k * K_Z * (Z - Z_eq) / ((K_Z + Z_alarm) * (K_Z + Z_eq))
-          \<le> k * K_Z * (Z - Z_eq) / ((K_Z + Z) * (K_Z + Z_eq))\<close>
+    have \<open>k * K_Z * (Z - Z_eq) / ((K_Z + Z_alarm) * (K_Z + Z_eq)) \<le>
+          k * K_Z * (Z - Z_eq) / ((K_Z + Z) * (K_Z + Z_eq))\<close>
     proof (rule frac_le)
-      show \<open>0 \<le> k * K_Z * (Z - Z_eq)\<close> using num_nn .
-      show \<open>k * K_Z * (Z - Z_eq) \<le> k * K_Z * (Z - Z_eq)\<close> by simp
-      show \<open>0 < (K_Z + Z) * (K_Z + Z_eq)\<close> using den_pos1 .
+      show \<open>0 \<le> k * K_Z * (Z - Z_eq)\<close>
+        using num_nn .
+      show \<open>k * K_Z * (Z - Z_eq) \<le> k * K_Z * (Z - Z_eq)\<close>
+        by simp
+      show \<open>0 < (K_Z + Z) * (K_Z + Z_eq)\<close>
+        using den_pos1 .
       show \<open>(K_Z + Z) * (K_Z + Z_eq) \<le> (K_Z + Z_alarm) * (K_Z + Z_eq)\<close>
         using denom_bound .
     qed
@@ -1647,12 +1840,13 @@ proof -
       using P_bound 
       by linarith
     have b:
-      \<open>\<alpha> * (\<mu>_max * S_hi / (K_S + S_hi)) * X_hi - k * Z / (K_Z + Z)
-       \<le> k * Z_eq / (K_Z + Z_eq) - k * Z / (K_Z + Z)\<close>
-      using eq_cond by linarith
+      \<open>\<alpha> * (\<mu>_max * S_hi / (K_S + S_hi)) * X_hi - k * Z / (K_Z + Z) \<le>
+       k * Z_eq / (K_Z + Z_eq) - k * Z / (K_Z + Z)\<close>
+      using eq_cond
+      by linarith
     have c:
-      \<open>k * Z_eq / (K_Z + Z_eq) - k * Z / (K_Z + Z)
-       = - (k * Z / (K_Z + Z) - k * Z_eq / (K_Z + Z_eq))\<close>
+      \<open>k * Z_eq / (K_Z + Z_eq) - k * Z / (K_Z + Z) =
+       - (k * Z / (K_Z + Z) - k * Z_eq / (K_Z + Z_eq))\<close>
       by simp
     have d:
       \<open>- (k * Z / (K_Z + Z) - k * Z_eq / (K_Z + Z_eq)) \<le>
@@ -1682,11 +1876,14 @@ proof -
     \<open>\<delta>_Z * (Z - Z_eq)^2 / 2 \<le>
      k * K_Z * (Z - Z_eq)^2 / ((K_Z + Z_alarm) * (K_Z + Z_eq))\<close>
   proof -
-    have sq_nn: \<open>0 \<le> (Z - Z_eq)^2\<close> by simp
+    have sq_nn: \<open>0 \<le> (Z - Z_eq)^2\<close>
+      by simp
     have step_assoc: \<open>\<delta>_Z * ((K_Z + Z_alarm) * (K_Z + Z_eq)) \<le> 2 * (k * K_Z)\<close>
-      using lower_band_decay_rate by (simp add: mult.assoc)
+      using lower_band_decay_rate
+      by (simp add: mult.assoc)
     have step_div: \<open>\<delta>_Z \<le> 2 * (k * K_Z) / ((K_Z + Z_alarm) * (K_Z + Z_eq))\<close>
-      using step_assoc den_pos2 by (simp add: pos_le_divide_eq)
+      using step_assoc den_pos2
+      by (simp add: pos_le_divide_eq)
     have step_half: \<open>\<delta>_Z / 2 \<le> k * K_Z / ((K_Z + Z_alarm) * (K_Z + Z_eq))\<close>
       using step_div 
       by linarith
@@ -1732,8 +1929,8 @@ lemma V_Z_Lie_decrease_full:
   assumes Z_above_eq:  \<open>Z_eq \<le> vec_nth v iZ\<close>
   assumes Z_below_max: \<open>vec_nth v iZ \<le> Z_max\<close>
   shows \<open>(vec_nth v iZ - Z_eq) *
-         (\<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX
-          - k * vec_nth v iZ / (K_Z + vec_nth v iZ)) \<le>
+         (\<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX -
+          k * vec_nth v iZ / (K_Z + vec_nth v iZ)) \<le>
           -\<delta>_Z * V_Z v\<close>
 proof (cases \<open>Z_alarm \<le> vec_nth v iZ\<close>)
   case True
@@ -1741,7 +1938,8 @@ proof (cases \<open>Z_alarm \<le> vec_nth v iZ\<close>)
     using V_Z_Lie_decrease[OF S_bounds X_bounds True Z_below_max] .
 next
   case False
-  hence \<open>vec_nth v iZ \<le> Z_alarm\<close> by linarith
+  hence \<open>vec_nth v iZ \<le> Z_alarm\<close>
+    by linarith
   show ?thesis
     using V_Z_Lie_decrease_lower[OF S_bounds X_bounds Z_above_eq \<open>vec_nth v iZ \<le> Z_alarm\<close>]
     by blast
@@ -1775,9 +1973,9 @@ proof -
   have rate_bound:
     \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow>
          (vec_nth (y \<tau>) iZ - Z_eq) *
-         (\<alpha> * (\<mu>_max * vec_nth (y \<tau>) iS / (K_S + vec_nth (y \<tau>) iS))
-            * vec_nth (y \<tau>) iX
-          - k * vec_nth (y \<tau>) iZ / (K_Z + vec_nth (y \<tau>) iZ)) \<le>
+         (\<alpha> * (\<mu>_max * vec_nth (y \<tau>) iS / (K_S + vec_nth (y \<tau>) iS)) *
+            vec_nth (y \<tau>) iX -
+          k * vec_nth (y \<tau>) iZ / (K_Z + vec_nth (y \<tau>) iZ)) \<le>
           -\<delta>_Z * V_Z (y \<tau>)\<close>
   proof -
     fix \<tau> assume \<tau>_in: \<open>\<tau> \<in> {0..T}\<close>
@@ -1787,9 +1985,9 @@ proof -
       \<open>Z_eq \<le> vec_nth (y \<tau>) iZ\<close> \<open>vec_nth (y \<tau>) iZ \<le> Z_max\<close>
       by auto
     show \<open>(vec_nth (y \<tau>) iZ - Z_eq) *
-          (\<alpha> * (\<mu>_max * vec_nth (y \<tau>) iS / (K_S + vec_nth (y \<tau>) iS))
-             * vec_nth (y \<tau>) iX
-           - k * vec_nth (y \<tau>) iZ / (K_Z + vec_nth (y \<tau>) iZ)) \<le>
+          (\<alpha> * (\<mu>_max * vec_nth (y \<tau>) iS / (K_S + vec_nth (y \<tau>) iS)) *
+             vec_nth (y \<tau>) iX -
+           k * vec_nth (y \<tau>) iZ / (K_Z + vec_nth (y \<tau>) iZ)) \<le>
            -\<delta>_Z * V_Z (y \<tau>)\<close>
       using V_Z_Lie_decrease V_Z_Lie_decrease_lower 
              \<open>S_lo \<le> vec_nth (y \<tau>) iS \<and> vec_nth (y \<tau>) iS \<le> S_hi \<and> X_lo \<le> vec_nth (y \<tau>) iX \<and> 
@@ -1805,7 +2003,7 @@ proof -
                      \<exists>DV. (V_Z has_derivative DV) (at (y \<tau>)) \<and>
                           DV (metabolic_field iS iX iZ u \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> (y \<tau>)) \<le> 
                           -\<delta>_Z * V_Z (y \<tau>)\<close>
-   using V_Z_induct_step[OF rate_bound] .
+    using V_Z_induct_step[OF rate_bound] .
 
   show ?thesis
     using REACH_lyapunov[where V = V_Z and \<delta> = \<delta>_Z,
@@ -1835,7 +2033,8 @@ lemma V_Z_reaches_sublevel_full:
 proof -
   have \<open>V_Z (y T) \<le> V_Z (y 0) * exp (-\<delta>_Z * T)\<close>
     using V_Z_exponential_decay_full[OF y_sol T_nn u_val state_in_full_band] .
-  also have \<open>... \<le> L\<close> using L_reached .
+  also have \<open>... \<le> L\<close>
+    using L_reached .
   finally show ?thesis .
 qed
 
@@ -1867,7 +2066,8 @@ proof -
        S_lo \<le> vec_nth (y \<tau>) iS \<and> vec_nth (y \<tau>) iS \<le> S_hi \<and>
        X_lo \<le> vec_nth (y \<tau>) iX \<and> vec_nth (y \<tau>) iX \<le> X_hi \<and>
        Z_eq \<le> vec_nth (y \<tau>) iZ \<and> vec_nth (y \<tau>) iZ \<le> Z_max\<close>
-    using substrate_controlled biomass_controlled Z_in_full_band by auto
+    using substrate_controlled biomass_controlled Z_in_full_band
+    by auto
   show ?thesis
     using V_Z_reaches_sublevel_full[OF y_sol T_nn u_feed_pos
                                        state_combined sufficient_time] .
@@ -1945,14 +2145,28 @@ proof -
       else vec_nth (y 0) i)\<close>
   define active :: \<open>'a set\<close> where \<open>active = {iZ}\<close>
 
-  have lo_S: \<open>lo iS = S_lo\<close> unfolding lo_def by simp
-  have lo_X: \<open>lo iX = X_lo\<close> unfolding lo_def by simp
-  have lo_Z: \<open>lo iZ = 0\<close>    unfolding lo_def by simp
-  have hi_S: \<open>hi iS = S_hi\<close> unfolding hi_def by simp
-  have hi_X: \<open>hi iX = X_hi\<close> unfolding hi_def by simp
-  have hi_Z: \<open>hi iZ = Z_max\<close> unfolding hi_def by simp
+  have lo_S: \<open>lo iS = S_lo\<close>
+    unfolding lo_def
+    by simp
+  have lo_X: \<open>lo iX = X_lo\<close>
+    unfolding lo_def
+    by simp
+  have lo_Z: \<open>lo iZ = 0\<close>
+    unfolding lo_def
+    by simp
+  have hi_S: \<open>hi iS = S_hi\<close>
+    unfolding hi_def
+    by simp
+  have hi_X: \<open>hi iX = X_hi\<close>
+    unfolding hi_def
+    by simp
+  have hi_Z: \<open>hi iZ = Z_max\<close>
+    unfolding hi_def
+    by simp
 
-  have T_in: \<open>0 \<in> {0..T}\<close> using T_nn by simp
+  have T_in: \<open>0 \<in> {0..T}\<close>
+    using T_nn
+    by simp
 
   \<comment> \<open>Initial-value condition.\<close>
   have iv: \<open>\<And>i. lo i \<le> vec_nth (y 0) i \<and> vec_nth (y 0) i \<le> hi i\<close>
@@ -1974,11 +2188,13 @@ proof -
         by simp
     next
       case Z
-      thus ?thesis using Z0_nn Z0_below_max lo_Z hi_Z 
+      thus ?thesis
+        using Z0_nn Z0_below_max lo_Z hi_Z
         by simp
     next
       case other
-      thus ?thesis unfolding lo_def hi_def 
+      thus ?thesis
+        unfolding lo_def hi_def
         by simp
     qed
   qed
@@ -1988,12 +2204,14 @@ proof -
   proof -
     fix i :: 'a
     assume \<open>i \<in> active\<close>
-    hence i_2: \<open>i = iZ\<close> unfolding active_def 
+    hence i_2: \<open>i = iZ\<close>
+      unfolding active_def
       by simp
     have \<open>0 < Z_max\<close>
       using Z_eq_pos Z_alarm_above_eq Z_max_above_alarm 
       by linarith
-    thus \<open>lo i < hi i\<close> using i_2 lo_Z hi_Z 
+    thus \<open>lo i < hi i\<close>
+      using i_2 lo_Z hi_Z
       by simp
   qed
 
@@ -2036,7 +2254,9 @@ proof -
 
     have uptake_pos: \<open>0 < \<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)\<close>
     proof -
-      have \<open>0 < K_S + vec_nth v iS\<close> using K_S_plus_S_pos S_nn by simp
+      have \<open>0 < K_S + vec_nth v iS\<close>
+        using K_S_plus_S_pos S_nn
+        by simp
       thus ?thesis 
         using \<mu>_max_pos S_pos 
         by simp
@@ -2086,8 +2306,8 @@ proof -
 
     have field_eq:
       \<open>vec_nth (metabolic_field iS iX iZ u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) iZ =
-       \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX
-       - k * Z_max / (K_Z + Z_max)\<close>
+       \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX -
+       k * Z_max / (K_Z + Z_max)\<close>
       unfolding metabolic_field_def 
       using Z_at_max
       by (simp add: fun_upd_def)
@@ -2108,7 +2328,9 @@ proof -
         thus ?thesis 
           by simp
       qed
-      have \<alpha>_nn: \<open>0 \<le> \<alpha>\<close> using \<alpha>_pos by simp
+      have \<alpha>_nn: \<open>0 \<le> \<alpha>\<close>
+        using \<alpha>_pos
+        by simp
       have \<alpha>_up_mono:
         \<open>\<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) \<le>
           \<alpha> * (\<mu>_max * S_hi / (K_S + S_hi))\<close>
@@ -2158,8 +2380,8 @@ proof -
       have \<open>0 < \<delta>_Z * (Z_alarm - Z_eq)\<close>
         using \<delta>_Z_pos Z_alarm_above_eq 
         by simp
-      hence \<open>\<alpha> * (\<mu>_max * S_hi / (K_S + S_hi)) * X_hi
-             < k * Z_alarm / (K_Z + Z_alarm)\<close>
+      hence \<open>\<alpha> * (\<mu>_max * S_hi / (K_S + S_hi)) * X_hi <
+             k * Z_alarm / (K_Z + Z_alarm)\<close>
         using degradation_exceeds_production 
         by linarith
       thus ?thesis 
@@ -2271,8 +2493,14 @@ proof -
       have y_const: \<open>vec_nth (y \<tau>) i = vec_nth (y 0) i\<close>
         using has_vderiv_on_zero_imp_constant[OF yi_vderiv T_nn \<tau>_in] .
 
-      have lo_eq: \<open>lo i = vec_nth (y 0) i\<close> using other unfolding lo_def by simp
-      have hi_eq: \<open>hi i = vec_nth (y 0) i\<close> using other unfolding hi_def by simp
+      have lo_eq: \<open>lo i = vec_nth (y 0) i\<close>
+        using other
+        unfolding lo_def
+        by simp
+      have hi_eq: \<open>hi i = vec_nth (y 0) i\<close>
+        using other
+        unfolding hi_def
+        by simp
       show ?thesis 
         using y_const lo_eq hi_eq 
         by simp
@@ -2334,14 +2562,28 @@ proof -
       else vec_nth (y 0) i)\<close>
   define active :: \<open>'a set\<close> where \<open>active = {iZ}\<close>
 
-  have lo_S: \<open>lo iS = S_lo\<close>  unfolding lo_def by simp
-  have lo_X: \<open>lo iX = X_lo\<close>  unfolding lo_def by simp
-  have lo_Z: \<open>lo iZ = Z_min\<close> unfolding lo_def by simp
-  have hi_S: \<open>hi iS = S_hi\<close>  unfolding hi_def by simp
-  have hi_X: \<open>hi iX = X_hi\<close>  unfolding hi_def by simp
-  have hi_Z: \<open>hi iZ = Z_max\<close> unfolding hi_def by simp
+  have lo_S: \<open>lo iS = S_lo\<close>
+    unfolding lo_def
+    by simp
+  have lo_X: \<open>lo iX = X_lo\<close>
+    unfolding lo_def
+    by simp
+  have lo_Z: \<open>lo iZ = Z_min\<close>
+    unfolding lo_def
+    by simp
+  have hi_S: \<open>hi iS = S_hi\<close>
+    unfolding hi_def
+    by simp
+  have hi_X: \<open>hi iX = X_hi\<close>
+    unfolding hi_def
+    by simp
+  have hi_Z: \<open>hi iZ = Z_max\<close>
+    unfolding hi_def
+    by simp
 
-  have T_in: \<open>0 \<in> {0..T}\<close> using T_nn by simp
+  have T_in: \<open>0 \<in> {0..T}\<close>
+    using T_nn
+    by simp
 
   \<comment> \<open>iv obligation: initial state in [lo, hi] componentwise.\<close>
   have iv: \<open>\<And>i. lo i \<le> vec_nth (y 0) i \<and> vec_nth (y 0) i \<le> hi i\<close>
@@ -2353,16 +2595,24 @@ proof -
     thus \<open>lo i \<le> vec_nth (y 0) i \<and> vec_nth (y 0) i \<le> hi i\<close>
     proof cases
       case S
-      thus ?thesis using substrate_controlled[OF T_in] lo_S hi_S by simp
+      thus ?thesis
+        using substrate_controlled[OF T_in] lo_S hi_S
+        by simp
     next
       case X
-      thus ?thesis using biomass_controlled[OF T_in] lo_X hi_X by simp
+      thus ?thesis
+        using biomass_controlled[OF T_in] lo_X hi_X
+        by simp
     next
       case Z
-      thus ?thesis using Z0_above_min Z0_below_max lo_Z hi_Z by simp
+      thus ?thesis
+        using Z0_above_min Z0_below_max lo_Z hi_Z
+        by simp
     next
       case other
-      thus ?thesis unfolding lo_def hi_def by simp
+      thus ?thesis
+        unfolding lo_def hi_def
+        by simp
     qed
   qed
 
@@ -2439,8 +2689,8 @@ proof -
         \<open>\<mu>_max * S_lo / (K_S + S_lo) \<le>
          \<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)\<close>
       proof -
-        have \<open>(\<mu>_max * S_lo / (K_S + S_lo)) * 1
-              \<le> (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * 1\<close>
+        have \<open>(\<mu>_max * S_lo / (K_S + S_lo)) * 1 \<le>
+              (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * 1\<close>
           using monod_uptake_monotone_in_S[OF S_lo_nn S_in(1), of 1] 
           by simp
         thus ?thesis 
@@ -2526,8 +2776,8 @@ proof -
 
     have field_eq:
       \<open>vec_nth (metabolic_field iS iX iZ u_feed \<mu>_max K_S Y d K_I \<alpha> k K_Z \<tau> v) iZ =
-       \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX
-       - k * Z_max / (K_Z + Z_max)\<close>
+       \<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) * vec_nth v iX -
+       k * Z_max / (K_Z + Z_max)\<close>
       unfolding metabolic_field_def 
       using Z_at_max
       by (simp add: fun_upd_def)
@@ -2547,7 +2797,9 @@ proof -
         thus ?thesis 
           by simp
       qed
-      have \<alpha>_nn: \<open>0 \<le> \<alpha>\<close> using \<alpha>_pos by simp
+      have \<alpha>_nn: \<open>0 \<le> \<alpha>\<close>
+        using \<alpha>_pos
+        by simp
       have \<alpha>_up_mono:
         \<open>\<alpha> * (\<mu>_max * vec_nth v iS / (K_S + vec_nth v iS)) \<le>
          \<alpha> * (\<mu>_max * S_hi / (K_S + S_hi))\<close>
@@ -2593,11 +2845,13 @@ proof -
       \<open>0 < k * Z_max / (K_Z + Z_max) - \<alpha> * (\<mu>_max * S_hi / (K_S + S_hi)) * X_hi\<close>
     proof -
       have \<open>0 < \<delta>_Z * (Z_alarm - Z_eq)\<close>
-        using \<delta>_Z_pos Z_alarm_above_eq by simp
+        using \<delta>_Z_pos Z_alarm_above_eq
+        by simp
       hence \<open>\<alpha> * (\<mu>_max * S_hi / (K_S + S_hi)) * X_hi < k * Z_alarm / (K_Z + Z_alarm)\<close>
         using degradation_exceeds_production 
         by linarith
-      thus ?thesis using deg_mono 
+      thus ?thesis
+        using deg_mono
         by linarith
     qed
 
@@ -2626,7 +2880,8 @@ proof -
 
     consider (S) \<open>i = iS\<close> | (X) \<open>i = iX\<close>
       | (other) \<open>i \<noteq> iS\<close> \<open>i \<noteq> iX\<close> \<open>i \<noteq> iZ\<close>
-      using i_ne_2 by blast
+      using i_ne_2
+      by blast
     thus \<open>lo i \<le> vec_nth (y \<tau>) i \<and> vec_nth (y \<tau>) i \<le> hi i\<close>
     proof cases
       case S
@@ -2703,8 +2958,14 @@ proof -
       have y_const: \<open>vec_nth (y \<tau>) i = vec_nth (y 0) i\<close>
         using has_vderiv_on_zero_imp_constant[OF yi_vderiv T_nn \<tau>_in] .
 
-      have lo_eq: \<open>lo i = vec_nth (y 0) i\<close> using other unfolding lo_def by simp
-      have hi_eq: \<open>hi i = vec_nth (y 0) i\<close> using other unfolding hi_def by simp
+      have lo_eq: \<open>lo i = vec_nth (y 0) i\<close>
+        using other
+        unfolding lo_def
+        by simp
+      have hi_eq: \<open>hi i = vec_nth (y 0) i\<close>
+        using other
+        unfolding hi_def
+        by simp
       show ?thesis 
         using y_const lo_eq hi_eq 
         by simp
@@ -2806,7 +3067,9 @@ theorem Z_exits_alarm_zone:
   assumes T_cl_def: \<open>T_cl = (2 / \<delta>_Z) * ln ((Z_max - Z_eq) / (Z_alarm - Z_eq))\<close>
   shows \<open>\<exists>\<tau>\<in>{0..T_cl}. vec_nth (y \<tau>) iZ \<le> Z_alarm\<close>
 proof -
-  have eq_pos:   \<open>0 < Z_alarm - Z_eq\<close> using Z_alarm_above_eq by simp
+  have eq_pos:   \<open>0 < Z_alarm - Z_eq\<close>
+    using Z_alarm_above_eq
+    by simp
   have max_pos:  \<open>0 < Z_max - Z_eq\<close>
     using Z_eq_pos Z_alarm_above_eq Z_max_above_alarm 
     by linarith
@@ -2862,7 +3125,8 @@ proof -
     have \<open>(vec_nth (y 0) iZ - Z_eq)^2 \<le> (Z_max - Z_eq)^2\<close>
       using z0_diff_nn z0_diff_le 
       by (simp add: power_mono)
-    thus ?thesis unfolding V_Z_def 
+    thus ?thesis
+      unfolding V_Z_def
       by simp
   qed
 
@@ -2881,7 +3145,8 @@ proof -
                ((Z_alarm - Z_eq) / (Z_max - Z_eq))^2\<close>
       using ratio_pos max_pos eq_pos
       by (simp add: powr_minus_divide power2_eq_square field_simps)
-    show ?thesis using step1 step2 step3 
+    show ?thesis
+      using step1 step2 step3
       by simp
   qed   
 
@@ -2890,7 +3155,8 @@ proof -
   proof -
     have exp_nn: \<open>0 \<le> exp (-\<delta>_Z * T_cl)\<close> 
       by simp
-    have v0_nn: \<open>0 \<le> V_Z (y 0)\<close> using V_Z_nn .
+    have v0_nn: \<open>0 \<le> V_Z (y 0)\<close>
+      using V_Z_nn .
     have prod_bound: \<open>V_Z (y 0) * exp (-\<delta>_Z * T_cl) \<le>
                       ((Z_max - Z_eq)^2 / 2) * exp (-\<delta>_Z * T_cl)\<close>
       using V_Z0_bound exp_nn mult_right_mono 
@@ -3042,7 +3308,8 @@ proof -
       \<tau>_e_in:    \<open>\<tau>_e \<in> {0..T_clear}\<close> and
       \<tau>_e_alarm: \<open>vec_nth (y \<tau>_e) iZ \<le> Z_alarm\<close>
       by blast
-    have \<open>\<tau>_e \<in> {0..T}\<close> using \<tau>_e_in T_clear_le_T 
+    have \<open>\<tau>_e \<in> {0..T}\<close>
+      using \<tau>_e_in T_clear_le_T
       by auto
     thus ?thesis 
       using \<tau>_e_alarm 
@@ -3133,15 +3400,33 @@ interpretation met_baseline:
 proof
   show \<open>iS \<noteq> iX\<close> \<open>iS \<noteq> iZ\<close> \<open>iX \<noteq> iZ\<close>
     by (simp_all add: coords)
-  show \<open>0 < \<mu>_max_val\<close> unfolding \<mu>_max_val_def by simp
-  show \<open>0 < K_S_val\<close> unfolding K_S_val_def by simp
-  show \<open>0 < Y_val\<close> unfolding Y_val_def by simp
-  show \<open>Y_val \<le> 1\<close> unfolding Y_val_def by simp
-  show \<open>0 < d_val\<close> unfolding d_val_def by simp
-  show \<open>0 < K_I_val\<close> unfolding K_I_val_def by simp
-  show \<open>0 < \<alpha>_met_val\<close> unfolding \<alpha>_met_val_def by simp
-  show \<open>0 < k_met_val\<close> unfolding k_met_val_def by simp
-  show \<open>0 < K_Z_val\<close> unfolding K_Z_val_def by simp
+  show \<open>0 < \<mu>_max_val\<close>
+    unfolding \<mu>_max_val_def
+    by simp
+  show \<open>0 < K_S_val\<close>
+    unfolding K_S_val_def
+    by simp
+  show \<open>0 < Y_val\<close>
+    unfolding Y_val_def
+    by simp
+  show \<open>Y_val \<le> 1\<close>
+    unfolding Y_val_def
+    by simp
+  show \<open>0 < d_val\<close>
+    unfolding d_val_def
+    by simp
+  show \<open>0 < K_I_val\<close>
+    unfolding K_I_val_def
+    by simp
+  show \<open>0 < \<alpha>_met_val\<close>
+    unfolding \<alpha>_met_val_def
+    by simp
+  show \<open>0 < k_met_val\<close>
+    unfolding k_met_val_def
+    by simp
+  show \<open>0 < K_Z_val\<close>
+    unfolding K_Z_val_def
+    by simp
 qed
 
 
@@ -3153,24 +3438,42 @@ interpretation met_z_clearance:
     S_lo_val S_hi_val X_lo_val X_hi_val
     Z_eq_val Z_alarm_val Z_max_met_val Z_min_val \<delta>_Z_val
 proof
-  show \<open>0 < S_lo_val\<close> unfolding S_lo_val_def by simp
-  show \<open>S_lo_val < S_hi_val\<close> unfolding S_lo_val_def S_hi_val_def by simp
-  show \<open>0 < X_lo_val\<close> unfolding X_lo_val_def by simp
-  show \<open>X_lo_val < X_hi_val\<close> unfolding X_lo_val_def X_hi_val_def by simp
-  show \<open>0 < Z_eq_val\<close> unfolding Z_eq_val_def by simp
-  show \<open>Z_eq_val < Z_alarm_val\<close> unfolding Z_eq_val_def Z_alarm_val_def by simp
+  show \<open>0 < S_lo_val\<close>
+    unfolding S_lo_val_def
+    by simp
+  show \<open>S_lo_val < S_hi_val\<close>
+    unfolding S_lo_val_def S_hi_val_def
+    by simp
+  show \<open>0 < X_lo_val\<close>
+    unfolding X_lo_val_def
+    by simp
+  show \<open>X_lo_val < X_hi_val\<close>
+    unfolding X_lo_val_def X_hi_val_def
+    by simp
+  show \<open>0 < Z_eq_val\<close>
+    unfolding Z_eq_val_def
+    by simp
+  show \<open>Z_eq_val < Z_alarm_val\<close>
+    unfolding Z_eq_val_def Z_alarm_val_def
+    by simp
   show \<open>Z_alarm_val \<le> Z_max_met_val\<close> 
-    unfolding Z_alarm_val_def Z_max_met_val_def by simp
+    unfolding Z_alarm_val_def Z_max_met_val_def
+    by simp
 
   (* Band-width: 7/4 - 1/4 = 3/2 \<le> 2\<sqdot>(1 - 1/4) = 3/2 *)
   show \<open>Z_max_met_val - Z_eq_val \<le> 2 * (Z_alarm_val - Z_eq_val)\<close>
-    unfolding Z_max_met_val_def Z_eq_val_def Z_alarm_val_def by simp
+    unfolding Z_max_met_val_def Z_eq_val_def Z_alarm_val_def
+    by simp
   show \<open>0 < Z_min_val\<close>
-    unfolding Z_min_val_def by simp
+    unfolding Z_min_val_def
+    by simp
 
   show \<open>Z_min_val \<le> Z_eq_val\<close>
-    unfolding Z_min_val_def Z_eq_val_def by simp
-  show \<open>0 < \<delta>_Z_val\<close> unfolding \<delta>_Z_val_def by simp
+    unfolding Z_min_val_def Z_eq_val_def
+    by simp
+  show \<open>0 < \<delta>_Z_val\<close>
+    unfolding \<delta>_Z_val_def
+    by simp
 
   (* Design gap: \<delta>_Z \<sqdot> (Z_alarm - Z_eq) = 1/2 \<sqdot> 3/4 = 3/8
      Degradation at Z_alarm: k \<sqdot> 1/(1+1) = 1/2
@@ -3179,8 +3482,8 @@ proof
      Gap: 1/2 - 1/15 = 13/30
      Check: 3/8 \<le> 13/30, i.e. 90 \<le> 104 *)
   show \<open>\<delta>_Z_val * (Z_alarm_val - Z_eq_val) \<le> 
-        k_met_val * Z_alarm_val / (K_Z_val + Z_alarm_val) 
-        - \<alpha>_met_val * (\<mu>_max_val * S_hi_val / (K_S_val + S_hi_val)) * X_hi_val\<close>
+        k_met_val * Z_alarm_val / (K_Z_val + Z_alarm_val) -
+        \<alpha>_met_val * (\<mu>_max_val * S_hi_val / (K_S_val + S_hi_val)) * X_hi_val\<close>
     unfolding \<delta>_Z_val_def Z_alarm_val_def Z_eq_val_def 
               k_met_val_def K_Z_val_def \<alpha>_met_val_def \<mu>_max_val_def 
               S_hi_val_def K_S_val_def X_hi_val_def
@@ -3191,8 +3494,8 @@ proof
         f(Z\_eq) = k*Z\_eq/(K\_Z+Z\_eq)
                 = 1*(1/4)/(5/4)       =  1/5
         Check: 1/15 <= 1/5  i.e. 3/15 >= 1/15\<close>
-  show \<open>\<alpha>_met_val * (\<mu>_max_val * S_hi_val / (K_S_val + S_hi_val)) * X_hi_val
-        \<le> k_met_val * Z_eq_val / (K_Z_val + Z_eq_val)\<close>
+  show \<open>\<alpha>_met_val * (\<mu>_max_val * S_hi_val / (K_S_val + S_hi_val)) * X_hi_val \<le>
+        k_met_val * Z_eq_val / (K_Z_val + Z_eq_val)\<close>
     unfolding \<alpha>_met_val_def \<mu>_max_val_def S_hi_val_def K_S_val_def X_hi_val_def
               k_met_val_def Z_eq_val_def K_Z_val_def
     by (simp add: field_simps)
@@ -3201,8 +3504,8 @@ proof
         LHS = delta\_Z*(K\_Z+Z\_alarm)*(K\_Z+Z\_eq) = 1/2 * 2 * 5/4 = 5/4
         RHS = 2*k*K\_Z                         = 2*1*1     = 2
         Check: 5/4 <= 2\<close>
-  show \<open>\<delta>_Z_val * (K_Z_val + Z_alarm_val) * (K_Z_val + Z_eq_val)
-        \<le> 2 * k_met_val * K_Z_val\<close>
+  show \<open>\<delta>_Z_val * (K_Z_val + Z_alarm_val) * (K_Z_val + Z_eq_val) \<le>
+        2 * k_met_val * K_Z_val\<close>
     unfolding \<delta>_Z_val_def K_Z_val_def Z_alarm_val_def Z_eq_val_def k_met_val_def
     by simp
  \<comment> \<open>Lower production exceeds degradation at Z\_min.
@@ -3211,8 +3514,8 @@ proof
             = (1/10)*(1/2)*(1/10)/(1/2+1/10)*(1/10)
             = (1/10)*(1/12)*(1/10) = 1/1200
         Check: 1/2001 < 1/1200 <=> 1200 < 2001\<close>
-  show \<open>k_met_val * Z_min_val / (K_Z_val + Z_min_val)
-        < \<alpha>_met_val * (\<mu>_max_val * S_lo_val / (K_S_val + S_lo_val)) * X_lo_val\<close>
+  show \<open>k_met_val * Z_min_val / (K_Z_val + Z_min_val) <
+        \<alpha>_met_val * (\<mu>_max_val * S_lo_val / (K_S_val + S_lo_val)) * X_lo_val\<close>
     unfolding k_met_val_def Z_min_val_def K_Z_val_def
               \<alpha>_met_val_def \<mu>_max_val_def S_lo_val_def K_S_val_def X_lo_val_def
     by (simp add: field_simps)

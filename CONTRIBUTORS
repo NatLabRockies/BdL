@@ -9,5 +9,8 @@ Authors
 Contributors
   Claude            AI assistant by Anthropic
                     Helped with the port from Isabelle2025-2 to
-                    Isabelle2026 and with maintaining the text blocks
-                    in the .thy files and the README.
+                    Isabelle2026, with maintaining the text blocks
+                    in the .thy files and the README, and with
+                    refactoring the Isabelle code to follow the
+                    project's code conventions (no change to
+                    specifications or semantics).

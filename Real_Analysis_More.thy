@@ -70,11 +70,13 @@ proof -
   
   (* Step 1: y has vderiv on [0..b] *)
   have y_vderiv: \<open>(y has_vderiv_on (\<lambda>\<tau>. f \<tau> (y \<tau>))) {0..b}\<close>
-    using y_sol by (simp add: solves_ode_def)
+    using y_sol
+    by (simp add: solves_ode_def)
 
   (* Step 2: The shift map s \<mapsto> t0 + s sends [0..(b-t0)] into [0..b] *)
   have shift_image: \<open>(\<lambda>s. t0 + s) ` {0..(b - t0)} \<subseteq> {0..b}\<close>
-    using t0_in t0_le_b by auto
+    using t0_in t0_le_b
+    by auto
 
   (* Step 3: Apply the chain rule via has_vderiv_on_compose.
      The "inner" function is (\<lambda>s. t0 + s), with derivative 1.
@@ -101,7 +103,8 @@ proof -
   qed
   (* Step 4: Use time-invariance to rewrite f (t0 + s) as f s *)
   have rewrite: \<open>\<And>s. f (t0 + s) (y (t0 + s)) = f s (?y' s)\<close>
-    using time_inv by simp
+    using time_inv
+    by simp
 
   have y'_vderiv': \<open>(?y' has_vderiv_on (\<lambda>s. f s (?y' s))) {0..(b - t0)}\<close>
     using y'_vderiv rewrite
@@ -109,9 +112,11 @@ proof -
 
   (* Step 5: Membership in Q *)
   have y_in_Q: \<open>\<And>\<tau>. \<tau> \<in> {0..b} \<Longrightarrow> y \<tau> \<in> Q\<close>
-    using y_sol by (simp add: solves_ode_def Pi_def)
+    using y_sol
+    by (simp add: solves_ode_def Pi_def)
   have y'_in_Q: \<open>\<And>s. s \<in> {0..(b - t0)} \<Longrightarrow> ?y' s \<in> Q\<close>
-    using y_in_Q t0_in t0_le_b by auto
+    using y_in_Q t0_in t0_le_b
+    by auto
 
   (* Step 6: Reassemble solves_ode *)
   show ?thesis
@@ -133,38 +138,49 @@ proof -
     using g_deriv
     by (simp add: has_field_derivative_iff)
   (* From the limit, extract \<epsilon> = l (a specific choice) *)
-  hence \<open>\<forall>\<epsilon> > 0. \<exists>d > 0. \<forall>y \<in> {\<tau>..s}. y \<noteq> \<tau> \<and> dist y \<tau> < d 
-                          \<longrightarrow> dist ((g y - g \<tau>)/(y - \<tau>)) l < \<epsilon>\<close>
+  hence \<open>\<forall>\<epsilon> > 0. \<exists>d > 0. \<forall>y \<in> {\<tau>..s}. y \<noteq> \<tau> \<and> dist y \<tau> < d \<longrightarrow>
+                          dist ((g y - g \<tau>)/(y - \<tau>)) l < \<epsilon>\<close>
     by (simp add: tendsto_iff eventually_at)
   from this[rule_format, OF l_pos]
   obtain d0 where d0_pos: \<open>0 < d0\<close> and
-    d0_prop: \<open>\<forall>y \<in> {\<tau>..s}. y \<noteq> \<tau> \<and> dist y \<tau> < d0 
-                  \<longrightarrow> dist ((g y - g \<tau>)/(y - \<tau>)) l < l\<close>
+    d0_prop: \<open>\<forall>y \<in> {\<tau>..s}. y \<noteq> \<tau> \<and> dist y \<tau> < d0 \<longrightarrow>
+                  dist ((g y - g \<tau>)/(y - \<tau>)) l < l\<close>
     by blast
   (* Choose d = min(d0, s - \<tau>) so that \<tau> + h stays in (\<tau>, s] \<subseteq> {\<tau>..s} *)
   define d where \<open>d = min d0 (s - \<tau>)\<close>
   have d_pos: \<open>0 < d\<close>
-    using d0_pos \<tau>_lt_s by (simp add: d_def)
+    using d0_pos \<tau>_lt_s
+    by (simp add: d_def)
   show ?thesis
   proof (intro exI[where x=d] conjI allI impI)
-    show \<open>0 < d\<close> using d_pos .
+    show \<open>0 < d\<close>
+      using d_pos .
     fix h assume h: \<open>0 < h \<and> h < d\<close>
-    hence h_pos: \<open>0 < h\<close> and h_lt_d: \<open>h < d\<close> by auto
+    hence h_pos: \<open>0 < h\<close> and h_lt_d: \<open>h < d\<close>
+      by auto
     let ?y = \<open>\<tau> + h\<close>
     have y_in: \<open>?y \<in> {\<tau>..s}\<close>
-      using h_pos h_lt_d by (auto simp: d_def)
-    have y_ne: \<open>?y \<noteq> \<tau>\<close> using h_pos by simp
+      using h_pos h_lt_d
+      by (auto simp: d_def)
+    have y_ne: \<open>?y \<noteq> \<tau>\<close>
+      using h_pos
+      by simp
     have y_dist: \<open>dist ?y \<tau> < d0\<close>
-      using h_lt_d d_def dist_real_def h by auto
+      using h_lt_d d_def dist_real_def h
+      by auto
     have \<open>dist ((g ?y - g \<tau>)/(?y - \<tau>)) l < l\<close>
-      using d0_prop y_in y_ne y_dist by blast
+      using d0_prop y_in y_ne y_dist
+      by blast
     hence \<open>(g ?y - g \<tau>)/(?y - \<tau>) > 0\<close>
       using dist_real_def 
       by force
-    moreover have \<open>?y - \<tau> > 0\<close> using h_pos by simp
+    moreover have \<open>?y - \<tau> > 0\<close>
+      using h_pos
+      by simp
     ultimately have \<open>g ?y - g \<tau> > 0\<close>
       by (simp add: zero_less_divide_iff)
-    thus \<open>g \<tau> < g ?y\<close> by simp
+    thus \<open>g \<tau> < g ?y\<close>
+      by simp
   qed
 qed
 
@@ -187,7 +203,8 @@ lemma deriv_pos_right_strict:
   shows \<open>\<exists>d > 0. \<forall>h. 0 < h \<and> h < d \<longrightarrow> g \<tau> < g (\<tau> + h)\<close>
 proof -
   have \<open>DERIV g \<tau> :> l\<close>
-    using g_deriv by simp
+    using g_deriv
+    by simp
   thus ?thesis
     using DERIV_pos_inc_right[OF _ l_pos]
     by blast
@@ -201,13 +218,16 @@ lemma has_vderiv_on_zero_imp_constant:
   shows \<open>\<phi> \<tau> = \<phi> 0\<close>
 proof -
   have \<open>\<And>x. x \<in> {0..t} \<Longrightarrow> (\<phi> has_derivative (\<lambda>h. h *\<^sub>R 0)) (at x within {0..t})\<close>
-    using vderiv unfolding has_vderiv_on_def has_vector_derivative_def by blast
+    using vderiv
+    unfolding has_vderiv_on_def has_vector_derivative_def
+    by blast
   hence \<open>\<And>x. x \<in> {0..t} \<Longrightarrow> (\<phi> has_derivative (\<lambda>h. 0)) (at x within {0..t})\<close>
     by simp
-    hence \<open>\<exists>c. \<forall>x\<in>{0..t}. \<phi> x = c\<close>
+  hence \<open>\<exists>c. \<forall>x\<in>{0..t}. \<phi> x = c\<close>
     by (rule has_derivative_zero_constant[rotated]) auto
   thus ?thesis
-    using \<tau>_in t_nn by fastforce
+    using \<tau>_in t_nn
+    by fastforce
 qed
 
 subsection \<open>Vector component derivatives\<close>
@@ -264,7 +284,9 @@ proof -
     unfolding has_field_derivative_def has_vector_derivative_def
     by (simp add: mult_commute_abs)
   from scalar_comp_vec_nth_has_derivative
-  show ?thesis using fderiv by blast
+  show ?thesis
+    using fderiv
+    by blast
 qed
 
 text \<open>Helper: derivative of the sum of two components.\<close>
@@ -294,7 +316,8 @@ proof -
     by (rule has_derivative_vec_nth)
   moreover have \<open>((\<lambda>v. 2 * vec_nth v j) has_derivative (\<lambda>w. 2 * vec_nth w j)) (at p)\<close>
     using has_derivative_vec_nth[where x=j]
-    using has_derivative_mult_right by blast
+    using has_derivative_mult_right
+    by blast
   ultimately show ?thesis
     by (intro has_derivative_add)
 qed
@@ -336,26 +359,30 @@ lemma hill_repressive_scalar_has_derivative_general:
   shows \<open>((\<lambda>y. \<alpha> / (1 + y^n)) has_field_derivative 
           (- \<alpha> * real n * x^(n-1) / (1 + x^n)^2)) (at x)\<close>
 proof -
-  have denom_nz: \<open>1 + x^n \<noteq> 0\<close> using denom_pos by simp
+  have denom_nz: \<open>1 + x^n \<noteq> 0\<close>
+    using denom_pos
+    by simp
 
   have pow_deriv: \<open>((\<lambda>y. y^n) has_field_derivative (real n * x^(n-1))) (at x)\<close>
     by (simp add: DERIV_pow)
 
   have denom_deriv: \<open>((\<lambda>y. 1 + y^n) has_field_derivative (real n * x^(n-1))) (at x)\<close>
     using pow_deriv DERIV_const[where k=1]
-    using DERIV_add by fastforce
+    using DERIV_add
+    by fastforce
 
   have \<open>((\<lambda>y. \<alpha> / (1 + y^n)) has_field_derivative 
          ((0 * (1 + x^n) - \<alpha> * (real n * x^(n-1))) / (1 + x^n)^2)) (at x)\<close>
   proof -
     have \<open>((\<lambda>r. \<alpha> / (1 + r^n)) has_real_derivative 
            (0 * (1 + x^n) - \<alpha> * (real n * x^(n-1))) / ((1 + x^n) * (1 + x^n))) (at x)\<close>
-      using DERIV_const DERIV_divide denom_deriv denom_nz by blast
+      using DERIV_const DERIV_divide denom_deriv denom_nz
+      by blast
     then show ?thesis
       by (simp add: power2_eq_square)
   qed
-  moreover have \<open>(0 * (1 + x^n) - \<alpha> * (real n * x^(n-1))) / (1 + x^n)^2 
-                = - \<alpha> * real n * x^(n-1) / (1 + x^n)^2\<close>
+  moreover have \<open>(0 * (1 + x^n) - \<alpha> * (real n * x^(n-1))) / (1 + x^n)^2 =
+                - \<alpha> * real n * x^(n-1) / (1 + x^n)^2\<close>
     by (simp add: field_simps)
   ultimately show ?thesis 
     by argo
@@ -383,8 +410,8 @@ lemma hill_repressive_vector_has_derivative_general:
   assumes denom_pos: \<open>0 < 1 + (vec_nth p i)^n\<close>
   assumes n_pos: \<open>1 \<le> n\<close>
   shows \<open>((\<lambda>v. \<alpha> / (1 + (vec_nth v i)^n)) has_derivative 
-          (\<lambda>w. (- \<alpha> * real n * (vec_nth p i)^(n-1) / (1 + (vec_nth p i)^n)^2) 
-                * vec_nth w i)) (at p)\<close>
+          (\<lambda>w. (- \<alpha> * real n * (vec_nth p i)^(n-1) / (1 + (vec_nth p i)^n)^2) *
+                vec_nth w i)) (at p)\<close>
 proof -
   have nth_deriv: \<open>((\<lambda>v. vec_nth v i) has_derivative (\<lambda>w. vec_nth w i)) (at p)\<close>
     by (rule has_derivative_vec_nth)
@@ -395,8 +422,8 @@ proof -
     using hill_repressive_scalar_has_frechet_derivative_general[OF denom_pos n_pos] .
 
   have \<open>(((\<lambda>y. \<alpha> / (1 + y^n)) \<circ> (\<lambda>v. vec_nth v i)) has_derivative 
-         ((\<lambda>h. h * (- \<alpha> * real n * (vec_nth p i)^(n-1) / (1 + (vec_nth p i)^n)^2)) 
-          \<circ> (\<lambda>w. vec_nth w i))) (at p)\<close>
+         ((\<lambda>h. h * (- \<alpha> * real n * (vec_nth p i)^(n-1) / (1 + (vec_nth p i)^n)^2)) \<circ>
+          (\<lambda>w. vec_nth w i))) (at p)\<close>
     using has_derivative_compose[OF nth_deriv hill_deriv]
           diff_chain_at hill_deriv nth_deriv 
     by blast
@@ -424,8 +451,12 @@ lemma hill_monotonic_bound_general:
   shows \<open>a / (1 + x_max^n) \<le> a / (1 + x^n) \<and> 
          a / (1 + x^n) \<le> a / (1 + x_min^n)\<close>
 proof -
-  have x_nn: \<open>0 \<le> x\<close> using x_min_nn x_bounds(1) by linarith
-  have x_max_nn: \<open>0 \<le> x_max\<close> using x_nn x_bounds(2) by linarith
+  have x_nn: \<open>0 \<le> x\<close>
+    using x_min_nn x_bounds(1)
+    by linarith
+  have x_max_nn: \<open>0 \<le> x_max\<close>
+    using x_nn x_bounds(2)
+    by linarith
 
   have sq_mono_lo: \<open>x_min^n \<le> x^n\<close>
     using x_min_nn x_bounds(1) n_pos 
@@ -436,9 +467,11 @@ proof -
     by (simp add: power_mono)
 
   have denom_min_le: \<open>1 + x_min^n \<le> 1 + x^n\<close>
-    using sq_mono_lo by simp
+    using sq_mono_lo
+    by simp
   have denom_x_le: \<open>1 + x^n \<le> 1 + x_max^n\<close>
-    using sq_mono_hi by simp
+    using sq_mono_hi
+    by simp
 
   have denom_min_pos: \<open>0 < 1 + x_min^n\<close>
     using x_min_nn n_pos 
@@ -458,7 +491,8 @@ proof -
     using a_pos denom_min_le denom_min_pos denom_x_pos
     by (simp add: frac_le)
 
-  from lower upper show ?thesis by blast
+  from lower upper show ?thesis
+    by blast
 qed
 
 
@@ -497,8 +531,11 @@ corollary hill_repressive_scalar_has_derivative_even:
           (- \<alpha> * real n * x^(n-1) / (1 + x^n)^2)) (at x)\<close>
 proof -
   have \<open>0 < 1 + x^n\<close>
-    using n_even by (simp add: zero_le_even_power add_pos_nonneg)
-  thus ?thesis using hill_repressive_scalar_has_derivative_general n_pos by blast
+    using n_even
+    by (simp add: zero_le_even_power add_pos_nonneg)
+  thus ?thesis
+    using hill_repressive_scalar_has_derivative_general n_pos
+    by blast
 qed
 
 text \<open>hill\_monotonic\_bound as a corollary (case n = 2).\<close>
@@ -574,8 +611,8 @@ proof -
 
   (* Step 3: Chain rule *)
   have \<open>(((\<lambda>y. \<alpha> / (1 + y^n)) \<circ> (\<lambda>v. vec_nth v i)) has_derivative 
-         ((\<lambda>h. h * (- \<alpha> * real n * (vec_nth p i)^(n-1) / (1 + (vec_nth p i)^n)^2)) 
-          \<circ> (\<lambda>w. vec_nth w i))) (at p)\<close>
+         ((\<lambda>h. h * (- \<alpha> * real n * (vec_nth p i)^(n-1) / (1 + (vec_nth p i)^n)^2)) \<circ>
+          (\<lambda>w. vec_nth w i))) (at p)\<close>
     using has_derivative_compose[OF nth_deriv hill_deriv]
           diff_chain_at hill_deriv nth_deriv 
     by blast
@@ -639,6 +676,7 @@ lemma induct_step_from_lie:
 proof -
   fix \<tau> assume h\<tau>: \<open>\<tau> \<in> {0..T}\<close>
   show \<open>\<exists>DV. (V has_derivative DV) (at (y \<tau>)) \<and> DV (f \<tau> (y \<tau>)) \<le> bnd \<tau>\<close>
-    using V_deriv[OF h\<tau>] rate_le[OF h\<tau>] by blast
+    using V_deriv[OF h\<tau>] rate_le[OF h\<tau>]
+    by blast
 qed
 end

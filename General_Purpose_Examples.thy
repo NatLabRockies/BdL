@@ -76,7 +76,8 @@ proof -
 
   (* PROOF OBLIGATION 1.1 (iv): initial condition r0² \<le> x(0)² + y(0)² *)
   have iv_ge: \<open>r0^2 \<le> (vec_nth (y 0) iX)^2 + (vec_nth (y 0) iY)^2\<close>
-    using iv by simp
+    using iv
+    by simp
 
   (* PROOF OBLIGATION 1.2 (induct_step): derivative check Dh(VelVect) \<le> Dg(VelVect) *)
   have induct_step_ge:
@@ -115,7 +116,8 @@ proof -
 
   (* PROOF OBLIGATION 2.1 (iv): initial condition x(0)² + y(0)² \<le> r0² *)
   have iv_le: \<open>(vec_nth (y 0) iX)^2 + (vec_nth (y 0) iY)^2 \<le> r0^2\<close>
-    using iv by simp
+    using iv
+    by simp
 
   (* PROOF OBLIGATION 2.2 (induct_step): derivative check Dh(VelVect) \<le> Dg(VelVect) *)
   have induct_step_le:
@@ -207,10 +209,13 @@ proof -
   proof -
     fix \<tau> :: real and v w :: \<open>(real, 'p) vec\<close>
     assume eq: \<open>\<forall>i. i \<noteq> iG \<longrightarrow> vec_nth v i = vec_nth w i\<close>
-    have v0: \<open>vec_nth v iX = vec_nth w iX\<close> using eq by simp
+    have v0: \<open>vec_nth v iX = vec_nth w iX\<close>
+      using eq
+      by simp
     show \<open>(\<lambda>t v. vec_lambda ((\<lambda>k. 0)(iX := -((vec_nth v iX)::real)))) \<tau> v =
           (\<lambda>t v. vec_lambda ((\<lambda>k. 0)(iX := -((vec_nth v iX)::real)))) \<tau> w\<close>
-      using v0 by (simp add: vec_eq_iff fun_upd_def)
+      using v0
+      by (simp add: vec_eq_iff fun_upd_def)
   qed
 
   (* APPLY DG: obtain a ghost trajectory y satisfying dy/dt = (1/2)\<sqdot>y + 0 *)
@@ -265,8 +270,8 @@ proof -
          \<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
                  ((\<lambda>v. vec_nth v iX * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
                  Dh ((\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(iX := -(vec_nth v iX))) +
-                            vec_lambda ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))
-                 \<le> Dg ((\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(iX := -(vec_nth v iX))) +
+                            vec_lambda ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
+                 Dg ((\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(iX := -(vec_nth v iX))) +
                               vec_lambda ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
   proof -
     fix \<tau> :: real
@@ -274,8 +279,8 @@ proof -
     show \<open>\<exists>Dh Dg. ((\<lambda>v. (1::real)) has_derivative Dh) (at (?z \<tau>)) \<and>
                   ((\<lambda>v. vec_nth v iX * (vec_nth v iG)^2) has_derivative Dg) (at (?z \<tau>)) \<and>
                   Dh ((\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(iX := -(vec_nth v iX))) +
-                             vec_lambda ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))
-                  \<le> Dg ((\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(iX := -(vec_nth v iX))) +
+                             vec_lambda ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>)) \<le>
+                  Dg ((\<lambda>\<tau> v. vec_lambda ((\<lambda>i. 0)(iX := -(vec_nth v iX))) +
                                vec_lambda ((\<lambda>i. 0)(iG := (1/2) * vec_nth v iG + 0))) \<tau> (?z \<tau>))\<close>
       apply (rule exI[where x = \<open>\<lambda>v. 0\<close>])
       apply (rule exI[where x = \<open>\<lambda>v. vec_nth v iX * (vec_nth (?z \<tau>) iG)^2 + 
@@ -296,10 +301,13 @@ proof -
      ========================================================================== *)
   show \<open>0 < vec_nth (x t) iX\<close>
   proof -
-    have z_eq_x: \<open>vec_nth (?z t) iX = vec_nth (x t) iX\<close> by simp
-    have y_sq_nn: \<open>0 \<le> (vec_nth (?z t) iG)^2\<close> by simp
+    have z_eq_x: \<open>vec_nth (?z t) iX = vec_nth (x t) iX\<close>
+      by simp
+    have y_sq_nn: \<open>0 \<le> (vec_nth (?z t) iG)^2\<close>
+      by simp
     have prod_ge_1: \<open>1 \<le> vec_nth (?z t) iX * (vec_nth (?z t) iG)^2\<close>
-      using ineq by simp
+      using ineq
+      by simp
     show ?thesis
       using z_eq_x y_sq_nn prod_ge_1
       apply (cases \<open>vec_nth (x t) iX \<le> 0\<close>) 
