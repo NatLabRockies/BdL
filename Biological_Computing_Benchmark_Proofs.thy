@@ -1770,9 +1770,9 @@ proof -
      
      so both directions hold with the same derivative check.
      
-     We discharge each DI_Vect obligation as a separate `have` statement, 
-     then apply both axiom instances via forward reasoning combined with 
-     antisym in the final show.
+     We discharge each DI_Vect obligation as a separate `have` statement,
+     then apply both instances of the provably verified lemma DI_Vect via
+     forward reasoning combined with antisym in the final show.
      ========================================================================== *)
 
   (* Helper: Fréchet derivative of the sum \<lambda>v. v\<^sub>1+ v\<^sub>2*)
@@ -2415,7 +2415,8 @@ text \<open>
 
   We have:
 \begin{enumerate}
-\item Formalized the Differential Cut (DC) axiom of dDL in Isabelle/HOL
+\item Formalized the Differential Cut (DC) rule of dDL in Isabelle/HOL as a
+  provably verified lemma
 \item Demonstrated DC application on the symmetric toggle switch:
 \begin{itemize}
 \item Used DI to prove the conservation law u(t) - v(t) = c
@@ -2543,10 +2544,11 @@ text \<open>
 
   NON-NEGATIVITY OF v: DIFFERENTIAL INDUCTION WITH A BOUNDARY CONDITION
   (DI\_boundary). Our DI\_Generic (and its vector counterpart DI\_Vect)
-  faithfully formalizes the STANDARD differential induction rule of dDL,
-  which requires the Lie derivative of the candidate invariant to be
-  >= 0 EVERYWHERE ALONG THE TRAJECTORY, not just at the boundary. For
-  the invariant v >= 0, the Lie derivative is:
+  faithfully formalizes, as a provably verified lemma, the STANDARD
+  differential induction rule of dDL, which requires the Lie derivative
+  of the candidate invariant to be >= 0 EVERYWHERE ALONG THE TRAJECTORY,
+  not just at the boundary. For the invariant v >= 0, the Lie derivative
+  is:
 
       d(v - 0)/dt = alpha2/(1+u\textasciicircum{}gamma) - v
 
@@ -3593,7 +3595,7 @@ proof -
        STAGE 3 (algebra): Since u \<sqdot> y\<^sup>2 \<ge> 1 and y\<^sup>2 \<ge> 0, we get u > 0.
      
      Both STAGE 1 (DG) and STAGE 2 (DI) are structured as: each proof obligation is discharged as a 
-     separate `have` statement, and the dDL axiom is applied via forward 
+     separate `have` statement, and the provably verified dDL lemma is applied via forward 
      reasoning at the bottom of each stage.
      ========================================================================== *)
 
@@ -3931,8 +3933,8 @@ proof -
        STAGE 3 (algebra): Since u \<sqdot> y\<^sup>2 \<ge> 1 and y\<^sup>2 \<ge> 0, we get u > 0.
      
      Both STAGE 1 (DG) and STAGE 2 (DI) are structured in the "obligations 
-     on top, axiom on bottom" pattern: each obligation is discharged as a 
-     separate `have` statement, and the dDL axiom is applied via forward 
+     on top, lemma on bottom" pattern: each obligation is discharged as a 
+     separate `have` statement, and the provably verified dDL lemma is applied via forward 
      reasoning at the bottom of each stage.
      ========================================================================== *)
 
@@ -4170,7 +4172,7 @@ proof -
        STAGE 3 (algebra): Since v \<sqdot> y\<^sup>2 \<ge> 1 and y\<^sup>2 \<ge> 0, we get v > 0.
      
      Both STAGE 1 (DG) and STAGE 2 (DI) are structured in the "obligations 
-     on top, axiom on bottom" pattern.
+     on top, lemma on bottom" pattern.
      ========================================================================== *)
 
   define y0 where \<open>y0 = 1 / sqrt (vec_nth (x 0) iV)\<close>
@@ -4406,8 +4408,8 @@ proof -
        STAGE 3 (algebra): Since W \<sqdot> y² \<ge> 1 and y² \<ge> 0, we get W > 0.
      
      Both STAGE 1 (DG) and STAGE 2 (DI) are structured in the "obligations 
-     on top, axiom on bottom" pattern: each obligation is discharged as a 
-     separate `have` statement, and the dDL axiom is applied via forward 
+     on top, lemma on bottom" pattern: each obligation is discharged as a 
+     separate `have` statement, and the provably verified dDL lemma is applied via forward 
      reasoning at the bottom of each stage.
      ========================================================================== *)
 
@@ -4814,7 +4816,7 @@ proof -
      PROOF STRATEGY
      
      This proof uses four applications of DI_Vect, all structured with the 
-     "obligations on top, axiom on bottom" pattern:
+     "obligations on top, lemma on bottom" pattern:
      
        PART A: Prove X(\<tau>) = \<mu>/\<theta> for all \<tau> \<in> [0..t]
          - Apply DI_Vect TWICE (one direction each) to sandwich X(\<tau>) at \<mu>/\<theta>
@@ -5070,7 +5072,7 @@ text \<open>
   |  5 | Antithetic integral feedback | Z1 - Z2 conserved    | DI (setpoint)  |
 
   \textbf{TAKING STOCK: WHAT WE HAVE}\\
-  \textbf{CORE AXIOMS:}\\
+  \textbf{CORE dDL RULES (PROVABLY VERIFIED LEMMAS):}\\
 \begin{itemize}
 \item DI\_Generic, DI\_Vect       (standard differential induction)
 \item DG, DG\_backward, DG\_elim  (differential ghost + derived rules)
@@ -5105,14 +5107,15 @@ text \<open>
 subsection \<open>Benchmark on Programmable Biological Circuit\<close>
 text \<open>
   Programmable Biological Circuit: Correctness of the min(x,y) CRN
-  via DIRECT use of dDL rules (DI\_Vect, DC, DI\_convergence\_rate)
+  via DIRECT use of the provably verified dDL lemmas DI\_Vect, DC and
+  DI\_convergence\_rate
 
   \textbf{BIOLOGICAL CONTEXT}\\
-  This part demonstrates that dDL rules can be used DIRECTLY to reason
-  about the CORRECTNESS of computing chemical reaction networks. We take
-  the min(x,y) CRN of the CRN benchmark, a chemical program whose output
-  [Z] computes the minimum of its two inputs, and prove six correctness
-  properties.
+  This part demonstrates that the provably verified dDL lemmas can be used
+  DIRECTLY to reason about the CORRECTNESS of computing chemical reaction
+  networks. We take the min(x,y) CRN of the CRN benchmark, a chemical
+  program whose output [Z] computes the minimum of its two inputs, and
+  prove six correctness properties.
 
   \textbf{THE CHEMICAL REACTIONS}\\
       X + Y ->(k) Z
@@ -5159,10 +5162,10 @@ text \<open>
   written.
 
   \textbf{HOW WE VERIFY IT}\\
-  Properties 1, 3 and 5 apply a dDL rule directly in the correctness
-  layer (not just transitively through pre-proved invariants); Properties
-  2 and 4 are algebra on the conservation laws, and Property 6 bundles the
-  others:
+  Properties 1, 3 and 5 apply a provably verified dDL lemma directly in
+  the correctness layer (not just transitively through pre-proved
+  invariants); Properties 2 and 4 are algebra on the conservation laws,
+  and Property 6 bundles the others:
 \begin{enumerate}
 \item MONOTONIC PROGRESS (uses DI\_Vect DIRECTLY): a fresh DI\_Vect
   application with the invariant pair (h, g) = (constant Z(0), current
@@ -5173,8 +5176,8 @@ text \<open>
   (each proved with DI\_Vect).
 \item COMMITMENT (uses DC DIRECTLY): PROPERTY 1 gives monotonic progress,
   then DC strengthens the domain by adding the \{v. vec\_nth v iZ >= c\}
-  constraint. This is a direct application of the DC rule in the
-  correctness layer.
+  constraint. This is a direct application of the provably verified DC
+  lemma in the correctness layer.
 \item EQUILIBRIUM CORRECTNESS (algebraic on conservation laws): case
   analysis on X = 0 or Y = 0, with each case discharged by linarith on the
   conservation laws and non-negativity.
@@ -5664,7 +5667,7 @@ text \<open>
      The output Z is bounded above by min(x0, y0)       (PROPERTY 2, DI)
      Once Z reaches a value, it stays                   (PROPERTY 3, DC)
      At any equilibrium, Z = min(x0, y0)                (PROPERTY 4, algebra)
-     For any epsilon > 0, Z reaches within epsilon of min in        (PROPERTY 5, FTC)
+     For any epsilon > 0, Z reaches within epsilon of min in        (PROPERTY 5, DI\_convergence\_rate)
        finite time T(epsilon) = (min(x0,y0) - epsilon - Z(0)) / (k*epsilon\textasciicircum{}2)
 
   PROPERTY 5 closes the gap left by PROPERTY 4: it doesn't just say
@@ -5672,7 +5675,8 @@ text \<open>
   reach within epsilon of the answer within an explicit time bound, for any epsilon".
 
   \textbf{THE PROOF IDEA}\\
-  By contradiction. Suppose Z(T) <= min(x0, y0) - epsilon.
+  The argument below is the one packaged in DI\_convergence\_rate (see
+  TOOLING USED).  By contradiction. Suppose Z(T) <= min(x0, y0) - epsilon.
 
   By monotonicity (PROPERTY 1), Z(tau) <= Z(T) <= min(x0, y0) - epsilon for all
   tau in \{0..T\}.
@@ -5692,11 +5696,18 @@ text \<open>
 
   \textbf{TOOLING USED}\\
 \begin{itemize}
-\item PROPERTY 1 (monotonicity, via DI)
-\item Conservation laws (via DI)
-\item Fundamental theorem of calculus from HOL-Analysis
-\item Integration bounds (integral\_le / integral\_mono)
-\item linarith for the final arithmetic contradiction
+\item DI\_convergence\_rate, the provably verified dDL lemma for finite-time
+  convergence. It carries out the integration argument above (the
+  fundamental theorem of calculus) once and for all; the proof of
+  Property 5 only discharges its premises.
+\item PROPERTY 1 in its general form (crn\_min\_Z\_monotonic\_general, via
+  DI) for the premise below\_final: Z(tau) <= Z(T) for all tau in \{0..T\}.
+\item The conservation laws (crn\_min\_X\_conservation and
+  crn\_min\_Y\_conservation, via DI), restricted to \{0..tau\} with
+  solves\_ode\_subset\_ivl, for the rate bound k*X*Y >= k*epsilon\textasciicircum{}2
+  while Z <= min(x0, y0) - epsilon.
+\item has\_derivative\_vec\_nth for the derivative of the measure
+  v |-> vec\_nth v iZ.
 \end{itemize}
 
   \textbf{WHAT THIS DOES NOT PROVE}\\
@@ -5708,7 +5719,7 @@ text \<open>
 \<close>
 
 
-lemma crn_min_Z_epsilon_convergence_via_axiom:
+lemma crn_min_Z_epsilon_convergence_via_DI_convergence_rate:
   fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
   fixes k x0 y0 \<epsilon> T :: real
   fixes iX iY iZ :: 'p
@@ -5734,7 +5745,7 @@ proof -
   have k_nn: \<open>k \<ge> 0\<close> using k_pos by simp
   have \<delta>_pos: \<open>0 < k * \<epsilon>^2\<close> using k_pos \<epsilon>_pos by simp
 
-  (* Discharge `monotone` via the existing crn_min_Z_monotonic_general *)
+  (* Discharge `below_final` via the existing crn_min_Z_monotonic_general *)
   have below_final: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow> vec_nth (y \<tau>) iZ \<le> vec_nth (y T) iZ\<close>
     using crn_min_Z_monotonic_general[OF coords y_sol _ _ _ k_nn X_nn_along Y_nn_along]
     by auto
@@ -5775,9 +5786,9 @@ proof -
       using X_ge Y_ge k_pos \<epsilon>_pos
       by (simp add: mult_mono' power2_eq_square)
   qed
-  \<comment> \<open>`induct\_step`:  The measure is the projection v |-> v\$2, whose
+  \<comment> \<open>`induct\_step`:  The measure is the projection v |-> vec\_nth v iZ, whose
       Frechet derivative is itself (has\_derivative\_vec\_nth); the Lie
-      derivative is then just the field's 2-component, namely k*X*Y.\<close>
+      derivative is then just the field's iZ-component, namely k*X*Y.\<close>
   have induct_step: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow>
       \<exists> Dquant. ((\<lambda>v::(real,'p) vec. vec_nth v iZ) has_derivative Dquant) (at (y \<tau>)) \<and>
                 (vec_nth (y \<tau>) iZ \<le> min x0 y0 - \<epsilon> \<longrightarrow>
@@ -5885,7 +5896,7 @@ proof (intro conjI impI)
 next
   (* PROPERTY 5: \<epsilon>-convergence *)
   show \<open>vec_nth (y T) iZ > min x0 y0 - \<epsilon>\<close>
-    using crn_min_Z_epsilon_convergence_via_axiom[OF coords 
+    using crn_min_Z_epsilon_convergence_via_DI_convergence_rate[OF coords 
             y_sol iv_x iv_y T_nn k_pos \<epsilon>_pos X_nn_along Y_nn_along T_large] .
 qed
 text \<open>
@@ -5975,7 +5986,7 @@ next
 next
   (* PROPERTY 5: \<epsilon>-convergence *)
   show \<open>vec_nth (y T) iZ > min x0 y0 - \<epsilon>\<close>
-    using crn_min_Z_epsilon_convergence_via_axiom[OF coords 
+    using crn_min_Z_epsilon_convergence_via_DI_convergence_rate[OF coords 
             y_sol iv_x iv_y T_nn k_pos \<epsilon>_pos X_nn_along Y_nn_along T_large] .
 qed
 

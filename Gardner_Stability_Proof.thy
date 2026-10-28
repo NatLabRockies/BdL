@@ -34,7 +34,11 @@ text \<open>
       V(y(tau)) = u(tau)\textasciicircum{}2 = exp(-4tau)
       (V o y)'(tau) = 2*u(tau)*u'(tau) = 2*u(tau)*(-2*u(tau)) = -4*u(tau)\textasciicircum{}2 = -4*V(y(tau))
 
-  So the rate bound phi(tau) <= -delta*V(y(tau)) holds with delta = 4.
+  REACH\_lyapunov asks for this decay pointwise, as a Lie derivative: at
+  every point y(tau) of the trajectory, V has a derivative DV with
+  DV(f(y(tau))) <= -delta*V(y(tau)).  Here DV is the linear map
+  w |-> 2*u*(vec\_nth w iU), so DV(f(v)) = 2*u*(-2*u) = -4*V(v), and the
+  condition holds with delta = 4.
 
   REACH\_lyapunov then gives:
 
@@ -45,10 +49,12 @@ text \<open>
   PURPOSE
   This sanity check validates two things:
 \begin{enumerate}
-\item The REACH\_lyapunov axiom's obligations (ODE, T\_nn, delta\_pos, V\_vderiv,
-  V\_nn, rate\_proportional) are ergonomic to discharge in a concrete
-  setting.  Each obligation becomes a named `have` statement in the
-  proof, following the "obligations on top, axiom on bottom" template.
+\item The premises of the provably verified lemma REACH\_lyapunov (ODE,
+  T\_nn and induct\_step) are ergonomic to discharge in a concrete
+  setting.  ODE and T\_nn are the assumptions y\_sol and T\_nn of the
+  sanity check; induct\_step, the pointwise decay condition, becomes a
+  named `have` statement in the proof, following the "obligations on top,
+  lemma on bottom" template.
 \item The obligation shapes generalize to higher-dimensional cases.  The
   same template will be used for the Gardner toggle switch proof, just
   with a 2D state space, a time-varying field, and a quadratic
@@ -76,15 +82,15 @@ proof -
      PROOF STRATEGY: Apply REACH_lyapunov with the following instantiation:
      
        V     = \<lambda>v. (vec_nth v iU)^2      (Lyapunov function: squared component)
-       \<phi>     = \<lambda>\<tau>. -4 * (vec_nth (y \<tau>) iU)^2   (time derivative of V \<circ> y)
        \<delta>     = 4                         (exponential decay rate)
      
      Then REACH_lyapunov concludes V(y(T)) \<le> V(y(0)) \<sqdot> exp(-4\<sqdot>T).
      Since V(y(0)) = (vec_nth (y 0) iU)^2 = 1^2 = 1 from `iv`, the 
      right-hand side simplifies to exp(-4\<sqdot>T), giving the goal.
      
-     Each of REACH_lyapunov's six proof obligations is discharged as a named 
-     `have` statement below, in the order the axiom expects them.
+     REACH_lyapunov has three premises: ODE and T_nn are the assumptions
+     y_sol and T_nn, and induct_step, the pointwise decay condition, is
+     discharged as a named `have` statement below.
      ========================================================================== *)
 
   (* ==========================================================================
@@ -96,51 +102,11 @@ proof -
      ========================================================================== *)
 
   (* ==========================================================================
-     PROOF OBLIGATION 3 (\<delta>_pos): \<delta> = 4 > 0, trivial.
+     PROOF OBLIGATION 3 (induct_step): at every \<tau> \<in> [0..T], V has a derivative DV
+     at y(\<tau>) with DV(f(y(\<tau>))) \<le> -4 \<sqdot> V(y(\<tau>)).  The helper V_deriv gives
+     DV(w) = 2 \<sqdot> u \<sqdot> (vec_nth w iU); at the field value f(y(\<tau>)), whose iU
+     component is -2 \<sqdot> u, this is 2 \<sqdot> u \<sqdot> (-2 \<sqdot> u) = -4 \<sqdot> u^2.
      ========================================================================== *)
-  have \<delta>_pos: \<open>(0::real) < 4\<close> by simp
-
-  (* ==========================================================================
-     PROOF OBLIGATION 4 (V_vderiv): The composition (V \<circ> y)(\<tau>) = (vec_nth (y \<tau>) iU)^2 
-     has time derivative \<phi>(\<tau>) = -4 \<sqdot> (vec_nth (y \<tau>) iU)^2 on {0..T}.
-     
-     Derivation: (V \<circ> y)'(\<tau>) = 2 \<sqdot> vec_nth (y \<tau>) iU \<sqdot> (vec_nth (y \<tau>) iU)'
-     The time derivative of vec_nth (y \<tau>) iU is the component at iU of the 
-     field at y(\<tau>), which by the ODE is -2 \<sqdot> vec_nth (y \<tau>) iU.  
-     Therefore (V \<circ> y)'(\<tau>) = 2 \<sqdot> u \<sqdot> (-2 \<sqdot> u) = -4 \<sqdot> u^2.
-     
-     The Isabelle mechanics: we extract the vderiv of vec_nth (y \<tau>) iU from 
-     y_sol, then apply the chain rule via derivative_eq_intros on 
-     has_derivative.
-     ========================================================================== *)
- have u_vderiv: \<open>((\<lambda>\<tau>. vec_nth (y \<tau>) iU) has_vderiv_on 
-                   (\<lambda>\<tau>. -2 * vec_nth (y \<tau>) iU)) {0..T}\<close>
-  proof -
-    have y_vderiv: \<open>(y has_vderiv_on 
-                     (\<lambda>\<tau>. vec_lambda ((\<lambda>k. 0)(iU := -2 * vec_nth (y \<tau>) iU)))) {0..T}\<close>
-      using y_sol by (simp add: solves_ode_def)
-    have proj_deriv: \<open>\<And>p. ((\<lambda>v. vec_nth v iU) has_derivative (\<lambda>v. vec_nth v iU)) 
-                          (at p within UNIV)\<close>
-      by (rule has_derivative_vec_nth)
-    show ?thesis
-      using y_vderiv
-      unfolding has_vderiv_on_def has_vector_derivative_def
-    proof (clarify, goal_cases)
-      case (1 \<tau>)
-      have y_at_\<tau>: \<open>(y has_derivative 
-                     (\<lambda>x. x *\<^sub>R vec_lambda ((\<lambda>k. 0)(iU := -2 * vec_nth (y \<tau>) iU)))) 
-                    (at \<tau> within {0..T})\<close>
-        using 1 by simp
-      have composed: \<open>((\<lambda>\<tau>'. vec_nth (y \<tau>') iU) has_derivative 
-                         (\<lambda>x. vec_nth (x *\<^sub>R vec_lambda ((\<lambda>k. 0)(iU := -2 * vec_nth (y \<tau>) iU))) iU)) 
-                       (at \<tau> within {0..T})\<close>
-        using has_derivative_compose[OF y_at_\<tau> proj_deriv] 
-        by simp
-      show ?case
-        using composed 
-        by (simp add: fun_upd_def)
-    qed
-  qed
 
   \<comment> \<open>Pointwise derivative of V = (lambda v. (vec\_nth v iU)\textasciicircum{}2) at a state p:
       the linear map w |-> 2 * (vec\_nth p iU) * (vec\_nth w iU).\<close>
