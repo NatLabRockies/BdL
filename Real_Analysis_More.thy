@@ -40,7 +40,7 @@ lemma solves_ode_subset_ivl:
             solves_ode_on_subset)
 
 text \<open>
-  HELPER: Time-shift of a solution to a time-invariant ODE
+  \textbf{HELPER: Time-shift of a solution to a time-invariant ODE}\\
   GRN: Gene Regulatory Network.
   If y solves the ODE on [a..b] and the vector field is time-invariant
   (i.e., f tau v depends only on v, not on tau), then the shifted trajectory
@@ -52,9 +52,10 @@ text \<open>
   trajectory by t1 and then apply existing invariant lemmas (which are
   stated for [0..t]) to the shifted trajectory.
 
-  TIME-INVARIANCE: most CRN/GRN ODEs in our development have the form
+  \textbf{TIME-INVARIANCE}\\
+  Most CRN/GRN ODEs in our development have the form
   lambda t v. <expression in v alone>, with no dependence on t. The hypothesis
-  `time\_inv` captures this property.
+  \texttt{time\_inv} captures this property.
 \<close>
 
 lemma solves_ode_shift:
@@ -185,13 +186,16 @@ proof -
 qed
 
 text \<open>
-  Part 1: Auxiliary lemma -- strict positive derivative implies right neighborhood
+  \textbf{Part 1: Auxiliary lemma -- strict positive derivative implies right neighborhood}\\
 
   This is the key real-analysis fact: if g'(tau*) > 0, then g is strictly
   greater than g(tau*) on a right neighborhood of tau*.
 
   HOL provides DERIV\_left\_inc which states:
-    DERIV f x :> l ==> 0 < l ==> EX d > 0. ALL h > 0. h < d --> f(x) < f(x + h)
+\begin{verbatim}
+    DERIV f x :> l ==> 0 < l ==>
+      EX d > 0. ALL h > 0. h < d --> f(x) < f(x + h)
+\end{verbatim}
 
   We restate it in the modern has\_real\_derivative form for convenience.
 \<close>
@@ -232,8 +236,8 @@ qed
 
 subsection \<open>Vector component derivatives\<close>
 text \<open>
-   Generic chain rule: scalar function composed with vector
-   component extraction.
+   \textbf{Generic chain rule: scalar function composed with vector
+   component extraction.}\\
 
    This is the abstract pattern behind component\_sq\_has\_derivative
    and all the Hill vector derivative lemmas.  Any differentiable
@@ -263,8 +267,8 @@ qed
 
 
 text \<open>
-   Corollary of scalar\_comp\_vec\_nth\_has\_derivative:
-   component\_sq\_has\_derivative from the general lemma.
+   \textbf{Corollary of scalar\_comp\_vec\_nth\_has\_derivative:
+   component\_sq\_has\_derivative from the general lemma.}\\
 
    textbook: f(x) = x\textasciicircum{}2, f'(x) = 2x.
    Our formalism:
@@ -324,7 +328,7 @@ qed
 
 subsection \<open>Hill function calculus\<close>
 text \<open>
-   Generalized Hill function calculus.
+   \textbf{Generalized Hill function calculus.}\\
 
    These four lemmas generalize the existing Hill derivative and
    monotonicity lemmas.  The key insight: the only property of
@@ -335,7 +339,7 @@ text \<open>
 
 subsubsection \<open>Scalar field derivative, general version\<close>
 text \<open>
-  Hill function derivatives for EVEN Hill coefficients
+  \textbf{Hill function derivatives for EVEN Hill coefficients}\\
 
   The existing hill\_repressive\_scalar\_has\_derivative requires x >= 0 to
   ensure 1 + x\textasciicircum{}n > 0. For the unconditional Gardner theorem, we need
@@ -435,7 +439,7 @@ qed
 subsubsection \<open>Monotonicity bound, general version for arbitrary n\<close>
 
 text \<open>
-   Hill-function monotonicity helper.
+   \textbf{Hill-function monotonicity helper.}\\
 
    For a > 0 and 0 <= x\_min <= x <= x\_max, 1 <= n, the Hill-style expression
    a / (1 + x\textasciicircum{}n) is bounded above by a / (1 + x\_min\textasciicircum{}n) and below
@@ -497,7 +501,7 @@ qed
 
 
 text \<open>
-   Corollary proofs: existing lemmas from general versions
+   \textbf{Corollary proofs: existing lemmas from general versions}\\
 
    These show how the existing special-case lemmas follow from
    the general versions.
@@ -552,10 +556,10 @@ corollary hill_monotonic_bound:
 
 
 text \<open>
-          Convert to has\_derivative form (Fr\'{e}chet derivative)
+  \textbf{Convert to has\_derivative form (Fr\'{e}chet derivative)}\\
 
-  DI\_Vect uses `has\_derivative` (Fr\'{e}chet) rather than `has\_field\_derivative`.
-  We use `has\_field\_derivative\_imp\_has\_derivative` to bridge.
+  DI\_Vect uses \texttt{has\_derivative} (Fr\'{e}chet) rather than \texttt{has\_field\_derivative}.
+  We use \texttt{has\_field\_derivative\_imp\_has\_derivative} to bridge.
 
   For real-valued functions of a real variable, the Fr\'{e}chet derivative
   Df at x is the linear map (lambda h. h * f'(x)).
@@ -573,17 +577,23 @@ lemma hill_repressive_scalar_has_frechet_derivative:
   by (metis (full_types) has_field_derivative_imp_has_derivative mult_commute_abs)
 
 text \<open>
-       Vector version
+  \textbf{Vector version}\\
 
   For DI\_Vect we need the function over vectors:
-    H\_i(v) = alpha / (1 + (vec\_nth v i)\textasciicircum{}n)
+\begin{verbatim}
+    H_i(v) = alpha / (1 + (vec_nth v i)^n)
+\end{verbatim}
 
-  Strategy: compose the scalar Hill function with `(lambda v. vec\_nth v i)`.
+  Strategy: compose the scalar Hill function with \texttt{(lambda v. vec\_nth v i)}.
 
   The chain rule gives us:
-    DH\_i(v)(w) = (-alpha * n * (vec\_nth v i)\textasciicircum{}\{n-1\} / (1 + (vec\_nth v i)\textasciicircum{}n)\textasciicircum{}2) * vec\_nth w i
+\begin{verbatim}
+    DH_i(v)(w) =
+      (-alpha * n * (vec_nth v i)^{n-1} / (1 + (vec_nth v i)^n)^2) *
+      vec_nth w i
+\end{verbatim}
 
-  i.e., the derivative is a linear functional on increment vectors `w`,
+  i.e., the derivative is a linear functional on increment vectors \texttt{w},
   which extracts the i-th component and multiplies by the scalar Hill
   derivative evaluated at vec\_nth v i.
 \<close>

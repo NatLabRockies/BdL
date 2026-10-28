@@ -109,8 +109,8 @@ proof -
     by linarith
 qed
 
-text \<open>Domain-aware @\{thm DI\_Generic\} inspired by textbook differential induction \cite{Platzer2018}.  The induction step may assume
-  @\{term \<open>y tau in Q\<close>\}; the conclusion additionally yields @\{term \<open>y t in Q\<close>\}.\<close>
+text \<open>Domain-aware @{thm [source] DI_Generic} inspired by textbook differential induction \cite{Platzer2018}.  The induction step may assume
+  @{term \<open>y \<tau> \<in> Q\<close>}; the conclusion additionally yields @{term \<open>y t \<in> Q\<close>}.\<close>
 
 lemma DI_Generic_dom:
   assumes iv: \<open>0 \<le> invar (y 0)\<close>
@@ -190,10 +190,10 @@ qed
 
 
 text \<open>
-  Spatial form; a drop-in companion to @\{thm DI\_Vect\}, identical except
-  that the induction step may assume @\{term \<open>y tau in Q\<close>\} and the
+  Spatial form; a drop-in companion to @{thm [source] DI_Vect}, identical except
+  that the induction step may assume @{term \<open>y \<tau> \<in> Q\<close>} and the
   conclusion additionally yields @{term \<open>y t \<in> Q\<close>}.  Proved by reduction
-  to @{thm DI_Vect}.\<close>
+  to @{thm [source] DI_Vect}.\<close>
 
 lemma DI_Vect_dom:
   fixes y :: \<open>real \<Rightarrow> (real, 'a:: finite) vec\<close>
@@ -214,7 +214,7 @@ proof -
   have y_in_Q: \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow> y \<tau> \<in> Q\<close>
     using ODE 
     by (auto simp add: solves_ode_def Pi_iff)
-  \<comment> \<open>Discharge the `y tau in Q` premise pointwise, recovering DI\_Vect's step.\<close>
+  \<comment> \<open>Discharge the \texttt{y tau in Q} premise pointwise, recovering DI\_Vect's step.\<close>
   have step': \<open>\<And>\<tau>. \<tau> \<in> {0..t} \<Longrightarrow>
             \<exists> Dh Dg. (h has_derivative Dh) (at (y \<tau>)) \<and>
                      (g has_derivative Dg) (at (y \<tau>)) \<and>
@@ -234,11 +234,11 @@ qed
 
 text \<open>
   Velocity form; explicit time-derivative
-  functions @\{term g'\} and @\{term h'\} supplied as @\{const has\_vderiv\_on\}
+  functions @{term g'} and @{term h'} supplied as @{const has_vderiv_on}
   facts.  The induction step compares the composed time-derivatives
-  @\{term \<open>h' tau (y tau) <= g' tau (y tau)\<close>\} under the domain hypothesis
+  @{term \<open>h' \<tau> (y \<tau>) \<le> g' \<tau> (y \<tau>)\<close>} under the domain hypothesis
   @{term \<open>y \<tau> \<in> Q\<close>}.  Proved directly via the fundamental theorem of
-  calculus, mirroring the second half of @{thm DI_Generic}.\<close>
+  calculus, mirroring the second half of @{thm [source] DI_Generic}.\<close>
 
 lemma DI_Vect_dom_vderiv:
   fixes y :: \<open>real \<Rightarrow> (real, 'a:: finite) vec\<close>
@@ -265,7 +265,7 @@ proof -
                    (\<lambda>s. g' s (y s) - h' s (y s))) {0..t}\<close>
     using has_vderiv_on_diff[OF g'_vderiv h'_vderiv] .
 
-  \<comment> \<open>Pointwise nonnegativity of the gap's derivative, using `y tau in Q`.\<close>
+  \<comment> \<open>Pointwise nonnegativity of the gap's derivative, using \texttt{y tau in Q}.\<close>
   have deriv_nn: \<open>\<And>s. s \<in> {0..t} \<Longrightarrow> 0 \<le> g' s (y s) - h' s (y s)\<close>
     using induct_step y_in_Q 
     by simp
@@ -698,14 +698,16 @@ proof -
 qed
 subsection \<open>Differential Cut (DC)\<close>
 text \<open>
-  Part 1: The Differential Cut (DC)
+  \textbf{Part 1: The Differential Cut (DC)}\\
 
-  DC IN dDL THEORY
+  \textbf{DC IN dDL THEORY}\\
   In Platzer's Differential Dynamic Logic, the DC axiom is:
 
-      [x' = f(x) \& Q]C    [x' = f(x) \& (Q and C)]P
+\begin{verbatim}
+      [x' = f(x) & Q]C    [x' = f(x) & (Q and C)]P
       --------------------------------------------
-                  [x' = f(x) \& Q]P
+                    [x' = f(x) & Q]P
+\end{verbatim}
 
   To prove P is invariant in domain Q, it suffices to first
   prove some intermediate cut-formula C is invariant in Q, and then
@@ -717,7 +719,7 @@ text \<open>
   STRENGTHEN our knowledge with previously-proved invariants, the
   local check often becomes tractable.
 
-  Example use case (Toggle Switch):
+  \textbf{Example use case (Toggle Switch):}\\
 \begin{itemize}
 \item Want to prove: u(t) <= M  (concentration bounded above)
 \item DI fails directly: when u is small, du/dt may not be <= 0
@@ -730,7 +732,7 @@ text \<open>
 \end{itemize}
 
   \textbf{ISABELLE FORMALIZATION}\\
-  Our DC lemma simply restricts the domain constraint of `solves\_ode`
+  Our DC lemma simply restricts the domain constraint of \texttt{solves\_ode}
   given that the trajectory already satisfies the cut-formula at every
   point in the time interval.
 \<close>
@@ -766,7 +768,7 @@ qed
 subsection \<open>DI boundary\<close>
 
 text \<open>
-  DI\_boundary: Boundary-Aware Differential Induction.\\
+  \textbf{DI\_boundary: Boundary-Aware Differential Induction.}\\
 
   \textbf{RESEARCH CONTRIBUTION}\\
   This file formalizes a STRENGTHENED variant of differential induction
@@ -783,27 +785,29 @@ text \<open>
   \textbf{EXAMPLE OF THE LIMITATION}\\
   Consider the gene-regulatory ODE:
 
-      du/dt = alpha / (1 + v\textasciicircum{}beta) - u
+\begin{verbatim}
+      du/dt = alpha / (1 + v^beta) - u
+\end{verbatim}
 
   We want to prove that u(0) >= 0 implies u(t) >= 0 for all t.
 
 \begin{itemize}
-\item The Lie derivative of `u` is `alpha/(1+v\textasciicircum{}beta) - u`.
+\item The Lie derivative of \texttt{u} is \texttt{alpha/(1+v\textasciicircum{}beta) - u}.
 \item This is NOT globally non-negative: when u is large, it becomes negative.
 \item Hence DI\_Vect cannot discharge the inductive step over the whole
   trajectory.
-\item However, the invariant `u >= 0` can only fail by `u` crossing zero.
-  At u = 0, the Lie derivative reduces to `alpha/(1+v\textasciicircum{}beta) >= 0`, so the
+\item However, the invariant \texttt{u >= 0} can only fail by \texttt{u} crossing zero.
+  At u = 0, the Lie derivative reduces to \texttt{alpha/(1+v\textasciicircum{}beta) >= 0}, so the
   boundary is repelling.
 \end{itemize}
 
-  This is exactly the situation `DI\_boundary` is designed to handle.
+  This is exactly the situation \texttt{DI\_boundary} is designed to handle.
 
   \textbf{THE KEY INSIGHT}\\
   A continuous function cannot change sign without passing through zero.
-  Hence, to prove `g(tau) >= 0` is invariant, it suffices to ensure that
-  whenever `g(tau) = 0`, the trajectory cannot "exit" into negative values.
-  This is enforced by requiring the time-derivative of `g` to be STRICTLY
+  Hence, to prove \texttt{g(tau) >= 0} is invariant, it suffices to ensure that
+  whenever \texttt{g(tau) = 0}, the trajectory cannot "exit" into negative values.
+  This is enforced by requiring the time-derivative of \texttt{g} to be STRICTLY
   POSITIVE at every boundary point: strictly positive derivatives
   guarantee a right-neighborhood where the function is strictly positive.
 
@@ -823,9 +827,9 @@ text \<open>
 \<close>
 
 text \<open>
-  Part 2: The main DI\_boundary lemma
+  \textbf{Part 2: The main DI\_boundary lemma}\\
 
-  STATEMENT:
+  \textbf{STATEMENT:}\\
     Given an ODE solution y : [0,t] -> vec and a Fr\'{e}chet-differentiable
     certificate function invar : vec -> real, whose non-negative region
     \{v. 0 <= invar v\} is the invariant to be established, IF:
@@ -1252,8 +1256,8 @@ proof (rule ccontr)
   qed
 qed
 
-text \<open>Domain-aware @\{thm DI\_boundary\}.  Only the strict-inward boundary
-  condition is gated by @\{term \<open>y tau in Q\<close>\}; the differentiability side
+text \<open>Domain-aware @{thm [source] DI_boundary}.  Only the strict-inward boundary
+  condition is gated by @{term \<open>y \<tau> \<in> Q\<close>}; the differentiability side
   condition stays global.\<close>
 
 lemma DI_boundary_dom:
@@ -1292,8 +1296,8 @@ qed
 subsection \<open>DI Convergence Rate\<close>
 text \<open>
   Finite-time convergence by accumulated rate.  A non-decreasing
-  differentiable function whose rate is at least @\{term delta\} while it stays
-  below the target @\{term \<open>Ltarget\<close>\} must exceed that target once
+  differentiable function whose rate is at least @{term \<delta>} while it stays
+  below the target @{term Ltarget} must exceed that target once
   @{term T} outruns the initial gap.  Positivity of @{term \<epsilon>} is not
   required: @{term \<epsilon>} enters only through the combination
   @{term \<open>Ltarget\<close>}.\<close>
@@ -1376,7 +1380,7 @@ proof (rule ccontr)
 qed
 
 text \<open>
-  DI\_convergence\_rate: Finite-Time Convergence Axiom
+  \textbf{DI\_convergence\_rate: Finite-Time Convergence Axiom}\\
 
   \textbf{RESEARCH CONTRIBUTION}\\
   This subsection formalizes a NEW dDL axiom for finite-time convergence of
@@ -1424,7 +1428,11 @@ text \<open>
   quant(y(tau)) <= Ltarget for all tau in [0..T]. By the rate hypothesis,
   the time derivative is >= delta throughout [0..T]. By FTC,
 
-    quant(y(T)) - quant(y(0)) = (integral over [0..T] of d/dtau quant(y(tau))) >= delta*T.
+\begin{verbatim}
+    quant(y(T)) - quant(y(0))
+      = (integral over [0..T] of d/dtau quant(y(tau)))
+      >= delta*T.
+\end{verbatim}
 
   So quant(y(T)) >= quant(y(0)) + delta*T > L - epsilon (using T > (Ltarget-quant(y(0)))/delta).
   Contradiction.
@@ -1534,8 +1542,8 @@ proof -
 qed
 
 
-text \<open>Domain-aware @\{thm DI\_convergence\_rate\}.  The differential obligation
-  may assume @\{term \<open>y tau in Q\<close>\}; the conclusion additionally yields
+text \<open>Domain-aware @{thm [source] DI_convergence_rate}.  The differential obligation
+  may assume @{term \<open>y \<tau> \<in> Q\<close>}; the conclusion additionally yields
   @{term \<open>y T \<in> Q\<close>}.  Monotonicity stays ungated, matching the treatment of
   background regularity conditions in the other @{text \<open>_dom\<close>} siblings.\<close>
 
@@ -1578,23 +1586,26 @@ text \<open>
   To apply DI\_convergence\_rate to a specific computing CRN:
 
 \begin{enumerate}
-\item Identify the progress measure `quant` (typically a single vector
+\item Identify the progress measure \texttt{quant} (typically a single vector
   component)
-\item Identify the target `Ltarget` (the value the CRN computes, less any
+\item Identify the target \texttt{Ltarget} (the value the CRN computes, less any
   margin the application wants)
-\item Identify the rate `delta` (depends on the ODE and on that margin)
+\item Identify the rate \texttt{delta} (depends on the ODE and on that margin)
 \item Provide:
-  - The ODE solution
-  - `below\_final`: the measure never exceeds its final value on [0,T]
+\begin{itemize}
+\item The ODE solution
+\item \texttt{below\_final}: the measure never exceeds its final value on [0,T]
   (often a separate lemma using DI\_Vect)
-  - `induct\_step`: at each trajectory point, the measure is
+\item \texttt{induct\_step}: at each trajectory point, the measure is
   differentiable and, WHILE it remains below the target, its Lie
   derivative is at least delta.  The composed time-derivative is NOT
   supplied - the rule derives it from the ODE by the chain rule.
-  - `T\_large`: T outruns the initial gap.
+\item \texttt{T\_large}: T outruns the initial gap.
+\end{itemize}
 \end{enumerate}
 
-  EXAMPLE: For min(x,y) with ODE d[Z]/dt = k*X*Y, with margin epsilon:
+  \textbf{EXAMPLE}\\
+  For min(x,y) with ODE d[Z]/dt = k*X*Y, with margin epsilon:
 \begin{itemize}
 \item quant   = vec\_nth v 2  (Z component)
 \item Ltarget = min(x0, y0) - epsilon
@@ -1604,7 +1615,7 @@ text \<open>
 \end{itemize}
 
   Remark: the rule itself has no epsilon, only
-  `Ltarget`.  Positivity of epsilon is needed here to establish the rate bound
+  \texttt{Ltarget}.  Positivity of epsilon is needed here to establish the rate bound
   (X, Y >= epsilon gives X*Y >= epsilon\textasciicircum{}2), not by the rule.
 \<close>
 
@@ -1612,8 +1623,8 @@ subsection \<open>Lyapunov reachability\<close>
 text \<open>
   Gr\"onwall-type comparison.  If a differentiable function decays at least
   proportionally to its own value, it is bounded by the corresponding
-  exponential.  Note this holds for ANY real @\{term delta\} and for @\{term u\} of
-  either sign: positivity of the rate and non-negativity of @\{term u\} belong
+  exponential.  Note this holds for ANY real @{term \<delta>} and for @{term u} of
+  either sign: positivity of the rate and non-negativity of @{term u} belong
   to the Lyapunov READING of the result, not to its proof.\<close>
 
 lemma gronwall_comparison_core:
@@ -1731,9 +1742,9 @@ proof -
 qed
 
 text \<open>
-  REACH\_lyapunov: Lyapunov-based exponential decay reachability
+  \textbf{REACH\_lyapunov: Lyapunov-based exponential decay reachability}\\
 
-  CONTEXT
+  \textbf{CONTEXT}\\
   The other formalized dDL proof rules (DI\_Vect, DI\_boundary, DC, DG) handle invariance-style
   reasoning: "once in a safe equilibrium, stay in a safe equilibrium."
    Our earlier novel proof rule
@@ -1750,7 +1761,7 @@ text \<open>
   this shape, and REACH\_lyapunov is the finite-horizon, dDL-compatible
   packaging of the classical Lyapunov stability theorems.
 
-  STATEMENT (informal)
+  \textbf{STATEMENT (informal)}\\
   Given an ODE solution y on [0..T], a non-negative Lyapunov function V,
   and a pointwise rate bound phi(tau) <= -delta * V(y(tau)) on the time derivative
   of V o y, the value V(y(T)) is bounded by V(y(0)) * exp(-delta * T).
@@ -1860,8 +1871,8 @@ proof -
 qed
 
 
-text \<open>Domain-aware @\{thm REACH\_lyapunov\}. Only the rate-proportional
-     (Lie-derivative) condition is constrained by @\{term \<open>y tau in Q\<close>\}; nonnegativity
+text \<open>Domain-aware @{thm [source] REACH_lyapunov}. Only the rate-proportional
+     (Lie-derivative) condition is constrained by @{term \<open>y \<tau> \<in> Q\<close>}; nonnegativity
      of @{term V} stays global.\<close>
 
 lemma REACH_lyapunov_dom:
@@ -1923,7 +1934,7 @@ qed
 
 
 text \<open>
-  USAGE EXAMPLE: Sublevel-set reachability as a corollary
+  \textbf{USAGE EXAMPLE: Sublevel-set reachability as a corollary}\\
 
   The exponential decay form is the foundational statement.  For reachability
   applications (e.g., "does the trajectory enter a target sublevel set?"),
@@ -1932,7 +1943,9 @@ text \<open>
   If V(y(0)) * exp(-delta*T) <= L, then V(y(T)) <= L.
 
   In particular, for any target level L > 0, the time
+\begin{verbatim}
     T = (1/delta) * log(V(y(0))/L)
+\end{verbatim}
   suffices (assuming V(y(0)) > L) to reach the sublevel set \{V <= L\}.
 \<close>
 
@@ -3753,28 +3766,28 @@ proof -
 qed
 
 text \<open>
-   DOMAIN-AWARE MODULARITY RULE - DI\_Frame\_Rule\_partial\_dom.
+   \textbf{DOMAIN-AWARE MODULARITY RULE - DI\_Frame\_Rule\_partial\_dom.}\\
 
    This is the evolution-domain-aware ("dL-faithful") version of the axis
    aligned bounded box modularity rule DI\_Frame\_Rule\_partial.
    Unlike the DI\_Vect\_dom-style siblings, this one does NOT reduce to its canonical counterpart:
    the per-component bound conditions quantify over arbitrary states v, and
-   gating them by `v in Q` WEAKENS the hypothesis (a strictly stronger
+   gating them by \texttt{v in Q} WEAKENS the hypothesis (a strictly stronger
    lemma).  So this is a from-scratch proof, a faithful copy of the
    DI\_Frame\_Rule\_partial first-hit-time reasoning, with the single
    addition that at the exit time the trajectory point is known to lie in
    the evolution domain Q, which discharges the now-gated bound condition.
 
-   Differences from DI\_Frame\_Rule\_partial (all marked `CHANGE N` below):
-     1,2. The lower/upper bound conditions gain a hypothesis `v in Q`.
+   Differences from DI\_Frame\_Rule\_partial:
 \begin{enumerate}
-\item The conclusion gains the conjunct `y tau in Q`.
-\item `y\_in\_Q` is extracted from the ODE near the top.
+\item The lower and upper bound conditions gain a hypothesis \texttt{v in Q}.
+\item The conclusion gains the conjunct \texttt{y tau in Q}.
+\item \texttt{y\_in\_Q} is extracted from the ODE near the top.
 \item The two bound-condition applications (at the exit time) supply
-  `y tau\_exit in Q`.
-\item The final assembly attaches `y tau in Q`.
+  \texttt{y tau\_exit in Q}.
+\item The final assembly attaches \texttt{y tau in Q}.
 \end{enumerate}
-   `inactive\_maintained` stays unconstrained: it is the dynamical-frame condition
+   \texttt{inactive\_maintained} stays unconstrained: it is the dynamical-frame condition
    on the trajectory, not a Lie-derivative check, so Q does not gate it.
 \<close>
 lemma DI_Frame_Rule_partial_dom:

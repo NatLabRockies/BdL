@@ -33,9 +33,11 @@ subsection \<open>Vector field\<close>
 
 text \<open>
   The dynamics are:
-    dS/dt = u - (mu\_max * S / (K\_S + S)) * X
-    dX/dt = Y * (mu\_max * S / (K\_S + S)) * X * (K\_I / (K\_I + Z)) - d * X
-    dZ/dt = alpha * (mu\_max * S / (K\_S + S)) * X - k * Z / (K\_Z + Z)
+\begin{verbatim}
+    dS/dt = u - (mu_max * S / (K_S + S)) * X
+    dX/dt = Y * (mu_max * S / (K_S + S)) * X * (K_I / (K_I + Z)) - d * X
+    dZ/dt = alpha * (mu_max * S / (K_S + S)) * X - k * Z / (K_Z + Z)
+\end{verbatim}
   
   The input u is a constant feed rate (one instance of the vector 
   field for each value of u).  Time-varying u can be handled by a 
@@ -1592,7 +1594,7 @@ proof -
 qed
 
 text \<open>
-   BIOREACTOR SAFETY THEOREM (inside metabolic\_z\_clearance\_params)
+   \textbf{BIOREACTOR SAFETY THEOREM (inside metabolic\_z\_clearance\_params)}\\
 
    This theorem is the paper-facing statement that separates the
    bioreactor controller's responsibility (maintaining S and X)
@@ -1666,10 +1668,14 @@ text \<open>
 
   The proof mirrors V\_Z\_Lie\_decrease but replaces ingredient (ii)
   (degradation lower bound at Z\_alarm) with a slope bound:
-    f(Z) - f(Z\_eq) >= beta*(Z - Z\_eq)
+\begin{verbatim}
+    f(Z) - f(Z_eq) >= beta*(Z - Z_eq)
+\end{verbatim}
   where beta = k*K\_Z / ((K\_Z + Z\_alarm)*(K\_Z + Z\_eq)) comes from the algebraic
   identity
-    f(Z) - f(Z\_eq) = k*K\_Z*(Z - Z\_eq) / ((K\_Z + Z)*(K\_Z + Z\_eq))
+\begin{verbatim}
+    f(Z) - f(Z_eq) = k*K_Z*(Z - Z_eq) / ((K_Z + Z)*(K_Z + Z_eq))
+\end{verbatim}
   and the bound (K\_Z + Z) <= (K\_Z + Z\_alarm) for Z <= Z\_alarm.
 
   The equilibrium\_condition gives P\_max <= f(Z\_eq), and lower\_band\_decay\_rate
@@ -1947,7 +1953,7 @@ qed
 
 
 text \<open>
-  Exponential decay of V\_Z over the full Z range [Z\_eq, Z\_max].
+  \textbf{Exponential decay of V\_Z over the full Z range [Z\_eq, Z\_max].}\\
 
   This is the rigorous statement of the bound shown in the metabolic
   Z-clearance figure: |Z(t) - Z\_eq| <= |Z(0) - Z\_eq| * exp(-delta\_Z*t/2),
@@ -2040,7 +2046,7 @@ qed
 
 
 text \<open>
-  Full-band bioreactor safety.  Mirrors `bioreactor\_safety` but admits
+  Full-band bioreactor safety.  Mirrors \texttt{bioreactor\_safety} but admits
   trajectories that pass through both the alarm zone and the safe zone
   -- the single exponential envelope from the figure.\<close>
 
@@ -2074,26 +2080,28 @@ proof -
 qed
 
 text \<open>
-   BIOREACTOR SAFETY -- Unconditional formulation.
+   \textbf{BIOREACTOR SAFETY -- Unconditional formulation.}\\
 
-   Adds three results to `metabolic\_z\_clearance\_params` that together upgrade
-   `bioreactor\_safety\_full` from a conditional theorem (assuming
-   `Z\_in\_full\_band`) to an unconditional one for the upper bound, with the
+   Adds three results to \texttt{metabolic\_z\_clearance\_params} that together upgrade
+   \texttt{bioreactor\_safety\_full} from a conditional theorem (assuming
+   \texttt{Z\_in\_full\_band}) to an unconditional one for the upper bound, with the
    Z >= Z\_eq part isolated as a "controller-supplied invariant for the safe
    phase" -- i.e., explicitly conditional and honest.
 
-   Three new results:
+   \textbf{Three new results:}\\
 \begin{enumerate}
-\item `Z\_upper\_bound\_invariant` -- forward-invariance of Z <= Z\_max
+\item \texttt{Z\_upper\_bound\_invariant} -- forward-invariance of Z <= Z\_max
   (using DI\_Frame\_Rule\_partial with active = \{iZ\}, lo iZ = 0).
-\item `Z\_exits\_alarm\_zone`     -- Z drops below Z\_alarm by T\_clear
+\item \texttt{Z\_exits\_alarm\_zone}     -- Z drops below Z\_alarm by T\_clear
   (using V\_Z\_exponential\_decay\_full + arithmetic on T\_clear).
-\item `bioreactor\_safety\_unconditional` -- composes (1) and (2).
+\item \texttt{bioreactor\_safety\_unconditional} -- composes (1) and (2).
 \end{enumerate}
 
    Piece C (Z >= Z\_eq forward-invariance) is provably INCOMPATIBLE with
-   `equilibrium\_condition`:
-       equilibrium\_condition: P\_max <= D(Z\_eq)
+   \texttt{equilibrium\_condition}:
+\begin{verbatim}
+       equilibrium_condition: P_max <= D(Z_eq)
+\end{verbatim}
    means at Z = Z\_eq the field points DOWNWARD, i.e., outward relative to
    \{Z >= Z\_eq\}.  Hence Z\_above\_eq\_post\_clearance is left as a controller-
    supplied hypothesis in the unconditional theorem.
@@ -2103,15 +2111,15 @@ text \<open>
 subsubsection \<open>Piece A: forward invariance of Z <= Z\_max\<close>
 
 text \<open>
-  Upper-bound forward-invariance for Z.  Uses `DI\_Frame\_Rule\_partial`
+  Upper-bound forward-invariance for Z.  Uses \texttt{DI\_Frame\_Rule\_partial}
   with active = \{iZ\}, lo iZ = 0, hi iZ = Z\_max.  At the lower face Z = 0:
   the field reduces to P(S, X) > 0 (production with S, X strictly
   positive from the controllers).  At the upper face Z = Z\_max:
-  production is bounded above by P\_max, and by `degradation\_exceeds\_production`
+  production is bounded above by P\_max, and by \texttt{degradation\_exceeds\_production}
   combined with monotonicity of MM degradation, D(Z\_max) > P\_max strictly.
 
-  We add `Z0\_nn` (Z(0) >= 0) as a natural biological assumption.  In the
-  unconditional theorem below this is derived from `Z0\_in\_alarm`.\<close>
+  We add \texttt{Z0\_nn} (Z(0) >= 0) as a natural biological assumption.  In the
+  unconditional theorem below this is derived from \texttt{Z0\_in\_alarm}.\<close>
 
 lemma Z_upper_bound_invariant:
   fixes y :: \<open>real \<Rightarrow> (real, 'a) vec\<close>
@@ -3043,7 +3051,8 @@ text \<open>
   V\_Z bound at endpoint equals (Z\_alarm - Z\_eq)\textasciicircum{}2 / 2; with Z(T\_clear) >= Z\_eq,
   this unfolds to Z(T\_clear) <= Z\_alarm.
 
-  IMPORTANT: this theorem still ASSUMES Z\_above\_eq\_throughout -- that's
+  \textbf{IMPORTANT}\\
+  This theorem still ASSUMES Z\_above\_eq\_throughout -- that's
   Piece C, which is provably incompatible with equilibrium\_condition.
   We leave it as a controller-supplied invariant.\<close>
 
@@ -3199,18 +3208,24 @@ qed
 
 
 text \<open>
-  Unconditional safety with the interval-invariant conjunct.
+  \textbf{Unconditional safety with the interval-invariant conjunct.}\\
 
   \textbf{WHAT'S UNCONDITIONAL:}\\
-- Z(t) in [Z\_min, Z\_max] for all t in [0,T]  (forward-invariant box,
+\begin{itemize}
+\item Z(t) in [Z\_min, Z\_max] for all t in [0,T]  (forward-invariant box,
   from Z\_in\_box\_invariant -- derived purely from the dynamics).
+\end{itemize}
 
-  WHAT'S CONDITIONAL (controller-supplied invariant):
-- Z(t) >= Z\_eq for all t in [0,T].  Structurally incompatible with
+  \textbf{WHAT'S CONDITIONAL (controller-supplied invariant):}\\
+\begin{itemize}
+\item Z(t) >= Z\_eq for all t in [0,T].  Structurally incompatible with
   equilibrium\_condition.
+\end{itemize}
 
-  \textbf{WHAT WE CONCLUDE GIVEN BOTH:}
-    - exists t* in [0,T] with Z(t*) <= Z\_alarm  (alarm-zone exit by T\_clear).\<close>
+  \textbf{WHAT WE CONCLUDE GIVEN BOTH:}\\
+\begin{itemize}
+\item exists t* in [0,T] with Z(t*) <= Z\_alarm  (alarm-zone exit by T\_clear).
+\end{itemize}\<close>
 
 theorem bioreactor_safety_unconditional:
   fixes y :: \<open>real \<Rightarrow> (real, 'a) vec\<close>
@@ -3326,27 +3341,33 @@ end  (* metabolic_z_clearance_params *)
 subsection \<open>Concrete metabolic instantiation\<close>
 
 text \<open>
-  Parameter values for an engineered E. coli biofuel strain.
+  \textbf{Parameter values for an engineered E. coli biofuel strain.}\\
   
-  Kinetic parameters (textbook-realistic):
-    mu\_max = 1/2 hr\textasciicircum{}-\textasciicircum{}1     (maximum Monod growth rate)
-    K\_S   = 1/2 g/L       (Monod half-saturation constant)
-    Y     = 2/5            (biomass yield per substrate)
-    d     = 1/10 hr\textasciicircum{}-\textasciicircum{}1     (biomass decay/dilution rate)
-    K\_I   = 5 mM           (Z-inhibition constant)
-    alpha     = 1/10           (intermediate production yield)
-    k     = 1 mM/hr        (engineered degradation V\_max)
-    K\_Z   = 1 mM           (degradation Michaelis constant)
+  \textbf{Kinetic parameters (textbook-realistic):}\\
+\begin{verbatim}
+    mu_max = 1/2 hr^-1   (maximum Monod growth rate)
+    K_S    = 1/2 g/L     (Monod half-saturation constant)
+    Y      = 2/5         (biomass yield per substrate)
+    d      = 1/10 hr^-1  (biomass decay/dilution rate)
+    K_I    = 5 mM        (Z-inhibition constant)
+    alpha  = 1/10        (intermediate production yield)
+    k      = 1 mM/hr     (engineered degradation V_max)
+    K_Z    = 1 mM        (degradation Michaelis constant)
+\end{verbatim}
   
-  Operational bounds (bioreactor controller):
+  \textbf{Operational bounds (bioreactor controller):}\\
+\begin{verbatim}
     S in [1/10, 1] g/L     (substrate maintained by feed pump)
     X in [1/10, 2] g/L     (biomass managed by dilution)
+\end{verbatim}
   
-  Z-clearance parameters:
-    Z\_eq    = 1/4 mM       (designed operating point for Z)
-    Z\_alarm = 1 mM         (alarm threshold)
-    Z\_max   = 7/4 mM       (maximum Z in alarm zone)
-    delta\_Z     = 1/2 hr\textasciicircum{}-\textasciicircum{}1    (exponential decay rate)
+  \textbf{Z-clearance parameters:}\\
+\begin{verbatim}
+    Z_eq    = 1/4 mM     (designed operating point for Z)
+    Z_alarm = 1 mM       (alarm threshold)
+    Z_max   = 7/4 mM     (maximum Z in alarm zone)
+    delta_Z = 1/2 hr^-1  (exponential decay rate)
+\end{verbatim}
   
   The design theorem: after a substrate spike pushes Z above 
   the alarm threshold, the engineered degradation pathway clears 
@@ -3383,7 +3404,7 @@ text \<open>
   As in the Gardner case study, the concrete instance keeps the state space
   general: S, X and Z sit at three pairwise distinct coordinates iS, iX
   and iZ of an arbitrary finite index type.  The results of this block are
-  exported with the coordinates generalised and their distinctness as
+  exported with the coordinates generalized and their distinctness as
   premises.
 \<close>
 
@@ -3534,7 +3555,9 @@ text \<open>
   for any trajectory with S in [0.1, 1] g/L, X in [0.1, 2] g/L, 
   and Z in [1, 1.75] mM throughout [0, T], the Lyapunov function 
   V\_Z = (Z - 0.25)\textasciicircum{}2/2 satisfies 
-    V\_Z(y(T)) <= V\_Z(y(0)) * exp(-T/2).
+\begin{verbatim}
+    V_Z(y(T)) <= V_Z(y(0)) * exp(-T/2).
+\end{verbatim}
   
   A bio-engineer reads this as: "Z clears with a half-life of 
   about 1.4 hours."\<close>

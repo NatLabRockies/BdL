@@ -18,21 +18,27 @@ section \<open>Case study: Proving Stability of Gardner Induced Switching\<close
 
 
 text \<open>
-  SANITY CHECK: REACH\_lyapunov applied to a trivial 1D linear ODE
+  \textbf{SANITY CHECK: REACH\_lyapunov applied to a trivial 1D linear ODE}\\
 
-  SETUP
-  -----
+  \textbf{SETUP}\\
   Consider the simplest possible scalar linear ODE:
 
+\begin{verbatim}
       du/dt = -2*u
+\end{verbatim}
 
   with initial condition u(0) = 1.  The exact solution is u(tau) = exp(-2tau).
 
   Define the Lyapunov function V(v) = (vec\_nth v iU)\textasciicircum{}2 (squared component).
   Along the trajectory:
 
-      V(y(tau)) = u(tau)\textasciicircum{}2 = exp(-4tau)
-      (V o y)'(tau) = 2*u(tau)*u'(tau) = 2*u(tau)*(-2*u(tau)) = -4*u(tau)\textasciicircum{}2 = -4*V(y(tau))
+\begin{verbatim}
+      V(y(tau)) = u(tau)^2 = exp(-4tau)
+      (V o y)'(tau) = 2*u(tau)*u'(tau)
+                    = 2*u(tau)*(-2*u(tau))
+                    = -4*u(tau)^2
+                    = -4*V(y(tau))
+\end{verbatim}
 
   REACH\_lyapunov asks for this decay pointwise, as a Lie derivative: at
   every point y(tau) of the trajectory, V has a derivative DV with
@@ -42,18 +48,20 @@ text \<open>
 
   REACH\_lyapunov then gives:
 
+\begin{verbatim}
       V(y(T)) <= V(y(0)) * exp(-4*T) = 1 * exp(-4*T) = exp(-4*T)
+\end{verbatim}
 
   i.e., u(T)\textasciicircum{}2 <= exp(-4*T), which is TIGHT (the trajectory achieves equality).
 
-  PURPOSE
+  \textbf{PURPOSE}\\
   This sanity check validates two things:
 \begin{enumerate}
 \item The premises of the provably verified lemma REACH\_lyapunov (ODE,
   T\_nn and induct\_step) are ergonomic to discharge in a concrete
   setting.  ODE and T\_nn are the assumptions y\_sol and T\_nn of the
   sanity check; induct\_step, the pointwise decay condition, becomes a
-  named `have` statement in the proof, following the "obligations on top,
+  named \texttt{have} statement in the proof, following the "obligations on top,
   lemma on bottom" template.
 \item The obligation shapes generalize to higher-dimensional cases.  The
   same template will be used for the Gardner toggle switch proof, just
@@ -158,12 +166,14 @@ text \<open>
   \textbf{GARDNER TOGGLE SWITCH: INDUCED SWITCHING VIA PULSED DYNAMICS}\\
   This example formalizes "induced switching" for the symmetric Gardner
   toggle switch.  Three-interval structure:
-    Interval 1: [0, t\_start]     baseline dynamics, trajectory in R\_A
-    Interval 2: [t\_start, t\_end] pulsed dynamics, trajectory moves to R\_B
-    Interval 3: [t\_end, T]       baseline dynamics, trajectory stays in R\_B
+\begin{verbatim}
+    Interval 1: [0, t_start]     baseline dynamics, trajectory in R_A
+    Interval 2: [t_start, t_end] pulsed dynamics, trajectory moves to R_B
+    Interval 3: [t_end, T]       baseline dynamics, trajectory stays in R_B
+\end{verbatim}
 
   All definitions and lemmas live inside the appropriate locale's
-  main `begin ... end` block (no reopened `context` blocks).  This
+  main \texttt{begin ... end} block (no reopened \texttt{context} blocks).  This
   ensures derived locales see the definitions as first-class members.
 \<close>
 
@@ -2788,7 +2798,7 @@ subsubsection \<open>Coordinates of the concrete instance\<close>
 text \<open>
   The concrete instance keeps the state space general: u and v sit at two
   distinct coordinates iU and iV of an arbitrary finite index type.  The
-  results of this block are exported with iU and iV generalised and with
+  results of this block are exported with iU and iV generalized and with
   their distinctness as a premise.  The corollary at the end of the theory
   instantiates them in R\textasciicircum{}2.
 \<close>
@@ -3089,19 +3099,23 @@ proof
   qed
 qed
 text \<open>
-   Stage 3c: gardner\_pulse\_lyapunov interpretation.
+   \textbf{Stage 3c: gardner\_pulse\_lyapunov interpretation.}\\
 
    The substantive step is delta\_bound:
-     1/8 <= 2 - M\_sharp(1/5, 5/16, 5/2, 7/2)
+\begin{verbatim}
+     1/8 <= 2 - M_sharp(1/5, 5/16, 5/2, 7/2)
+\end{verbatim}
 
-   Computing M\_sharp:
-     M\_sharp = u\_pulse*(v\_max+v\_pulse)/(1+v\_min\textasciicircum{}2) +
-               v\_pulse*(u\_max+u\_pulse)/(1+u\_min\textasciicircum{}2)
+   \textbf{Computing M\_sharp:}\\
+\begin{verbatim}
+     M_sharp = u_pulse*(v_max+v_pulse)/(1+v_min^2) +
+               v_pulse*(u_max+u_pulse)/(1+u_min^2)
              = (1/4)*(7/2+3)/(1+25/4) + 3*(5/16+1/4)/(1+1/25)
              = (1/4)*(13/2)/(29/4) + 3*(9/16)/(26/25)
              = 13/58 + 675/416
              = 2704/12064 + 19575/12064
              = 22279/12064
+\end{verbatim}
 
    So 2 - M\_sharp = 1849/12064.
    Check: 1/8 <= 1849/12064 <=> 12064 <= 8*1849 = 14792
@@ -3162,15 +3176,17 @@ proof
 qed
 
 text \<open>
-   Stage 4: gardner\_induced\_switching interpretation.
+   \textbf{Stage 4: gardner\_induced\_switching interpretation.}\\
 
    Instantiates the top-level induced
    switching theorem with the concrete Gardner parameters.
 
    The substantive obligation is sublevel\_in\_R\_B:
-     V\_pulse v <= 1/100  ==>  in\_R\_B v
+\begin{verbatim}
+     V_pulse v <= 1/100  ==>  in_R_B v
+\end{verbatim}
 
-   Outline of proof:
+   \textbf{Outline of proof:}\\
 \begin{itemize}
 \item V\_pulse v = (1/2)((u - 1/4)\textasciicircum{}2 + (v - 3)\textasciicircum{}2) <= 1/100
   gives (u - 1/4)\textasciicircum{}2 <= 1/50 and (v - 3)\textasciicircum{}2 <= 1/50.
@@ -3335,14 +3351,16 @@ text \<open>
    proof is the locale predicate established by the interpretation
    concrete\_switching.
 
-   Parameter order (from thm gardner\_induced\_switching\_def):
+   \textbf{Parameter order (from thm gardner\_induced\_switching\_def):}\\
+\begin{verbatim}
      iU iV
-     alpha\_base beta gamma
-     u\_A\_lo u\_A\_hi v\_A\_lo v\_A\_hi
-     u\_B\_lo u\_B\_hi v\_B\_lo v\_B\_hi
-     alpha\_low u\_pulse v\_pulse
-     u\_min u\_max v\_min v\_max delta
-     L\_target
+     alpha_base beta gamma
+     u_A_lo u_A_hi v_A_lo v_A_hi
+     u_B_lo u_B_hi v_B_lo v_B_hi
+     alpha_low u_pulse v_pulse
+     u_min u_max v_min v_max delta
+     L_target
+\end{verbatim}
 \<close>
 
 theorem gardner_induced_switching_concrete:
@@ -3360,7 +3378,7 @@ theorem gardner_induced_switching_concrete:
 subsubsection \<open>Concrete switching theorem\<close>
 
 text \<open>
-   Concrete Gardner switching theorem.
+   \textbf{Concrete Gardner switching theorem.}\\
 
    We prove the switching property for the concrete parameter values
    as a top-level theorem.  It is polymorphic in the index type 'a

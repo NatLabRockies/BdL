@@ -33,9 +33,11 @@ text \<open>
   The system consists of three chemical species A, B, C undergoing three
   autocatalytic reactions:
 
+\begin{verbatim}
     Reaction 1:  A + B  ->  2B    (rate k1)
     Reaction 2:  B + C  ->  2C    (rate k2)
     Reaction 3:  C + A  ->  2A    (rate k3)
+\end{verbatim}
 
   In each reaction, one species "converts" another into a copy of itself:
 \begin{itemize}
@@ -51,9 +53,11 @@ text \<open>
   Under mass-action kinetics (the standard model for well-mixed chemical
   systems), the concentrations [A], [B], [C] evolve according to:
 
+\begin{verbatim}
     d[A]/dt = -k1*[A]*[B] + k3*[C]*[A]
     d[B]/dt =  k1*[A]*[B] - k2*[B]*[C]
     d[C]/dt =  k2*[B]*[C] - k3*[C]*[A]
+\end{verbatim}
 
   Each equation has two terms:
 \begin{itemize}
@@ -67,7 +71,9 @@ text \<open>
   \textbf{WHAT WE VERIFY}\\
   We formally prove the CONSERVATION LAW:
 
+\begin{verbatim}
     [A](t) + [B](t) + [C](t) = [A](0) + [B](0) + [C](0)    for all t >= 0
+\end{verbatim}
 
   This states that the TOTAL concentration of all species is preserved
   over time. Although individual concentrations oscillate, their sum
@@ -97,9 +103,12 @@ text \<open>
   this nonlinear system), we show that the DERIVATIVE of the invariant
   quantity [A]+[B]+[C] along the vector field is ZERO:
 
-    d([A]+[B]+[C])/dt = d[A]/dt + d[B]/dt + d[C]/dt
-                       = (-k1*A*B + k3*C*A) + (k1*A*B - k2*B*C) + (k2*B*C - k3*C*A)
-                       = 0
+\begin{verbatim}
+    d([A]+[B]+[C])/dt
+      = d[A]/dt + d[B]/dt + d[C]/dt
+      = (-k1*A*B + k3*C*A) + (k1*A*B - k2*B*C) + (k2*B*C - k3*C*A)
+      = 0
+\end{verbatim}
 
   Every term appears once with + and once with -, so they cancel perfectly.
   Since the derivative is zero and the quantity starts at total0, it
@@ -125,7 +134,9 @@ text \<open>
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambda k. 0)(iA := d[A]/dt, iB := d[B]/dt, iC := d[C]/dt))
+\begin{verbatim}
+    vec_lambda ((lambda k. 0)(iA := d[A]/dt, iB := d[B]/dt, iC := d[C]/dt))
+\end{verbatim}
 
   The proof uses DI\_Vect (Differential Induction for vector-valued ODEs)
   applied twice (via antisymmetry) to establish the equality.
@@ -264,25 +275,35 @@ proof -
 qed
 
 text \<open>
- We formally proved that the total concentration in an autocatalytic chemical oscillator
-   is conserved, using differential induction, a technique that verifies properties of nonlinear
-    ODE systems without solving them. This is the first step toward formally certified
-   compilation of chemical reaction networks.
-  Chemical Reaction Network: Autocatalytic Oscillator
+  We formally proved that the total concentration in an autocatalytic chemical oscillator
+  is conserved, using differential induction, a technique that verifies properties of nonlinear
+  ODE systems without solving them. This is the first step toward formally certified
+  compilation of chemical reaction networks.
 
- Reactions:
+  \textbf{Chemical Reaction Network: Autocatalytic Oscillator}\\
+
+  \textbf{Reactions:}\\
+\begin{verbatim}
     A + B -> 2B    (rate k1)
     B + C -> 2C    (rate k2)
     C + A -> 2A    (rate k3)
-  Mass-action ODEs:
+\end{verbatim}
+  \textbf{Mass-action ODEs:}\\
+\begin{verbatim}
     d[A]/dt = -k1*[A]*[B] + k3*[C]*[A]
     d[B]/dt =  k1*[A]*[B] - k2*[B]*[C]
     d[C]/dt =  k2*[B]*[C] - k3*[C]*[A]
-  Conservation law: [A](t) + [B](t) + [C](t) = [A](0) + [B](0) + [C](0)
+\end{verbatim}
+  \textbf{Conservation law:}\\
+\begin{verbatim}
+    [A](t) + [B](t) + [C](t) = [A](0) + [B](0) + [C](0)
+\end{verbatim}
 
-  Proof method: DI\_Vect via antisymmetry (same structure as circular\_invariant)
+  Proof method: DI\_Vect via antisymmetry (same structure as circular\_invariant).
   The Lie derivative of [A]+[B]+[C] along the vector field is:
+\begin{verbatim}
     (-k1*A*B + k3*C*A) + (k1*A*B - k2*B*C) + (k2*B*C - k3*C*A) = 0
+\end{verbatim}
 \<close>
 
 subsubsection \<open>Michaelis-Menten enzyme kinetics: conservation laws\<close>
@@ -299,14 +320,18 @@ text \<open>
   complex ES, which then irreversibly produces a product P and releases
   the enzyme:
 
-           k1      k2
+\begin{verbatim}
+           k1       k2
     E + S  <=>  ES  ->  E + P
            k-1
+\end{verbatim}
 
   Where:
+\begin{verbatim}
     k1  = binding rate (enzyme + substrate -> complex)
     km1 = unbinding rate (complex -> enzyme + substrate)
     k2  = catalytic rate (complex -> enzyme + product)
+\end{verbatim}
 
   The enzyme acts as a catalyst: it facilitates the reaction but is
   regenerated at the end. The substrate is consumed and transformed
@@ -315,10 +340,12 @@ text \<open>
   \textbf{THE MASS-ACTION ODE MODEL}\\
   Under mass-action kinetics, the concentrations evolve according to:
 
+\begin{verbatim}
     d[E]/dt  = -k1*[E]*[S] + (km1 + k2)*[ES]
     d[S]/dt  = -k1*[E]*[S] + km1*[ES]
     d[ES]/dt =  k1*[E]*[S] - (km1 + k2)*[ES]
     d[P]/dt  =  k2*[ES]
+\end{verbatim}
 
   This is a 4-species, nonlinear system (due to the k1*[E]*[S] terms).
 
@@ -356,14 +383,18 @@ text \<open>
   Both conservation laws are proved using Differential Induction (DI),
   the same technique used for the CRN oscillator conservation law.
 
-  For enzyme conservation [E]+[ES]:
+  \textbf{For enzyme conservation [E]+[ES]:}\\
+\begin{verbatim}
     d([E]+[ES])/dt = d[E]/dt + d[ES]/dt
                    = (-k1*E*S + (km1+k2)*ES) + (k1*E*S - (km1+k2)*ES)
                    = 0
-  For substrate conservation [S]+[ES]+[P]:
+\end{verbatim}
+  \textbf{For substrate conservation [S]+[ES]+[P]:}\\
+\begin{verbatim}
     d([S]+[ES]+[P])/dt = d[S]/dt + d[ES]/dt + d[P]/dt
                        = (-k1*E*S + km1*ES) + (k1*E*S - (km1+k2)*ES) + k2*ES
                        = 0
+\end{verbatim}
 
   \textbf{ASSUMPTIONS}\\
   Each proof assumes:
@@ -388,7 +419,10 @@ text \<open>
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambda k. 0)(iE := d[E]/dt, iS := d[S]/dt, iES := d[ES]/dt, iP := d[P]/dt))
+\begin{verbatim}
+    vec_lambda ((lambda k. 0)(iE := d[E]/dt, iS := d[S]/dt,
+                              iES := d[ES]/dt, iP := d[P]/dt))
+\end{verbatim}
 
   Each proof uses DI\_Vect (Differential Induction for vector-valued ODEs)
   applied twice (via antisymmetry) to establish the equality.
@@ -402,10 +436,13 @@ text \<open>
   The enzyme is a catalyst: it is neither created nor destroyed.
   The total enzyme concentration [E] + [ES] remains constant.
 
-  Lie derivative calculation:
-      d([E]+[ES])/dt = (-k1*[E]*[S] + (km1+k2)*[ES]) + (k1*[E]*[S] - (km1+k2)*[ES])
-                     = -k1*E*S + (km1+k2)*ES + k1*E*S - (km1+k2)*ES
-                     = 0
+  \textbf{Lie derivative calculation:}\\
+\begin{verbatim}
+      d([E]+[ES])/dt
+        = (-k1*[E]*[S] + (km1+k2)*[ES]) + (k1*[E]*[S] - (km1+k2)*[ES])
+        = -k1*E*S + (km1+k2)*ES + k1*E*S - (km1+k2)*ES
+        = 0
+\end{verbatim}
 \<close>
 
 lemma michaelis_menten_enzyme_conservation:
@@ -548,11 +585,13 @@ text \<open>
   The substrate is transformed but not destroyed: it is either free [S],
   bound in the complex [ES], or converted to product [P].
 
-  Lie derivative calculation:
+  \textbf{Lie derivative calculation:}\\
+\begin{verbatim}
     d([S]+[ES]+[P])/dt = d[S]/dt + d[ES]/dt + d[P]/dt
-      = (-k1*E*S + km1*ES) + (k1*E*S - (km1+k2)*ES) + k2*ES
-      = -k1*E*S + km1*ES + k1*E*S - km1*ES - k2*ES + k2*ES
-      = 0
+                       = (-k1*E*S + km1*ES) + (k1*E*S - (km1+k2)*ES) + k2*ES
+                       = -k1*E*S + km1*ES + k1*E*S - km1*ES - k2*ES + k2*ES
+                       = 0
+\end{verbatim}
 \<close>
 lemma michaelis_menten_substrate_conservation:
   fixes y :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
@@ -700,17 +739,21 @@ text \<open>
   \textbf{THE CHEMICAL REACTIONS}\\
   Read as a chemical reaction network, the model has two reactions:
 
+\begin{verbatim}
     S + I -> 2I    (infection: an S meets an I and becomes I)
     I -> R         (recovery: an I becomes R)
+\end{verbatim}
 
   Where beta = infection rate, gamma = recovery rate.
 
   \textbf{THE MASS-ACTION ODE MODEL}\\
   Under mass-action kinetics:
 
+\begin{verbatim}
     d[S]/dt = -beta*[S]*[I]
     d[I]/dt =  beta*[S]*[I] - gamma*[I]
     d[R]/dt =  gamma*[I]
+\end{verbatim}
 
   \textbf{WHAT WE VERIFY}\\
   Population conservation: [S](t) + [I](t) + [R](t) = N  for all t >= 0
@@ -729,9 +772,11 @@ text \<open>
   We use Differential Induction (DI), as for the CRN oscillator: the Lie
   derivative of [S]+[I]+[R] along the vector field is zero:
 
+\begin{verbatim}
     d([S]+[I]+[R])/dt = (-beta*S*I) + (beta*S*I - gamma*I) + (gamma*I)
                       = -beta*S*I + beta*S*I - gamma*I + gamma*I
                       = 0
+\end{verbatim}
 
   \textbf{ASSUMPTIONS}\\
   The proof assumes:
@@ -753,7 +798,9 @@ text \<open>
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambda k. 0)(iS := d[S]/dt, iI := d[I]/dt, iR := d[R]/dt))
+\begin{verbatim}
+    vec_lambda ((lambda k. 0)(iS := d[S]/dt, iI := d[I]/dt, iR := d[R]/dt))
+\end{verbatim}
 
   The proof uses DI\_Vect (Differential Induction for vector-valued ODEs)
   applied twice (via antisymmetry) to establish the equality.
@@ -890,14 +937,18 @@ text \<open>
 \end{itemize}
 
   \textbf{THE CHEMICAL REACTIONS}\\
+\begin{verbatim}
     A + B <=> C     (k1 forward, km1 reverse)
+\end{verbatim}
 
   \textbf{THE MASS-ACTION ODE MODEL}\\
   Under mass-action kinetics:
 
+\begin{verbatim}
     d[A]/dt = -k1*[A]*[B] + km1*[C]
     d[B]/dt = -k1*[A]*[B] + km1*[C]
     d[C]/dt =  k1*[A]*[B] - km1*[C]
+\end{verbatim}
 
   \textbf{WHAT WE VERIFY}\\
   Two conservation laws:
@@ -920,8 +971,10 @@ text \<open>
   Each law is proved with Differential Induction (DI): the Lie derivative
   of the conserved quantity along the vector field is zero:
 
+\begin{verbatim}
     d([A]+[C])/dt = (-k1*A*B + km1*C) + (k1*A*B - km1*C) = 0
     d([B]+[C])/dt = (-k1*A*B + km1*C) + (k1*A*B - km1*C) = 0
+\end{verbatim}
 
   \textbf{ASSUMPTIONS}\\
   Each proof assumes:
@@ -944,7 +997,9 @@ text \<open>
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambda k. 0)(iA := d[A]/dt, iB := d[B]/dt, iC := d[C]/dt))
+\begin{verbatim}
+    vec_lambda ((lambda k. 0)(iA := d[A]/dt, iB := d[B]/dt, iC := d[C]/dt))
+\end{verbatim}
 
   Each proof uses DI\_Vect (Differential Induction for vector-valued ODEs)
   applied twice (via antisymmetry) to establish the equality.
@@ -1208,13 +1263,17 @@ text \<open>
 \end{itemize}
 
   \textbf{THE CHEMICAL REACTIONS}\\
+\begin{verbatim}
     2A  <=>  A2     (k1 forward, km1 reverse)
+\end{verbatim}
 
   \textbf{THE MASS-ACTION ODE MODEL}\\
   Under mass-action kinetics:
 
-    d[A]/dt  = -2*k1*[A]\textasciicircum{}2 + 2*km1*[A2]
-    d[A2]/dt =    k1*[A]\textasciicircum{}2 -    km1*[A2]
+\begin{verbatim}
+    d[A]/dt  = -2*k1*[A]^2 + 2*km1*[A2]
+    d[A2]/dt =    k1*[A]^2 -    km1*[A2]
+\end{verbatim}
 
   \textbf{WHAT WE VERIFY}\\
   Weighted conservation: [A](t) + 2*[A2](t) = total0  for all t >= 0
@@ -1234,9 +1293,11 @@ text \<open>
   We use Differential Induction (DI): the Lie derivative of [A] + 2*[A2]
   along the vector field is zero:
 
-    d([A] + 2*[A2])/dt = (-2*k1*A\textasciicircum{}2 + 2*km1*A2) + 2*(k1*A\textasciicircum{}2 - km1*A2)
-                        = -2*k1*A\textasciicircum{}2 + 2*km1*A2 + 2*k1*A\textasciicircum{}2 - 2*km1*A2
-                        = 0
+\begin{verbatim}
+    d([A] + 2*[A2])/dt = (-2*k1*A^2 + 2*km1*A2) + 2*(k1*A^2 - km1*A2)
+                       = -2*k1*A^2 + 2*km1*A2 + 2*k1*A^2 - 2*km1*A2
+                       = 0
+\end{verbatim}
 
   \textbf{ASSUMPTIONS}\\
   The proof assumes:
@@ -1257,7 +1318,9 @@ text \<open>
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambda k. 0)(iA := d[A]/dt, iA2 := d[A2]/dt))
+\begin{verbatim}
+    vec_lambda ((lambda k. 0)(iA := d[A]/dt, iA2 := d[A2]/dt))
+\end{verbatim}
 
   The proof uses DI\_Vect (Differential Induction for vector-valued ODEs)
   applied twice (via antisymmetry) to establish the equality.
@@ -1388,10 +1451,14 @@ text \<open>
 \end{itemize}
 
   \textbf{THE CHEMICAL REACTIONS}\\
-    A  ->  \{\}     (first-order degradation, rate k)
+\begin{verbatim}
+    A  ->  {}     (first-order degradation, rate k)
+\end{verbatim}
 
   \textbf{THE MASS-ACTION ODE MODEL}\\
+\begin{verbatim}
     d[A]/dt = -k*[A]
+\end{verbatim}
 
   \textbf{WHAT WE VERIFY}\\
   If [A](0) > 0, then [A](t) > 0 for all t >= 0.
@@ -1415,11 +1482,13 @@ text \<open>
   opposite of what we want.
 
   Instead we use a Differential Ghost (DG):
+\begin{verbatim}
     Ghost: g' = (k/2)*g,  g(0) = 1/sqrt([A](0))
-    Invariant: [A]*g\textasciicircum{}2 = 1
-    Lie derivative: (-k*A)*g\textasciicircum{}2 + A*2g*(k/2*g) = -kAg\textasciicircum{}2 + kAg\textasciicircum{}2 = 0
-    Initial: A0*(1/sqrt(A0))\textasciicircum{}2 = 1
-    Conclude: A*g\textasciicircum{}2 >= 1 and g\textasciicircum{}2 >= 0 ==> A > 0
+    Invariant: [A]*g^2 = 1
+    Lie derivative: (-k*A)*g^2 + A*2g*(k/2*g) = -kAg^2 + kAg^2 = 0
+    Initial: A0*(1/sqrt(A0))^2 = 1
+    Conclude: A*g^2 >= 1 and g^2 >= 0 ==> A > 0
+\end{verbatim}
 
   \textbf{ASSUMPTIONS}\\
   The proof assumes:
@@ -1439,7 +1508,9 @@ text \<open>
 \end{itemize}
 
   The ODE is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambda k. 0)(iA := d[A]/dt))
+\begin{verbatim}
+    vec_lambda ((lambda k. 0)(iA := d[A]/dt))
+\end{verbatim}
 
   The proof (crn\_simple\_decay\_positivity, below) applies DG to extend
   the trajectory with the ghost at iG, then DI\_Vect to prove
@@ -1449,18 +1520,21 @@ text \<open>
 subsubsection \<open>CRN benchmark summary\<close>
 
 text \<open>
-  | \#  | System                | Property              | Method | Species |
-  |----|-----------------------|-----------------------|--------|---------|
-  | 1  | CRN Oscillator        | A+B+C = const         | DI     | 3       |
-  | 2  | Michaelis-Menten      | E+ES = const          | DI     | 4       |
-  | 3  | Michaelis-Menten      | S+ES+P = const        | DI     | 4       |
-  | 4  | Exponential decay     | x > 0                 | DG+DI  | 1+ghost |
-  | 5  | Harmonic oscillator   | x\textasciicircum{}2+y\textasciicircum{}2 = r0\textasciicircum{}2          | DI     | 2       |
-  | 6  | SIR Epidemic          | S+I+R = N             | DI     | 3       |
-  | 7a | Reversible binding    | A+C = A\_total         | DI     | 3       |
-  | 7b | Reversible binding    | B+C = B\_total         | DI     | 3       |
-  | 8  | Dimerization          | A+2*A2 = total        | DI     | 2       |
-  | 9  | Simple decay A->\{\} (CRN form of 4) | [A] > 0               | DG+DI  | 1+ghost |
+\begin{verbatim}
+  | #  | System              | Property       | Method | Species |
+  |----|---------------------|----------------|--------|---------|
+  | 1  | CRN Oscillator      | A+B+C = const  | DI     | 3       |
+  | 2  | Michaelis-Menten    | E+ES = const   | DI     | 4       |
+  | 3  | Michaelis-Menten    | S+ES+P = const | DI     | 4       |
+  | 4  | Exponential decay   | x > 0          | DG+DI  | 1+ghost |
+  | 5  | Harmonic oscillator | x^2+y^2 = r0^2 | DI     | 2       |
+  | 6  | SIR Epidemic        | S+I+R = N      | DI     | 3       |
+  | 7a | Reversible binding  | A+C = A_total  | DI     | 3       |
+  | 7b | Reversible binding  | B+C = B_total  | DI     | 3       |
+  | 8  | Dimerization        | A+2*A2 = total | DI     | 2       |
+  | 9  | Simple decay A->{}  | [A] > 0        | DG+DI  | 1+ghost |
+  |    | (CRN form of 4)     |                |        |         |
+\end{verbatim}
 
   All properties verified WITHOUT solving the ODEs, purely from
   local derivative analysis using differential induction (DI) and
@@ -1474,7 +1548,7 @@ text \<open>
   "wrong sign", so a ghost variable must be introduced to create
   an invariant that implies the desired property.
 
-  General pattern:
+  \textbf{General pattern:}\\
 \begin{itemize}
 \item Want to prove: [X](t) > 0
 \item ODE has form: d[X]/dt = -k*[X] + (other terms)
@@ -1677,7 +1751,9 @@ text \<open>
   in Biological Computing" (Nag et al., 2026).
 
   \textbf{THE CHEMICAL REACTIONS}\\
+\begin{verbatim}
     X + Y -> Z     (rate k)
+\end{verbatim}
 
   Starting from initial concentrations [X](0) = x0 and [Y](0) = y0
   (with [Z](0) = 0), the reaction consumes equal amounts of X and Y
@@ -1685,9 +1761,11 @@ text \<open>
   stops, and [Z] = min(x0, y0).
 
   \textbf{THE MASS-ACTION ODE MODEL}\\
+\begin{verbatim}
     d[X]/dt = -k*[X]*[Y]
     d[Y]/dt = -k*[X]*[Y]
     d[Z]/dt =  k*[X]*[Y]
+\end{verbatim}
 
   \textbf{WHAT WE VERIFY}\\
   Two conservation laws that together ensure computational correctness:
@@ -1722,8 +1800,10 @@ text \<open>
   \textbf{HOW WE VERIFY IT}\\
   Differential Induction (DI). Both Lie derivatives cancel to zero:
 
+\begin{verbatim}
     d([X]+[Z])/dt = (-k*X*Y) + (k*X*Y) = 0
     d([Y]+[Z])/dt = (-k*X*Y) + (k*X*Y) = 0
+\end{verbatim}
 
   The preserved difference [X](t) - [Y](t) = x0 - y0 follows by
   subtracting the two laws.
@@ -1748,7 +1828,9 @@ text \<open>
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambda i. 0)(iX := d[X]/dt, iY := d[Y]/dt, iZ := d[Z]/dt))
+\begin{verbatim}
+    vec_lambda ((lambda i. 0)(iX := d[X]/dt, iY := d[Y]/dt, iZ := d[Z]/dt))
+\end{verbatim}
 
   Each conservation law uses DI\_Vect (Differential Induction for
   vector-valued ODEs) applied twice (via antisymmetry);
@@ -2085,8 +2167,10 @@ text \<open>
   \textbf{THE CIRCUIT}\\
   Two repressors that mutually inhibit each other:
 
+\begin{verbatim}
     Gene 1 -> Protein 1 -| Gene 2
     Gene 2 -> Protein 2 -| Gene 1
+\end{verbatim}
 
   Each protein represses the other through a bimolecular destruction
   reaction (beta*u*v term). This is the "annihilation" form of repression,
@@ -2096,26 +2180,35 @@ text \<open>
   \textbf{THE MASS-ACTION ODE MODEL}\\
   The full Hill-function model used by Gardner et al.,
 
-    du/dt = alpha1/(1 + v\textasciicircum{}beta) - u
-    dv/dt = alpha2/(1 + u\textasciicircum{}gamma) - v
+\begin{verbatim}
+    du/dt = alpha1/(1 + v^beta) - u
+    dv/dt = alpha2/(1 + u^gamma) - v
+\end{verbatim}
 
   involves rational functions and needs has\_derivative for Hill
   functions; it is treated in the next example. Here we formalize the
   SIMPLIFIED LINEAR REPRESSION version:
 
+\begin{verbatim}
     du/dt = alpha1 - beta*u*v - delta*u
     dv/dt = alpha2 - beta*u*v - delta*v
+\end{verbatim}
 
   Where:
+\begin{verbatim}
     alpha1, alpha2 = constitutive production rates of proteins 1 and 2
-    beta     = mutual repression rate (each protein degrades the other)
-    delta     = degradation rate (basal turnover)
+    beta           = mutual repression rate
+                     (each protein degrades the other)
+    delta          = degradation rate (basal turnover)
+\end{verbatim}
 
   The lemmas below use its symmetric, degradation-free case
   (alpha1 = alpha2 = alpha, delta = 0):
 
+\begin{verbatim}
     du/dt = alpha - beta*u*v
     dv/dt = alpha - beta*u*v
+\end{verbatim}
 
   \textbf{WHAT WE VERIFY}\\
 \begin{enumerate}
@@ -2137,7 +2230,9 @@ text \<open>
   DIFFERENCE CONSERVATION is proved with Differential Induction (DI). In
   the symmetric case the Lie derivative of u - v cancels:
 
+\begin{verbatim}
     d(u - v)/dt = (alpha - beta*u*v) - (alpha - beta*u*v) = 0
+\end{verbatim}
 
   For different production rates no such combination is conserved in
   general: d(alpha2*u - alpha1*v)/dt = (alpha1 - alpha2)*beta*u*v, which
@@ -2167,7 +2262,9 @@ text \<open>
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambda k. 0)(iU := du/dt, iV := dv/dt))
+\begin{verbatim}
+    vec_lambda ((lambda k. 0)(iU := du/dt, iV := dv/dt))
+\end{verbatim}
 
   Difference conservation uses DI\_Vect (Differential Induction for
   vector-valued ODEs) applied twice (via antisymmetry); the domain
@@ -2204,17 +2301,24 @@ text \<open>
 
 paragraph \<open>Toggle switch: conservation in degradation-free form\<close>
 text \<open>
-  ODE:
+  \textbf{ODE:}\\
+\begin{verbatim}
     du/dt = alpha1 - beta*u*v
     dv/dt = alpha2 - beta*u*v
+\end{verbatim}
 
-  CONSERVATION LAW (Lie derivative argument):
-    d(alpha2*u - alpha1*v)/dt = alpha2*(alpha1 - beta*u*v) - alpha1*(alpha2 - beta*u*v)
-                        = alpha2*alpha1 - alpha2*beta*u*v - alpha1*alpha2 + alpha1*beta*u*v
-                        = (alpha1 - alpha2)*beta*u*v
+  \textbf{CONSERVATION LAW (Lie derivative argument):}\\
+\begin{verbatim}
+    d(alpha2*u - alpha1*v)/dt
+      = alpha2*(alpha1 - beta*u*v) - alpha1*(alpha2 - beta*u*v)
+      = alpha2*alpha1 - alpha2*beta*u*v - alpha1*alpha2 + alpha1*beta*u*v
+      = (alpha1 - alpha2)*beta*u*v
+\end{verbatim}
 
   In the symmetric case alpha1 = alpha2 = alpha, the conservation is:
+\begin{verbatim}
     d(u - v)/dt = (alpha - beta*u*v) - (alpha - beta*u*v) = 0
+\end{verbatim}
 
   So u(t) - v(t) = u(0) - v(0)  (the difference is preserved)
 \<close>
@@ -2347,7 +2451,7 @@ qed
 
 
 text \<open>
-  Using DC to derive a stronger invariant
+  \textbf{Using DC to derive a stronger invariant}\\
 
   Now we demonstrate the DC pattern: USE the conservation law as a
   CUT to strengthen the domain, then derive further consequences.
@@ -2358,7 +2462,9 @@ text \<open>
 
   Using DC, we strengthen the domain to \{(u,v). u = v\}, and within
   this domain the ODE simplifies to a 1-D system:
-    du/dt = alpha - beta*u\textasciicircum{}2
+\begin{verbatim}
+    du/dt = alpha - beta*u^2
+\end{verbatim}
 
   Now we can prove further invariants on this restricted system.
 \<close>
@@ -2438,7 +2544,7 @@ qed
                     
 
 text \<open>
-  SUMMARY: What we have achieved with DC
+  \textbf{SUMMARY: What we have achieved with DC}\\
 
   We have:
 \begin{enumerate}
@@ -2469,20 +2575,26 @@ text \<open>
   The toggle switch consists of two genes encoding proteins that
   mutually repress each other's expression:
 
+\begin{verbatim}
       Gene 1 -> Protein u -| Gene 2
       Gene 2 -> Protein v -| Gene 1
+\end{verbatim}
 
   \textbf{THE ODE MODEL}\\
   Gardner et al. modeled the dynamics using Hill functions, which capture
   the cooperative nature of transcription-factor binding:
 
-      du/dt = alpha1 / (1 + v\textasciicircum{}beta) - u
-      dv/dt = alpha2 / (1 + u\textasciicircum{}gamma) - v
+\begin{verbatim}
+      du/dt = alpha1 / (1 + v^beta) - u
+      dv/dt = alpha2 / (1 + u^gamma) - v
+\end{verbatim}
 
   where:
+\begin{verbatim}
     alpha1, alpha2 are the maximal production rates of each protein
-    beta, gamma   are the Hill coefficients (cooperativity exponents)
-    u, v   are protein concentrations
+    beta, gamma    are the Hill coefficients (cooperativity exponents)
+    u, v           are protein concentrations
+\end{verbatim}
 
   Each Hill term is a DECREASING function of the repressor concentration,
   capturing the fact that as repressor levels rise, target gene expression
@@ -2530,7 +2642,7 @@ text \<open>
 \end{enumerate}
 
   \textbf{HOW WE VERIFY IT}\\
-  POSITIVITY OF u: DIFFERENTIAL GHOST (DG).
+  \textbf{POSITIVITY OF u: DIFFERENTIAL GHOST (DG).}\\
   We cannot prove u(t) > 0 by Differential Induction (DI) alone: the Lie
   derivative of u along the vector field includes the -u term, which
   is negative when u is positive. DI requires this derivative to be
@@ -2539,20 +2651,26 @@ text \<open>
   Instead, we use the DIFFERENTIAL GHOST technique. We introduce a ghost
   variable g satisfying the linear ODE:
 
+\begin{verbatim}
       g' = g / 2,    g(0) = 1 / sqrt(u(0))
+\end{verbatim}
 
   (This is the same ghost trick we use for exponential decay and for
   CRN simple decay.) The key insight: consider the combined quantity
 
-      I(u, g) = u * g\textasciicircum{}2
+\begin{verbatim}
+      I(u, g) = u * g^2
+\end{verbatim}
 
   Its Lie derivative along the EXTENDED vector field (u-dynamics plus
   g-dynamics) is:
 
-      dI/dt = (du/dt) * g\textasciicircum{}2 + u * 2g * (dg/dt)
-            = (alpha1/(1+v\textasciicircum{}beta) - u) * g\textasciicircum{}2 + u * 2g * (g/2)
-            = alpha1/(1+v\textasciicircum{}beta) * g\textasciicircum{}2 - u*g\textasciicircum{}2 + u*g\textasciicircum{}2
-            = alpha1/(1+v\textasciicircum{}beta) * g\textasciicircum{}2
+\begin{verbatim}
+      dI/dt = (du/dt) * g^2 + u * 2g * (dg/dt)
+            = (alpha1/(1+v^beta) - u) * g^2 + u * 2g * (g/2)
+            = alpha1/(1+v^beta) * g^2 - u*g^2 + u*g^2
+            = alpha1/(1+v^beta) * g^2
+\end{verbatim}
 
   The -u*g\textasciicircum{}2 from the ODE and the +u*g\textasciicircum{}2 from the ghost CANCEL
   perfectly (this is DG magic!). The residual
@@ -2569,15 +2687,18 @@ text \<open>
   we conclude I(tau) >= 1 for all tau in [0, t]. Since g\textasciicircum{}2 >= 0, this means u*g\textasciicircum{}2 >= 1
   forces u > 0 (because if u <= 0, the product u*g\textasciicircum{}2 could not be >= 1).
 
-  NON-NEGATIVITY OF v: DIFFERENTIAL INDUCTION WITH A BOUNDARY CONDITION
-  (DI\_boundary). Our DI\_Generic (and its vector counterpart DI\_Vect)
+  \textbf{NON-NEGATIVITY OF v: DIFFERENTIAL INDUCTION WITH A BOUNDARY CONDITION
+  (DI\_boundary).}\\
+  Our DI\_Generic (and its vector counterpart DI\_Vect)
   faithfully formalizes, as a provably verified lemma, the STANDARD
   differential induction rule of dDL, which requires the Lie derivative
   of the candidate invariant to be >= 0 EVERYWHERE ALONG THE TRAJECTORY,
   not just at the boundary. For the invariant v >= 0, the Lie derivative
   is:
 
-      d(v - 0)/dt = alpha2/(1+u\textasciicircum{}gamma) - v
+\begin{verbatim}
+      d(v - 0)/dt = alpha2/(1+u^gamma) - v
+\end{verbatim}
 
   This expression is NOT globally non-negative: when v is large, it
   becomes negative. Hence, standard DI cannot discharge the inductive
@@ -2588,7 +2709,8 @@ text \<open>
   of our formalization; DI\_boundary only requires a strictly positive
   derivative on the boundary.
 
-  UNCONDITIONAL POSITIVITY OF u: the non-negativity of v discharges the
+  \textbf{UNCONDITIONAL POSITIVITY OF u}\\
+  The non-negativity of v discharges the
   assumption of the conditional result. No DC is needed for this
   composition.
 
@@ -2617,7 +2739,9 @@ text \<open>
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambda k. 0)(iU := du/dt, iV := dv/dt))
+\begin{verbatim}
+    vec_lambda ((lambda k. 0)(iU := du/dt, iV := dv/dt))
+\end{verbatim}
 
   The positivity proofs apply DG to extend the trajectory with the ghost
   at iG, then DI\_Vect to prove u*g\textasciicircum{}2 >= 1 along the extended
@@ -2889,11 +3013,12 @@ text \<open>
 \end{enumerate}
 \<close>
 text \<open>
-  PART B: Non-negativity of v for the Gardner toggle switch (via DI\_boundary)
+  \textbf{PART B: Non-negativity of v for the Gardner toggle switch (via DI\_boundary)}\\
   We prove: if v(0) >= 0, alpha2 > 0, and gamma is a positive even Hill coefficient,
   then v(tau) >= 0 throughout the Gardner toggle switch trajectory.
-  PROOF METHOD: Differential Induction with Boundary Condition (DI\_boundary).
-  The candidate function is `invar(w) = vec\_nth w iV` (i.e., the v component).
+
+  \textbf{PROOF METHOD: Differential Induction with Boundary Condition (DI\_boundary).}\\
+  The candidate function is \texttt{invar(w) = vec\_nth w iV} (i.e., the v component).
 \begin{itemize}
 \item Differentiability assumption: invar is linear, so it's everywhere
   Frechet-differentiable with Dinvar = (lambda w. vec\_nth w iV).
@@ -2902,9 +3027,12 @@ text \<open>
 \end{itemize}
 
     The Gardner ODE gives:
-      vec\_nth (f tau (y tau)) iV = alpha2/(1 + (vec\_nth (y tau) iU)\textasciicircum{}gamma) - vec\_nth (y tau) iV
-                            = alpha2/(1 + (vec\_nth (y tau) iU)\textasciicircum{}gamma) - 0        (since v = 0)
-                            = alpha2/(1 + u\textasciicircum{}gamma)
+\begin{verbatim}
+      vec_nth (f tau (y tau)) iV
+        = alpha2/(1 + (vec_nth (y tau) iU)^gamma) - vec_nth (y tau) iV
+        = alpha2/(1 + (vec_nth (y tau) iU)^gamma) - 0      (since v = 0)
+        = alpha2/(1 + u^gamma)
+\end{verbatim}
 
     Since alpha2 > 0 and 1 + u\textasciicircum{}gamma > 0 (because gamma is even, so u\textasciicircum{}gamma >= 0),
     the quotient is strictly positive.
@@ -3050,7 +3178,7 @@ qed
 
 
 text \<open>
-  PART C: The unconditional Gardner toggle switch positivity theorem
+  \textbf{PART C: The unconditional Gardner toggle switch positivity theorem}\\
 
   This upgrades gardner\_toggle\_switch\_u\_positive from conditional
   (assuming v(tau) >= 0 throughout) to UNCONDITIONAL (just assuming
@@ -3121,12 +3249,15 @@ qed
 text \<open>
   \textbf{SUMMARY OF THE UNCONDITIONAL RESULT}\\
   We have proved:
-    THEOREM (Unconditional Strict Positivity for the Gardner Toggle Switch):
+
+    \textbf{THEOREM (Unconditional Strict Positivity for the Gardner Toggle Switch):}\\
 
     For the Gardner et al. (Nature 2000) toggle switch ODE
 
-        du/dt = alpha1 / (1 + v\textasciicircum{}beta) - u
-        dv/dt = alpha2 / (1 + u\textasciicircum{}gamma) - v
+\begin{verbatim}
+        du/dt = alpha1 / (1 + v^beta) - u
+        dv/dt = alpha2 / (1 + u^gamma) - v
+\end{verbatim}
 
     if:
 \begin{itemize}
@@ -3141,6 +3272,7 @@ text \<open>
 \end{itemize}
 
     then u(t) > 0 for all t >= 0.
+
   \textbf{TECHNICAL CONTRIBUTIONS DEMONSTRATED:}\\
 \begin{enumerate}
 \item DI\_boundary (boundary-aware differential induction) enables the
@@ -3170,16 +3302,20 @@ text \<open>
   \textbf{THE CIRCUIT}\\
   The circuit is the Gardner toggle switch of the previous example,
 
+\begin{verbatim}
       Gene 1 -> Protein u -| Gene 2
       Gene 2 -> Protein v -| Gene 1
+\end{verbatim}
 
   with production rates that vary in time.
 
   \textbf{THE ODE MODEL}\\
   The time-varying toggle switch ODE is:
 
-      du/dt = alpha1(tau) / (1 + v\textasciicircum{}beta) - u
-      dv/dt = alpha2(tau) / (1 + u\textasciicircum{}gamma) - v
+\begin{verbatim}
+      du/dt = alpha1(tau) / (1 + v^beta) - u
+      dv/dt = alpha2(tau) / (1 + u^gamma) - v
+\end{verbatim}
 
   where alpha1, alpha2 :: real => real are functions of time.
 
@@ -3199,7 +3335,10 @@ text \<open>
   that drops alpha1 from a baseline alpha1\_high to a low value alpha1\_low and
   back could be modeled as a bump:
 
-      alpha1(tau) = alpha1\_high - (alpha1\_high - alpha1\_low) * bump(tau, t\_start, t\_end, steepness)
+\begin{verbatim}
+      alpha1(tau) = alpha1_high - (alpha1_high - alpha1_low) *
+                                  bump(tau, t_start, t_end, steepness)
+\end{verbatim}
 
   where bump is a continuous function that is 0 outside
   [t\_start, t\_end] and close to 1 inside. Piecewise-constant inducer
@@ -3212,9 +3351,11 @@ text \<open>
   Little changes from the constant-rate version. The DG reasoning for
   u-positivity used the cancellation
 
-      d(u*y\textasciicircum{}2)/dt = (alpha1/(1+v\textasciicircum{}beta) - u)*y\textasciicircum{}2 + u*2y*(y/2)
-                 = alpha1/(1+v\textasciicircum{}beta)*y\textasciicircum{}2 - u*y\textasciicircum{}2 + u*y\textasciicircum{}2
-                 = alpha1/(1+v\textasciicircum{}beta)*y\textasciicircum{}2
+\begin{verbatim}
+      d(u*y^2)/dt = (alpha1/(1+v^beta) - u)*y^2 + u*2y*(y/2)
+                  = alpha1/(1+v^beta)*y^2 - u*y^2 + u*y^2
+                  = alpha1/(1+v^beta)*y^2
+\end{verbatim}
 
   which remains valid when alpha1 is replaced by alpha1(tau), giving
   alpha1(tau)/(1+v\textasciicircum{}beta)*y\textasciicircum{}2, still non-negative provided alpha1(tau) >= 0 pointwise.
@@ -3248,7 +3389,9 @@ text \<open>
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambda k. 0)(iU := du/dt, iV := dv/dt))
+\begin{verbatim}
+    vec_lambda ((lambda k. 0)(iU := du/dt, iV := dv/dt))
+\end{verbatim}
 
   As in the constant-rate version, the proof applies DG to extend the
   trajectory with the ghost at iG, then DI\_Vect to prove
@@ -3518,16 +3661,22 @@ text \<open>
   \textbf{THE CIRCUIT}\\
   A single gene whose protein represses its own expression:
 
+\begin{verbatim}
       Gene u -> Protein u -| Gene u
+\end{verbatim}
 
   \textbf{THE ODE MODEL}\\
-      du/dt = alpha / (1 + u\textasciicircum{}n) - beta*u
+\begin{verbatim}
+      du/dt = alpha / (1 + u^n) - beta*u
+\end{verbatim}
 
   where:
+\begin{verbatim}
     alpha  is the maximal production rate (baseline promoter strength)
-    beta  is the protein degradation rate
-    n  is the Hill coefficient (cooperativity of the self-repression)
-    u  is the protein concentration
+    beta   is the protein degradation rate
+    n      is the Hill coefficient (cooperativity of the self-repression)
+    u      is the protein concentration
+\end{verbatim}
 
   When u is small, the Hill term alpha/(1+u\textasciicircum{}n) approx alpha is large -> rapid production.
   When u is large, the Hill term is small -> production slows while
@@ -3555,14 +3704,16 @@ text \<open>
   is always >= 0 (since alpha >= 0 and u\textasciicircum{}n >= 0 for even n), so
   the argument carries through unchanged.
 
+\begin{verbatim}
   Ghost: g' = (beta/2)*g,  g(0) = 1/sqrt(u(0))
-  Invariant: u * g\textasciicircum{}2 >= 1
+  Invariant: u * g^2 >= 1
   Lie derivative:
-    d(u*g\textasciicircum{}2)/dt = (du/dt)*g\textasciicircum{}2 + u*2g*(dg/dt)
-               = (alpha/(1+u\textasciicircum{}n) - beta*u)*g\textasciicircum{}2 + u*2g*(beta/2*g)
-               = alpha/(1+u\textasciicircum{}n)*g\textasciicircum{}2 - beta*u*g\textasciicircum{}2 + beta*u*g\textasciicircum{}2
-               = alpha/(1+u\textasciicircum{}n)*g\textasciicircum{}2
-               >= 0   (since alpha >= 0, 1+u\textasciicircum{}n > 0, g\textasciicircum{}2 >= 0)
+    d(u*g^2)/dt = (du/dt)*g^2 + u*2g*(dg/dt)
+                = (alpha/(1+u^n) - beta*u)*g^2 + u*2g*(beta/2*g)
+                = alpha/(1+u^n)*g^2 - beta*u*g^2 + beta*u*g^2
+                = alpha/(1+u^n)*g^2
+                >= 0   (since alpha >= 0, 1+u^n > 0, g^2 >= 0)
+\end{verbatim}
 
   The beta*u*g\textasciicircum{}2 terms cancel (DG magic). The residual alpha/(1+u\textasciicircum{}n)*g\textasciicircum{}2 is
   non-negative. Hence u*g\textasciicircum{}2 >= 1 is invariant, which implies u > 0.
@@ -3596,7 +3747,9 @@ text \<open>
 \end{itemize}
 
   The ODE is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambda k. 0)(iU := du/dt))
+\begin{verbatim}
+    vec_lambda ((lambda k. 0)(iU := du/dt))
+\end{verbatim}
 
   The proof applies DG to extend the trajectory with the ghost at iG,
   then DI\_Vect to prove u*g\textasciicircum{}2 >= 1 along the extended
@@ -3853,9 +4006,11 @@ text \<open>
   (Nag et al., 2026).
 
   \textbf{THE CIRCUIT}\\
+\begin{verbatim}
       Gene u -> Protein u -| Gene v
       Gene v -> Protein v -| Gene w
       Gene w -> Protein w -| Gene u
+\end{verbatim}
 
   A ring of three repressive interactions. With the right parameters,
   no stable fixed point exists and the system oscillates: the three
@@ -3863,21 +4018,25 @@ text \<open>
   phase-shifted trio.
 
   \textbf{THE ODE MODEL}\\
-      du/dt = alpha / (1 + w\textasciicircum{}n) - u
-      dv/dt = alpha / (1 + u\textasciicircum{}n) - v
-      dw/dt = alpha / (1 + v\textasciicircum{}n) - w
+\begin{verbatim}
+      du/dt = alpha / (1 + w^n) - u
+      dv/dt = alpha / (1 + u^n) - v
+      dw/dt = alpha / (1 + v^n) - w
+\end{verbatim}
 
   where:
-    alpha  is the maximal protein production rate
-    n  is the Hill coefficient (cooperativity)
+\begin{verbatim}
+    alpha    is the maximal protein production rate
+    n        is the Hill coefficient (cooperativity)
     u, v, w  are the three protein concentrations
+\end{verbatim}
 
   For simplicity we use a symmetric model (same alpha and n for all three
   genes). The original Elowitz-Leibler paper uses this symmetric form
   for their theoretical analysis.
 
   \textbf{WHAT WE VERIFY}\\
-  STRICT POSITIVITY OF ALL THREE PROTEINS:
+  \textbf{STRICT POSITIVITY OF ALL THREE PROTEINS:}\\
     If u(0) > 0, v(0) > 0, w(0) > 0, alpha >= 0, and n is a positive even
     integer, then u(t) > 0, v(t) > 0, w(t) > 0 for all t >= 0.
 
@@ -3892,20 +4051,23 @@ text \<open>
   machinery beyond our current tooling (see LIMITATIONS).
 
   \textbf{HOW WE VERIFY IT}\\
-  DIFFERENTIAL GHOST (DG), THREE INDEPENDENT COPIES.
-  KEY OBSERVATION: With EVEN Hill coefficients, the positivity proof
+  \textbf{DIFFERENTIAL GHOST (DG), THREE INDEPENDENT COPIES.}\\
+  \textbf{KEY OBSERVATION}\\
+  With EVEN Hill coefficients, the positivity proof
   for each component is INDEPENDENT of the other components. The ring
   coupling disappears at the level of the positivity argument.
 
-  For u-positivity:
+  \textbf{For u-positivity:}\\
+\begin{verbatim}
     Ghost: g' = g/2,  g(0) = 1/sqrt(u(0))
-    Invariant: u*g\textasciicircum{}2 >= 1
+    Invariant: u*g^2 >= 1
     Lie derivative:
-      d(u*g\textasciicircum{}2)/dt = (du/dt)*g\textasciicircum{}2 + u*2g*(dg/dt)
-                 = (alpha/(1+w\textasciicircum{}n) - u)*g\textasciicircum{}2 + u*2g*(g/2)
-                 = alpha/(1+w\textasciicircum{}n)*g\textasciicircum{}2 - u*g\textasciicircum{}2 + u*g\textasciicircum{}2
-                 = alpha/(1+w\textasciicircum{}n)*g\textasciicircum{}2
-                 >= 0   (since alpha >= 0, w\textasciicircum{}n >= 0 for even n, g\textasciicircum{}2 >= 0)
+      d(u*g^2)/dt = (du/dt)*g^2 + u*2g*(dg/dt)
+                  = (alpha/(1+w^n) - u)*g^2 + u*2g*(g/2)
+                  = alpha/(1+w^n)*g^2 - u*g^2 + u*g^2
+                  = alpha/(1+w^n)*g^2
+                  >= 0   (since alpha >= 0, w^n >= 0 for even n, g^2 >= 0)
+\end{verbatim}
 
   CRUCIALLY: the Hill term alpha/(1+w\textasciicircum{}n) is always non-negative for even n,
   regardless of the sign of w. So we do NOT need to prove w >= 0 first.
@@ -3935,7 +4097,9 @@ text \<open>
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambda k. 0)(iU := du/dt, iV := dv/dt, iW := dw/dt))
+\begin{verbatim}
+    vec_lambda ((lambda k. 0)(iU := du/dt, iV := dv/dt, iW := dw/dt))
+\end{verbatim}
 
   Each of repressilator\_u\_positive, repressilator\_v\_positive and
   repressilator\_w\_positive applies DG to extend the trajectory with the
@@ -4764,26 +4928,32 @@ text \<open>
   each other (\{\} <- Z1 + Z2), plus one "process species" X that is
   the controlled variable:
 
-      \{\}        ->(mu)     Z1        (constant production of Z1 - setpoint)
-      X        ->(theta)     Z2 + X    (Z2 produced at rate proportional to X)
-      Z1 + Z2  ->(eta)     \{\}         (stoichiometric annihilation)
+\begin{verbatim}
+      {}       ->(mu)     Z1        (constant production of Z1 - setpoint)
+      X        ->(theta)  Z2 + X    (Z2 produced at rate proportional to X)
+      Z1 + Z2  ->(eta)    {}        (stoichiometric annihilation)
+\end{verbatim}
 
   Plus some dynamics for X (which we leave abstract as d*X terms).
 
   \textbf{THE MASS-ACTION ODE MODEL}\\
   In the symmetric formulation:
 
+\begin{verbatim}
       dZ1/dt = mu - eta * Z1 * Z2
       dZ2/dt = theta * X - eta * Z1 * Z2
+\end{verbatim}
 
   The X dynamics can be anything - biosensors, protein circuits, etc.
   The key observation is that the DIFFERENCE Z1 - Z2 encodes the
   integral of the tracking error:
 
+\begin{verbatim}
       d(Z1 - Z2)/dt = (mu - eta*Z1*Z2) - (theta*X - eta*Z1*Z2)
                     = mu - theta*X
                     = theta * (mu/theta - X)
-                    = theta * (X\_setpoint - X)
+                    = theta * (X_setpoint - X)
+\end{verbatim}
 
   The eta*Z1*Z2 annihilation terms CANCEL, leaving the tracking error.
   So Z1 - Z2 acts as the integrator of the error X\_setpoint - X.
@@ -4797,9 +4967,12 @@ text \<open>
   work: when the system IS at the setpoint X = mu/theta, the difference
   Z1 - Z2 is CONSERVED:
 
+\begin{verbatim}
     Z1(t) - Z2(t) = Z1(0) - Z2(0)   for all t >= 0.
+\end{verbatim}
 
-  INTERPRETATION: at the setpoint, the controller's "integral state"
+  \textbf{INTERPRETATION}\\
+  At the setpoint, the controller's "integral state"
   (Z1 - Z2) is frozen - no further correction is needed because the
   tracking error is zero. This is precisely the behavior we'd expect
   from a perfect integral controller: it accumulates error when there
@@ -4828,8 +5001,10 @@ text \<open>
   argument, structurally identical to our CRN conservation laws. The Lie
   derivative of (Z1 - Z2) along the field is:
 
+\begin{verbatim}
       d(Z1 - Z2)/dt = (mu - eta*Z1*Z2) - (theta*X - eta*Z1*Z2)
                     = mu - theta*X
+\end{verbatim}
 
   At the setpoint X = mu/theta, this becomes mu - theta*(mu/theta) = 0, so
   Z1 - Z2 is conserved.
@@ -4859,7 +5034,9 @@ text \<open>
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambda k. 0)(iZ1 := dZ1/dt, iZ2 := dZ2/dt, iX := 0))
+\begin{verbatim}
+    vec_lambda ((lambda k. 0)(iZ1 := dZ1/dt, iZ2 := dZ2/dt, iX := 0))
+\end{verbatim}
 
   The production rate mu is called mu1 in the formalization. The proof
   applies DI\_Vect twice (via antisymmetry) to show that X stays at
@@ -5156,13 +5333,15 @@ qed
 subsubsection \<open>GRN benchmark summary\<close>
 
 text \<open>
-  |  \# | System                       | Property              | Method         |
-  |----|------------------------------|-----------------------|----------------|
-  |  1 | Gardner toggle switch (cond) | u(t) > 0              | DG + Hill      |
-  |  2 | Gardner toggle switch (uncon)| u(t) > 0              | DG+DI\_bnd+Hill |
-  |  3 | Negative autoregulation      | u(t) > 0              | DG + Hill-even |
-  |  4 | Repressilator                | u,v,w > 0             | DG + Hill-even |
-  |  5 | Antithetic integral feedback | Z1 - Z2 conserved    | DI (setpoint)  |
+\begin{verbatim}
+  | # | System                        | Property          | Method         |
+  |---|-------------------------------|-------------------|----------------|
+  | 1 | Gardner toggle switch (cond)  | u(t) > 0          | DG + Hill      |
+  | 2 | Gardner toggle switch (uncon) | u(t) > 0          | DG+DI_bnd+Hill |
+  | 3 | Negative autoregulation       | u(t) > 0          | DG + Hill-even |
+  | 4 | Repressilator                 | u,v,w > 0         | DG + Hill-even |
+  | 5 | Antithetic integral feedback  | Z1 - Z2 conserved | DI (setpoint)  |
+\end{verbatim}
 
   \textbf{TAKING STOCK: WHAT WE HAVE}\\
   \textbf{CORE dDL RULES (PROVABLY VERIFIED LEMMAS):}\\
@@ -5188,10 +5367,10 @@ text \<open>
 \item assemble\_test, component\_sq\_has\_derivative, ...
 \end{itemize}
 
-  CRN BENCHMARK (12 examples):
+  \textbf{CRN BENCHMARK (12 examples):}\\
     Conservation laws, strict positivity via DG
 
-  GRN BENCHMARK (5 examples):
+  \textbf{GRN BENCHMARK (5 examples):}\\
     Gene regulatory motifs from Gardner (toggle switch), Elowitz
     (repressilator), Alon (negative autoregulation), Briat et al.
     (antithetic integral feedback).
@@ -5199,9 +5378,9 @@ text \<open>
 
 subsection \<open>Benchmark on Programmable Biological Circuit\<close>
 text \<open>
-  Programmable Biological Circuit: Correctness of the min(x,y) CRN
+  \textbf{Programmable Biological Circuit: Correctness of the min(x,y) CRN
   via DIRECT use of the provably verified dDL lemmas DI\_Vect, DC and
-  DI\_convergence\_rate
+  DI\_convergence\_rate}\\
 
   \textbf{BIOLOGICAL CONTEXT}\\
   This part demonstrates that the provably verified dDL lemmas can be used
@@ -5211,12 +5390,16 @@ text \<open>
   prove six correctness properties.
 
   \textbf{THE CHEMICAL REACTIONS}\\
+\begin{verbatim}
       X + Y ->(k) Z
+\end{verbatim}
 
   \textbf{THE MASS-ACTION ODE MODEL}\\
+\begin{verbatim}
       d[X]/dt = -k * [X] * [Y]
       d[Y]/dt = -k * [X] * [Y]
       d[Z]/dt =  k * [X] * [Y]
+\end{verbatim}
 
   \textbf{WHAT WE VERIFY}\\
 \begin{enumerate}
@@ -5307,7 +5490,9 @@ text \<open>
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
-    vec\_lambda ((lambda i. 0)(iX := d[X]/dt, iY := d[Y]/dt, iZ := d[Z]/dt))
+\begin{verbatim}
+    vec_lambda ((lambda i. 0)(iX := d[X]/dt, iY := d[Y]/dt, iZ := d[Z]/dt))
+\end{verbatim}
 
   crn\_min\_correctness\_full\_R3 instantiates the full specification in
   R\textasciicircum{}3, at the coordinates 0, 1 and 2.
@@ -5329,13 +5514,17 @@ subsubsection \<open>Property 1: monotonic progress (direct use of DI\_Vect)\<cl
 
 text \<open>
   We prove [Z](t) >= [Z](0) by a FRESH DI\_Vect application with:
-    h(v) = vec\_nth (y 0) iZ     (constant: the initial value of Z)
-    g(v) = vec\_nth v iZ          (current value of Z)
+\begin{verbatim}
+    h(v) = vec_nth (y 0) iZ    (constant: the initial value of Z)
+    g(v) = vec_nth v iZ        (current value of Z)
+\end{verbatim}
 
+\begin{verbatim}
   Initial condition:  Z(0) <= Z(0)  trivially
   Lie derivative check:
     Dh(field) = 0
     Dg(field) = field[iZ] = k*X*Y
+\end{verbatim}
   Need: 0 <= k*X*Y, which holds when k >= 0 and X(tau), Y(tau) >= 0.
 
   Limitation: the non-negativity of X and Y along the trajectory
@@ -5426,7 +5615,7 @@ proof -
 qed
 
 text \<open>
-  HELPER: Generalized monotonicity -- Z(t1) <= Z(t2) for any t1 <= t2
+  \textbf{HELPER: Generalized monotonicity -- Z(t1) <= Z(t2) for any t1 <= t2}\\
 
   Generalizes crn\_min\_Z\_monotonic from "Z(t) >= Z(0)" to "Z(t1) <= Z(t2)
   for any 0 <= t1 <= t2 <= T".
@@ -5580,7 +5769,8 @@ text \<open>
   it stays above that threshold, the computational analog of
   write-once memory.
 
-  STANDALONE LEMMA: This is the only computing-CRN correctness property
+  \textbf{STANDALONE LEMMA}\\
+  This is the only computing-CRN correctness property
   in the Programmable Biological Circuit section that uses DC directly.
   It is not bundled into crn\_min\_correctness\_full because its conclusion
   is a domain-restricted solves\_ode predicate (not a scalar inequality),
@@ -5661,12 +5851,14 @@ text \<open>
   But it does close the "what is the answer at equilibrium?" question
   algebraically, completing the equilibrium-correctness side of the story.
 
-  PROOF:
+  \textbf{PROOF:}\\
+\begin{verbatim}
     The conservation laws give X + Z = x0 and Y + Z = y0.
     From X*Y = 0, either X = 0 or Y = 0:
       Case X = 0: Z = x0 from X+Z=x0; Y = y0-x0 from Y+Z=y0.
                   Y >= 0 forces x0 <= y0, so min(x0,y0) = x0 = Z.
       Case Y = 0: symmetric, gives min(x0,y0) = y0 = Z.
+\end{verbatim}
 
   \textbf{TOOLING USED:}\\
 \begin{itemize}
@@ -5742,14 +5934,21 @@ text \<open>
   Each correctness property is proved using dDL rules, either directly in
   the correctness layer or through the conservation laws:
 
-    PROPERTY 1 (monotonicity)        ->  fresh DI\_Vect application with new invariant
-    PROPERTY 2 (upper bound)         ->  conservation laws + algebra (DI used)
-    PROPERTY 3 (commitment)          ->  DC application (with PROPERTY 1 as a sub-lemma)
-    PROPERTY 4 (equilibrium correct) ->  algebra on conservation laws (DI used transitively)
-    PROPERTY 5 (epsilon-convergence) ->  DI\_convergence\_rate application (below)
+\begin{verbatim}
+    PROPERTY 1 (monotonicity)        ->  fresh DI_Vect application with
+                                         new invariant
+    PROPERTY 2 (upper bound)         ->  conservation laws + algebra
+                                         (DI used)
+    PROPERTY 3 (commitment)          ->  DC application (with PROPERTY 1
+                                         as a sub-lemma)
+    PROPERTY 4 (equilibrium correct) ->  algebra on conservation laws
+                                         (DI used transitively)
+    PROPERTY 5 (epsilon-convergence) ->  DI_convergence_rate application
+                                         (below)
     PROPERTY 6 (combined spec)       ->  packages 1, 2, 4 and 5 (below)
+\end{verbatim}
   \textbf{THE COMPOSITIONAL PATTERN:}\\
-  PROPERTY 3 (commitment) demonstrates the **DI-then-DC** compositional
+  PROPERTY 3 (commitment) demonstrates the \textbf{DI-then-DC} compositional
   pattern: prove an invariant with DI, then use DC to lift it into a
   domain restriction. This is the same pattern as our
   toggle\_switch\_DC\_strengthened\_domain example, and it's the building
@@ -5776,17 +5975,20 @@ text \<open>
   bound. This provides a finite-time convergence rate, strictly stronger
   than the conditional equilibrium correctness.
 
-  CONTRIBUTION
+  \textbf{CONTRIBUTION}\\
   Together with the trajectory-level properties (monotonicity, upper bound,
   commitment) and the equilibrium characterization, this gives a NEAR-COMPLETE
   correctness story for the min(x,y) CRN:
 
-     The output Z is monotonically non-decreasing       (PROPERTY 1, DI)
-     The output Z is bounded above by min(x0, y0)       (PROPERTY 2, DI)
-     Once Z reaches a value, it stays                   (PROPERTY 3, DC)
-     At any equilibrium, Z = min(x0, y0)                (PROPERTY 4, algebra)
-     For any epsilon > 0, Z reaches within epsilon of min in        (PROPERTY 5, DI\_convergence\_rate)
-       finite time T(epsilon) = (min(x0,y0) - epsilon - Z(0)) / (k*epsilon\textasciicircum{}2)
+\begin{verbatim}
+     The output Z is monotonically non-decreasing   (PROPERTY 1, DI)
+     The output Z is bounded above by min(x0, y0)   (PROPERTY 2, DI)
+     Once Z reaches a value, it stays               (PROPERTY 3, DC)
+     At any equilibrium, Z = min(x0, y0)            (PROPERTY 4, algebra)
+     For any epsilon > 0, Z reaches within epsilon  (PROPERTY 5,
+       of min in finite time                         DI_convergence_rate)
+       T(epsilon) = (min(x0,y0) - epsilon - Z(0)) / (k*epsilon^2)
+\end{verbatim}
 
   PROPERTY 5 closes the gap left by PROPERTY 4: it doesn't just say
   "if you reach equilibrium, the answer is correct"; it says "you DO
@@ -5805,7 +6007,9 @@ text \<open>
   So the rate dZ/dtau = k*X*Y >= k*epsilon\textasciicircum{}2 uniformly on \{0..T\}.
 
   By the fundamental theorem of calculus:
-    Z(T) - Z(0) = (integral over [0..T] of dZ/dtau) >= k*epsilon\textasciicircum{}2*T
+\begin{verbatim}
+    Z(T) - Z(0) = (integral over [0..T] of dZ/dtau) >= k*epsilon^2*T
+\end{verbatim}
 
   So Z(T) >= Z(0) + k*epsilon\textasciicircum{}2*T.
 
@@ -5913,7 +6117,7 @@ proof -
       using X_ge Y_ge k_pos \<epsilon>_pos
       by (simp add: mult_mono' power2_eq_square)
   qed
-  \<comment> \<open>`induct\_step`:  The measure is the projection v |-> vec\_nth v iZ, whose
+  \<comment> \<open>\texttt{induct\_step}:  The measure is the projection v |-> vec\_nth v iZ, whose
       Frechet derivative is itself (has\_derivative\_vec\_nth); the Lie
       derivative is then just the field's iZ-component, namely k*X*Y.\<close>
   have induct_step: \<open>\<And>\<tau>. \<tau> \<in> {0..T} \<Longrightarrow>
@@ -5961,11 +6165,18 @@ text \<open>
   The min(x,y) CRN is a CORRECT-BY-DESIGN computational primitive in the
   following formal sense:
 
-     MONOTONIC PROGRESS:    Z(t) >= Z(0)              (PROPERTY 1, via DI)
-     BOUNDED OUTPUT:        Z(t) <= min(x0, y0)        (PROPERTY 2, via DI conservation)
-     COMMITTED OUTPUT:      Z(0) >= c ==> Z(t) >= c     (PROPERTY 3, via DI + DC; not bundled here)
-     EQUILIBRIUM CORRECT:   X*Y = 0 ==> Z = min(x0,y0)  (PROPERTY 4, algebra)
-     epsilon-CONVERGENCE:        T large ==> Z(T) > min - epsilon  (PROPERTY 5, FTC via DI\_convergence\_rate)
+\begin{verbatim}
+     MONOTONIC PROGRESS:   Z(t) >= Z(0)
+                           (PROPERTY 1, via DI)
+     BOUNDED OUTPUT:       Z(t) <= min(x0, y0)
+                           (PROPERTY 2, via DI conservation)
+     COMMITTED OUTPUT:     Z(0) >= c ==> Z(t) >= c
+                           (PROPERTY 3, via DI + DC; not bundled here)
+     EQUILIBRIUM CORRECT:  X*Y = 0 ==> Z = min(x0,y0)
+                           (PROPERTY 4, algebra)
+     epsilon-CONVERGENCE:  T large ==> Z(T) > min - epsilon
+                           (PROPERTY 5, FTC via DI_convergence_rate)
+\end{verbatim}
 
   Property 3 (commitment) is NOT bundled here because its conclusion is a
   domain-restricted solves\_ode predicate, not a scalar inequality, so it
@@ -6033,19 +6244,27 @@ next
             y_sol iv_x iv_y T_nn k_pos \<epsilon>_pos X_nn_along Y_nn_along T_large] .
 qed
 text \<open>
-   Combined correctness specification (5 properties)
+  \textbf{Combined correctness specification (5 properties)}\\
 
   This theorem bundles ALL FIVE correctness properties of the min(x,y) CRN
   into a single statement. Unlike the scalar-only crn\_min\_correctness\_specification,
   this version also includes Property 3 (commitment), a predicate-level fact
   about the ODE solution's domain restriction.
 
-  Properties bundled:
-     1: MONOTONIC PROGRESS    Z(T) >= Z(0)                  (DI)
-     2: BOUNDED OUTPUT        Z(T) <= min(x0, y0)            (DI conservation)
-     3: COMMITTED OUTPUT      ALL c. Z(0) >= c ==> (ALL tau in [0..T]. Z(tau) >= c)   (DI + DC)
-     4: EQUILIBRIUM CORRECT   X(T)*Y(T) = 0 ==> Z(T) = min      (algebra)
-     5: epsilon-CONVERGENCE         T large ==> Z(T) > min - epsilon      (DI\_convergence\_rate)
+  \textbf{Properties bundled:}\\
+\begin{verbatim}
+     1: MONOTONIC PROGRESS    Z(T) >= Z(0)
+                              (DI)
+     2: BOUNDED OUTPUT        Z(T) <= min(x0, y0)
+                              (DI conservation)
+     3: COMMITTED OUTPUT      ALL c. Z(0) >= c ==>
+                                (ALL tau in [0..T]. Z(tau) >= c)
+                              (DI + DC)
+     4: EQUILIBRIUM CORRECT   X(T)*Y(T) = 0 ==> Z(T) = min
+                              (algebra)
+     5: epsilon-CONVERGENCE   T large ==> Z(T) > min - epsilon
+                              (DI_convergence_rate)
+\end{verbatim}
 
   Note that Property 3 here is stated in its scalar-trajectory form
   "the value Z(tau) stays >= c at every point in [0..T]". The full
