@@ -177,10 +177,10 @@ text \<open>
 \begin{verbatim}
   ODE:        x' = -x
               (at coordinate iX)
-  Proof Goal: x(t) > 0 given x(0) > 0
+  Proof Goal: 0 < x(t) given 0 < x(0)
   Ghost:      g' = 1/2*g
               (at coordinate iG, distinct from iX)
-  Invariant:  x*g^2 >= 1
+  Invariant:  1 <= x*g^2
               (using DI_Vect with h = lambda v. 1, g = lambda v. x*g^2)
 \end{verbatim}
 \<close>

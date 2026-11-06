@@ -17,16 +17,19 @@ begin
 section \<open>Case study: bioreactor safety proof\<close>
 
 text \<open>
-  We formalize an engineered microorganism for biofuel production.
-  The substrate S is consumed by biomass X via Monod kinetics.  
-  Biomass growth produces a toxic intermediate Z, which is removed 
-  by an engineered enzymatic degradation pathway (Michaelis-Menten 
-  kinetics).  Growth is inhibited by high Z.
+  We formalize an engineered microorganism for biofuel production
+  \cite{Hollinshead2014}.  The substrate S is consumed by biomass X via
+  Monod kinetics \cite{Monod1949}.  Biomass growth produces a toxic
+  intermediate Z, which is removed by an engineered enzymatic degradation
+  pathway (Michaelis-Menten kinetics \cite{MichaelisMenten1913}).  Growth
+  is inhibited by high Z.
   
   The central design question: for what regime of feed rate u, 
   degradation rate k, and initial conditions does the intermediate 
-  Z stay below its toxicity threshold?  This is a bioreactor 
-  safety guarantee that cannot be obtained by simulation alone.\<close>
+  Z stay below its toxicity threshold?  This is a bioreactor safety
+  guarantee over whole ranges of parameter values, which covers the
+  parameter values and the solutions of the ODE model that standard
+  bio-engineering techniques, such as numerical simulation, can miss.\<close>
 
 
 subsection \<open>Vector field\<close>
@@ -122,10 +125,10 @@ lemma K_Z_plus_Z_pos:
   using K_Z_pos Z_nn 
   by simp
 
-text \<open>Monod consumption rate is bounded above by mu\_max * X.
-      (The "rate" here is the per-cell intrinsic term, without the 
-       biomass multiplier; the bound matters because we'll need to 
-       bound the flux into Z from above when proving the safety box.)\<close>
+text \<open>Monod consumption is bounded above by mu\_max * X.
+      (The per-cell uptake rate mu\_max*S/(K\_S+S) is at most mu\_max, and
+       the bound multiplies it by the biomass X; it matters because we
+       need to bound the flux into Z from above.)\<close>
 
 lemma monod_consumption_bound:
   fixes S X :: real
@@ -232,9 +235,10 @@ proof -
     by blast
 qed
 
-text \<open>MM degradation is monotone in Z: larger Z means faster degradation 
-      (up to saturation).  This is the key property that makes k/(K\_Z+Z) 
-      pointing inward at Z = Z\_tox.\<close>
+text \<open>MM degradation is monotone in Z: larger Z means faster degradation
+      (up to saturation).  This is the key property that makes the Z
+      component of the vector field point inward at an upper face of a box
+      in Z.\<close>
 
 lemma mm_degradation_monotone:
   fixes Z1 Z2 :: real
@@ -270,9 +274,9 @@ proof -
     by linarith
 qed
 
-text \<open>Monod uptake is monotone in S (at fixed X): larger substrate gives 
-      faster consumption. This is the key property that makes 
-      mu\_max*S/(K\_S+S) pointing inward at S = S\_max.\<close>
+text \<open>Monod uptake is monotone in S (at fixed X): larger substrate gives
+      faster consumption. This is the key property that makes the S
+      component of the vector field point inward at the face S = S\_max.\<close>
 
 lemma monod_uptake_monotone_in_S:
   fixes S1 S2 X :: real
@@ -334,7 +338,7 @@ text \<open>
   does not depend on X.  For given S and Z, the field therefore points the
   same way on both X faces, so it cannot point inward on both.  In the
   locale below this shows up as two design constraints that contradict
-  each other: X\_lower\_growth\_exceeds\_decay asks for r > 0 at the
+  each other: X\_lower\_growth\_exceeds\_decay asks for 0 < r at the
   slowest growth in the box (S = S\_min, Z = Z\_max), and
   X\_upper\_growth\_below\_decay asks for r < 0 at the fastest growth
   (S = S\_max, Z = Z\_min).  Growth increases with S and decreases with Z,
@@ -388,7 +392,7 @@ subsection \<open>Forward invariance of the safety region\<close>
 
 text \<open>
   Forward invariance of the box under the design constraints: a
-  trajectory that starts in the safety region and evolves under the
+  trajectory y that starts in the safety region and evolves under the
   metabolic ODE with constant feed rate u stays in the safety region.
   The derivation is correct, but its premises include the two
   contradictory X-face constraints explained above, so the theorem says
@@ -1163,10 +1167,10 @@ text \<open>
   box cannot point inward on both X faces); they come from 
   the bioreactor's feed controller and dilution rate management.
   
-  Given these operational bounds, we prove the engineered 
-  degradation pathway clears the toxic intermediate Z 
-  exponentially, from any initial Z above the alarm threshold 
-  down to the target operating level.  The clearance time is 
+  Given these operational bounds, we prove that the engineered
+  degradation pathway clears the toxic intermediate Z
+  exponentially, from any initial Z in the alarm zone [Z\_alarm, Z\_max]
+  toward the target operating level Z\_eq.  The clearance time is 
   explicitly computable from the decay rate delta\_Z.\<close>
 
 locale metabolic_z_clearance_params = metabolic_baseline_params +
@@ -1223,9 +1227,9 @@ locale metabolic_z_clearance_params = metabolic_baseline_params +
 begin
 
 text \<open>
-  Production-degradation gap is non-negative at Z\_alarm.  This 
-  is an immediate consequence of delta\_Z > 0 and 
-  degradation\_exceeds\_production.\<close>
+  The gap between degradation and production is non-negative at
+  Z\_alarm.  This is an immediate consequence of 0 < delta\_Z,
+  Z\_eq < Z\_alarm and degradation\_exceeds\_production.\<close>
 
 lemma gap_at_alarm_nn:
   \<open>0 \<le> k * Z_alarm / (K_Z + Z_alarm) -
@@ -1504,7 +1508,7 @@ qed
 
 
 text \<open>
-  Exponential decay of V\_Z while the trajectory stays in the 
+  Exponential decay of V\_Z while the trajectory y stays in the
   alarm zone.  This is the main REACH\_lyapunov application.\<close>
 
 lemma V_Z_exponential_decay:
@@ -1563,12 +1567,15 @@ qed
 
 
 text \<open>
-  Clearance time corollary.  If V\_Z starts at some level 
-  V\_0 and the trajectory stays in the alarm zone for time T, 
-  then V\_Z(T) <= L for any level L >= V\_0 * exp(-delta\_Z * T).
-  
-  The bio-engineer reads this as: "To get Z within epsilon of Z\_eq, 
-  wait T >= ln(V\_0 / (epsilon\textasciicircum{}2/2)) / delta\_Z hours."\<close>
+  Clearance time corollary.  If V\_Z starts at some level
+  V\_0 and the trajectory y stays in the alarm zone for time T,
+  then V\_Z(y(T)) <= L for any level L with V\_0 * exp(-delta\_Z * T) <= L.
+
+  The bio-engineer reads this as: "To bring V\_Z down to a level L, wait
+  ln(V\_0/L)/delta\_Z hours, as long as Z stays in the alarm zone."  The
+  full-band corollary V\_Z\_reaches\_sublevel\_full below drops this
+  restriction, so that Z comes within epsilon of Z\_eq after
+  ln(V\_0/(epsilon\textasciicircum{}2/2))/delta\_Z hours.\<close>
 
 lemma V_Z_reaches_sublevel:
   fixes y :: \<open>real \<Rightarrow> (real, 'a) vec\<close>
@@ -1596,7 +1603,7 @@ qed
 text \<open>
    \textbf{BIOREACTOR SAFETY THEOREM (inside metabolic\_z\_clearance\_params)}\\
 
-   This theorem is the paper-facing statement that separates the
+   This theorem is the headline statement that separates the
    bioreactor controller's responsibility (maintaining S and X)
    from the engineered pathway's guarantee (clearing Z).
 \<close>
@@ -1623,10 +1630,10 @@ text \<open>
   the operator manages macroscopic variables (feed, dilution); 
   the genetic design determines internal metabolic behavior.
   
-  The formal guarantee covers ALL trajectories consistent with 
-  the controller bounds, an uncountable family of scenarios that 
-  no finite simulation campaign can exhaust.  This is the value 
-  of formal verification over simulation.\<close>
+  The formal guarantee covers ALL trajectories y consistent with
+  the controller bounds, an uncountable family of scenarios, which
+  includes the scenarios that standard bio-engineering techniques,
+  such as numerical simulation, can miss.\<close>
 
 theorem bioreactor_safety:
   fixes y :: \<open>real \<Rightarrow> (real, 'a) vec\<close>
@@ -1669,7 +1676,7 @@ text \<open>
   The proof mirrors V\_Z\_Lie\_decrease but replaces ingredient (ii)
   (degradation lower bound at Z\_alarm) with a slope bound:
 \begin{verbatim}
-    f(Z) - f(Z_eq) >= beta*(Z - Z_eq)
+    beta*(Z - Z_eq) <= f(Z) - f(Z_eq)
 \end{verbatim}
   where beta = k*K\_Z / ((K\_Z + Z\_alarm)*(K\_Z + Z\_eq)) comes from the algebraic
   identity
@@ -1925,7 +1932,7 @@ qed
 
 text \<open>
   Combined Lyapunov decrease for the full Z range [Z\_eq, Z\_max].
-  Case-split on whether Z >= Z\_alarm (upper band, V\_Z\_Lie\_decrease) or
+  Case-split on whether Z\_alarm <= Z (upper band, V\_Z\_Lie\_decrease) or
   Z <= Z\_alarm (lower band, V\_Z\_Lie\_decrease\_lower).\<close>
 
 lemma V_Z_Lie_decrease_full:
@@ -1955,10 +1962,9 @@ qed
 text \<open>
   \textbf{Exponential decay of V\_Z over the full Z range [Z\_eq, Z\_max].}\\
 
-  This is the rigorous statement of the bound shown in the metabolic
-  Z-clearance figure: |Z(t) - Z\_eq| <= |Z(0) - Z\_eq| * exp(-delta\_Z*t/2),
-  which is the envelope plotted across BOTH Phase 1 (alarm) and Phase 2
-  (safe) without case-splitting on the trajectory.\<close>
+  This gives the bound |Z(t) - Z\_eq| <= |Z(0) - Z\_eq| * exp(-delta\_Z*t/2),
+  a single exponential envelope across BOTH Phase 1 (alarm) and Phase 2
+  (safe), without case-splitting on the trajectory y.\<close>
 
 lemma V_Z_exponential_decay_full:
   fixes y :: \<open>real \<Rightarrow> (real, 'a) vec\<close>
@@ -2047,8 +2053,8 @@ qed
 
 text \<open>
   Full-band bioreactor safety.  Mirrors \texttt{bioreactor\_safety} but admits
-  trajectories that pass through both the alarm zone and the safe zone
-  -- the single exponential envelope from the figure.\<close>
+  trajectories y that pass through both the alarm zone and the safe zone,
+  with the single exponential envelope above.\<close>
 
 theorem bioreactor_safety_full:
   fixes y :: \<open>real \<Rightarrow> (real, 'a) vec\<close>
@@ -2085,8 +2091,8 @@ text \<open>
    Adds three results to \texttt{metabolic\_z\_clearance\_params} that together upgrade
    \texttt{bioreactor\_safety\_full} from a conditional theorem (assuming
    \texttt{Z\_in\_full\_band}) to an unconditional one for the upper bound, with the
-   Z >= Z\_eq part isolated as a "controller-supplied invariant for the safe
-   phase" -- i.e., explicitly conditional and honest.
+   Z\_eq <= Z part isolated as a "controller-supplied invariant for the safe
+   phase" -- i.e., explicitly conditional.
 
    \textbf{Three new results:}\\
 \begin{enumerate}
@@ -2097,13 +2103,13 @@ text \<open>
 \item \texttt{bioreactor\_safety\_unconditional} -- composes (1) and (2).
 \end{enumerate}
 
-   Piece C (Z >= Z\_eq forward-invariance) is provably INCOMPATIBLE with
+   Piece C (forward invariance of Z\_eq <= Z) does not hold in general under
    \texttt{equilibrium\_condition}:
 \begin{verbatim}
        equilibrium_condition: P_max <= D(Z_eq)
 \end{verbatim}
-   means at Z = Z\_eq the field points DOWNWARD, i.e., outward relative to
-   \{Z >= Z\_eq\}.  Hence Z\_above\_eq\_post\_clearance is left as a controller-
+   means that at Z = Z\_eq the field never points upward, i.e., never inward
+   relative to \{Z\_eq <= Z\}, so no boundary argument proves this invariant.  Hence Z\_above\_eq\_post\_clearance is left as a controller-
    supplied hypothesis in the unconditional theorem.
 \<close>
 
@@ -2113,12 +2119,12 @@ subsubsection \<open>Piece A: forward invariance of Z <= Z\_max\<close>
 text \<open>
   Upper-bound forward-invariance for Z.  Uses \texttt{DI\_Frame\_Rule\_partial}
   with active = \{iZ\}, lo iZ = 0, hi iZ = Z\_max.  At the lower face Z = 0:
-  the field reduces to P(S, X) > 0 (production with S, X strictly
+  the field reduces to P(S, X), which is strictly positive (production with S, X strictly
   positive from the controllers).  At the upper face Z = Z\_max:
   production is bounded above by P\_max, and by \texttt{degradation\_exceeds\_production}
-  combined with monotonicity of MM degradation, D(Z\_max) > P\_max strictly.
+  combined with monotonicity of MM degradation, P\_max < D(Z\_max) strictly.
 
-  We add \texttt{Z0\_nn} (Z(0) >= 0) as a natural biological assumption.  In the
+  We add \texttt{Z0\_nn} (0 <= Z(0)) as a natural biological assumption.  In the
   unconditional theorem below this is derived from \texttt{Z0\_in\_alarm}.\<close>
 
 lemma Z_upper_bound_invariant:
@@ -2997,8 +3003,8 @@ qed
 
 text \<open>
   Unconditional box invariance for Z.  Composes Z\_upper\_bound\_invariant
-  (Round 1) with Z\_lower\_bound\_invariant (above).  The Z\_upper precondition
-  Z(0) >= 0 follows from Z\_min\_pos + Z0\_above\_min.\<close>
+  (Piece A) with Z\_lower\_bound\_invariant (above).  The Z\_upper precondition
+  0 <= Z(0) follows from Z\_min\_pos and Z0\_above\_min.\<close>
 
 lemma Z_in_box_invariant:
   fixes y :: \<open>real \<Rightarrow> (real, 'a) vec\<close>
@@ -3048,12 +3054,12 @@ subsubsection \<open>Piece B: Phase 1 exit-time theorem\<close>
 text \<open>
   Z drops below Z\_alarm by time T\_clear = (2/delta\_Z)*ln((Z\_max-Z\_eq)/
   (Z\_alarm-Z\_eq)).  Proof: from V\_Z\_exponential\_decay\_full at time T\_clear,
-  V\_Z bound at endpoint equals (Z\_alarm - Z\_eq)\textasciicircum{}2 / 2; with Z(T\_clear) >= Z\_eq,
+  V\_Z bound at endpoint equals (Z\_alarm - Z\_eq)\textasciicircum{}2 / 2; with Z\_eq <= Z(T\_clear),
   this unfolds to Z(T\_clear) <= Z\_alarm.
 
   \textbf{IMPORTANT}\\
   This theorem still ASSUMES Z\_above\_eq\_throughout -- that's
-  Piece C, which is provably incompatible with equilibrium\_condition.
+  Piece C, which does not hold in general under equilibrium\_condition.
   We leave it as a controller-supplied invariant.\<close>
 
 theorem Z_exits_alarm_zone:
@@ -3213,12 +3219,13 @@ text \<open>
   \textbf{WHAT'S UNCONDITIONAL:}\\
 \begin{itemize}
 \item Z(t) in [Z\_min, Z\_max] for all t in [0,T]  (forward-invariant box,
-  from Z\_in\_box\_invariant -- derived purely from the dynamics).
+  from Z\_in\_box\_invariant -- derived from the dynamics, given the
+  controller bounds on S and X).
 \end{itemize}
 
   \textbf{WHAT'S CONDITIONAL (controller-supplied invariant):}\\
 \begin{itemize}
-\item Z(t) >= Z\_eq for all t in [0,T].  Structurally incompatible with
+\item Z\_eq <= Z(t) for all t in [0,T].  This does not hold in general under
   equilibrium\_condition.
 \end{itemize}
 
@@ -3369,9 +3376,12 @@ text \<open>
     delta_Z = 1/2 hr^-1  (exponential decay rate)
 \end{verbatim}
   
-  The design theorem: after a substrate spike pushes Z above 
-  the alarm threshold, the engineered degradation pathway clears 
-  Z below the alarm level with a half-life of ln(2)/delta\_Z approx 1.4 hr.\<close>
+  The design theorem: after a substrate spike pushes Z above
+  the alarm threshold, the engineered degradation pathway brings
+  Z back below the alarm level, and the squared deviation
+  V\_Z = (Z - Z\_eq)\textasciicircum{}2/2 decays with a half-life of ln(2)/delta\_Z,
+  approximately 1.4 hr, so that the deviation |Z - Z\_eq| itself halves
+  about every 2.8 hr.\<close>
 
 subsubsection \<open>Parameter values\<close>
 
@@ -3552,15 +3562,16 @@ text \<open>
   theorems about this specific engineered organism.
   
   In particular, met\_z\_clearance.V\_Z\_exponential\_decay gives:
-  for any trajectory with S in [0.1, 1] g/L, X in [0.1, 2] g/L, 
+  for any trajectory y with S in [0.1, 1] g/L, X in [0.1, 2] g/L, 
   and Z in [1, 1.75] mM throughout [0, T], the Lyapunov function 
   V\_Z = (Z - 0.25)\textasciicircum{}2/2 satisfies 
 \begin{verbatim}
     V_Z(y(T)) <= V_Z(y(0)) * exp(-T/2).
 \end{verbatim}
   
-  A bio-engineer reads this as: "Z clears with a half-life of 
-  about 1.4 hours."\<close>
+  A bio-engineer reads this as: "the squared deviation of Z from 0.25 mM
+  halves about every 1.4 hours, and the deviation itself about every 2.8
+  hours."\<close>
 
 thm met_z_clearance.V_Z_exponential_decay
 thm met_z_clearance.V_Z_reaches_sublevel

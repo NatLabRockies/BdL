@@ -41,7 +41,6 @@ lemma solves_ode_subset_ivl:
 
 text \<open>
   \textbf{HELPER: Time-shift of a solution to a time-invariant ODE}\\
-  GRN: Gene Regulatory Network.
   If y solves the ODE on [a..b] and the vector field is time-invariant
   (i.e., f tau v depends only on v, not on tau), then the shifted trajectory
   y'(s) := y(t0 + s) solves the same ODE on [0..(b - t0)] for any
@@ -49,11 +48,12 @@ text \<open>
 
   This lemma is needed for "monotonicity in both directions":
   to prove an invariant about y(t1) vs y(t2) for t1 < t2, we shift the
-  trajectory by t1 and then apply existing invariant lemmas (which are
+  trajectory y by t1 and then apply existing invariant lemmas (which are
   stated for [0..t]) to the shifted trajectory.
 
   \textbf{TIME-INVARIANCE}\\
-  Most CRN/GRN ODEs in our development have the form
+  Most ODE models of chemical reaction networks (CRNs) and gene regulatory
+  networks (GRNs) in our development have the form
   lambda t v. <expression in v alone>, with no dependence on t. The hypothesis
   \texttt{time\_inv} captures this property.
 \<close>
@@ -188,13 +188,13 @@ qed
 text \<open>
   \textbf{Part 1: Auxiliary lemma -- strict positive derivative implies right neighborhood}\\
 
-  This is the key real-analysis fact: if g'(tau*) > 0, then g is strictly
+  This is the key real-analysis fact: if 0 < g'(tau*), then g is strictly
   greater than g(tau*) on a right neighborhood of tau*.
 
-  HOL provides DERIV\_left\_inc which states:
+  HOL provides DERIV\_left\_inc which states, in ASCII notation:
 \begin{verbatim}
     DERIV f x :> l ==> 0 < l ==>
-      EX d > 0. ALL h > 0. h < d --> f(x) < f(x + h)
+      EX d. 0 < d & (ALL h. 0 < h & h < d --> f(x) < f(x + h))
 \end{verbatim}
 
   We restate it in the modern has\_real\_derivative form for convenience.
@@ -333,7 +333,7 @@ text \<open>
    These four lemmas generalize the existing Hill derivative and
    monotonicity lemmas.  The key insight: the only property of
    the exponent n that matters is that the denominator 1 + x\textasciicircum{}n
-   is strictly positive.  This holds when x >= 0 (any n >= 1),
+   is strictly positive.  This holds when 0 <= x (any n with 1 <= n),
    or when n is even (any x).
 \<close>
 
@@ -341,18 +341,17 @@ subsubsection \<open>Scalar field derivative, general version\<close>
 text \<open>
   \textbf{Hill function derivatives for EVEN Hill coefficients}\\
 
-  The existing hill\_repressive\_scalar\_has\_derivative requires x >= 0 to
-  ensure 1 + x\textasciicircum{}n > 0. For the unconditional Gardner theorem, we need
+  The existing hill\_repressive\_scalar\_has\_derivative requires 0 <= x to
+  ensure 0 < 1 + x\textasciicircum{}n. For the unconditional Gardner theorem, we need
   the derivative of the Hill function WITHOUT assuming the regulator
   concentration is non-negative (because we're about to PROVE it's
   non-negative).
 
-  The trick: if n is EVEN, then x\textasciicircum{}n >= 0 for all real x, so
-  1 + x\textasciicircum{}n >= 1 > 0 automatically, without any sign assumption.
+  The trick: if n is EVEN, then 0 <= x\textasciicircum{}n for all real x, so
+  0 < 1 <= 1 + x\textasciicircum{}n automatically, without any sign assumption.
 
-  Biological justification: Hill coefficients for dimerizing repressors
-  (the standard mechanism in the Gardner toggle switch) are typically
-  n = 2, which is even. More generally, n = 2k for k-mer binding.
+  Biological justification: the Hill coefficient of a dimerizing repressor
+  is often modeled as n = 2, which is even.
 \<close>
 
 lemma hill_repressive_scalar_has_derivative_general:
@@ -441,7 +440,7 @@ subsubsection \<open>Monotonicity bound, general version for arbitrary n\<close>
 text \<open>
    \textbf{Hill-function monotonicity helper.}\\
 
-   For a > 0 and 0 <= x\_min <= x <= x\_max, 1 <= n, the Hill-style expression
+   For 0 < a and 0 <= x\_min <= x <= x\_max, 1 <= n, the Hill-style expression
    a / (1 + x\textasciicircum{}n) is bounded above by a / (1 + x\_min\textasciicircum{}n) and below
    by a / (1 + x\_max\textasciicircum{}n).
 \<close>

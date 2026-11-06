@@ -14,6 +14,33 @@ theory Differential_Dynamic_Logic
 imports Real_Analysis_More
 begin
 section \<open>Differential Dynamic Logic\<close>
+
+text \<open>
+  This theory formalizes the proof rules of BdL as lemmas of Isabelle/HOL.
+  Differential induction (DI\_Generic, DI\_Vect), differential ghost (DG) and
+  differential cut (DC) are rules of differential dynamic logic (dL)
+  \cite{Platzer2008,Platzer2010,Platzer2018}.  BdL extends dL with four rules
+  for the dynamics of biological systems, namely a boundary rule for
+  non-negativity (DI\_boundary), a convergence-rate rule for finite-time
+  progress (DI\_convergence\_rate), a Lyapunov reachability rule with an
+  explicit exponential decay rate (REACH\_lyapunov), and a frame rule
+  (DI\_Frame\_Rule\_partial) for the forward invariance of axis-aligned boxes.  Every
+  rule is stated directly over the predicate solves\_ode of the HOL-ODE
+  library \cite{ImmlerHoelzl2012,ImmlerHoelzlITP2012}, which means that the
+  rules are integrated shallowly with Isabelle's ODE infrastructure, and every
+  rule is a proved lemma, not an axiom.  The price of this shallow
+  integration is that the meta-theory of the uniform substitution calculus of
+  dL \cite{Platzer2017} is not mechanized.  This distinguishes BdL from the
+  deep embedding of dL by Bohrer et al. \cite{Bohrer2017}, from the
+  hybrid-program frameworks for Isabelle/HOL of Foster et al.
+  \cite{Foster2021} and Munive et al. \cite{Munive2024}, in which an ODE is
+  re-encoded in their syntax before dL reasoning applies, and from the prover
+  KeYmaera X \cite{Fulton2015}, which remains the source of most of the rules
+  and of the calculus we build upon.  The completeness of the dL axioms for
+  the invariants of ODEs, in which differential ghosts play a crucial role,
+  is due to Platzer and Tan \cite{PlatzerTan2020}.
+\<close>
+
 subsection \<open>Differential Induction\<close>
 
 lemma DI_Generic:
@@ -523,11 +550,11 @@ qed
 subsubsection \<open>The differential ghost lemma\<close>
 
 text \<open>
-  DG says: given a solution x of the original ODE on \{0..t\},
+  DG says: given a solution y of the original ODE on \{0..t\},
   and continuous ghost coefficients a, b, for any initial ghost
-  value y0, there exists a ghost trajectory y such that the
-  combined trajectory (x with y at position gi) solves the
-  extended ODE.
+  value y0, there exists a ghost trajectory yi with yi(0) = y0 such that
+  the combined trajectory (y with yi at the coordinate gi) solves the
+  extended ODE, whose ghost component is a(tau)*yi + b(tau).
 
   The user then feeds this combined trajectory into DI\_Generic/DI\_Vect for specific
   trajectory invariance proofs.
@@ -700,8 +727,8 @@ subsection \<open>Differential Cut (DC)\<close>
 text \<open>
   \textbf{Part 1: The Differential Cut (DC)}\\
 
-  \textbf{DC IN dDL THEORY}\\
-  In Platzer's Differential Dynamic Logic, the DC axiom is:
+  \textbf{DC IN dL}\\
+  In differential dynamic logic \cite{Platzer2018}, the differential cut rule is:
 
 \begin{verbatim}
       [x' = f(x) & Q]C    [x' = f(x) & (Q and C)]P
@@ -719,21 +746,24 @@ text \<open>
   STRENGTHEN our knowledge with previously-proved invariants, the
   local check often becomes tractable.
 
-  \textbf{Example use case (Toggle Switch):}\\
+  \textbf{Example use case (Gardner toggle switch):}\\
 \begin{itemize}
-\item Want to prove: u(t) <= M  (concentration bounded above)
-\item DI fails directly: when u is small, du/dt may not be <= 0
-\item But if we KNOW u, v >= 0, then for u close to M we can show du/dt <= 0
+\item Want to prove: 0 < u(t) for du/dt = alpha1/(1 + v\textasciicircum{}beta) - u
+\item With the ghost g' = g/2, the Lie derivative of u*g\textasciicircum{}2 is
+  alpha1*g\textasciicircum{}2/(1 + v\textasciicircum{}beta), which is non-negative where 0 <= v,
+  since then 1 <= 1 + v\textasciicircum{}beta (for an odd beta and v <= -1 the
+  denominator is not positive)
 \item DC strategy:
 \begin{enumerate}
-\item First prove u >= 0 is invariant (cut-formula C)
-\item Then prove u <= M is invariant FROM u >= 0
+\item First prove that 0 <= v is invariant (cut-formula C)
+\item Then prove that 1 <= u*g\textasciicircum{}2 is invariant in the domain
+  strengthened with 0 <= v, which gives 0 < u
 \end{enumerate}
 \end{itemize}
 
   \textbf{ISABELLE FORMALIZATION}\\
   Our DC lemma simply restricts the domain constraint of \texttt{solves\_ode}
-  given that the trajectory already satisfies the cut-formula at every
+  given that the trajectory y already satisfies the cut-formula at every
   point in the time interval.
 \<close>
 
@@ -771,13 +801,13 @@ text \<open>
   \textbf{DI\_boundary: Boundary-Aware Differential Induction.}\\
 
   \textbf{RESEARCH CONTRIBUTION}\\
-  This file formalizes a STRENGTHENED variant of differential induction
+  This subsection formalizes a STRENGTHENED variant of differential induction
   that exploits BOUNDARY structure to prove non-negativity invariants.
 
-  In the original DI axiom (formalized in this development as DI\_Generic
+  In the original DI rule of dL (formalized in this development as DI\_Generic
   and DI\_Vect), the inductive step requires the Lie derivative of the
   candidate invariant to be non-negative AT EVERY POINT along the
-  trajectory. This works for global invariants such as conservation laws
+  trajectory y. This works for global invariants such as conservation laws
   (where the Lie derivative is identically zero), but it FAILS for many
   natural non-negativity invariants that are only at risk on the
   boundary \{invar = 0\}.
@@ -789,37 +819,37 @@ text \<open>
       du/dt = alpha / (1 + v^beta) - u
 \end{verbatim}
 
-  We want to prove that u(0) >= 0 implies u(t) >= 0 for all t.
+  We want to prove that 0 <= u(0) implies 0 <= u(t) for all t.
 
 \begin{itemize}
 \item The Lie derivative of \texttt{u} is \texttt{alpha/(1+v\textasciicircum{}beta) - u}.
 \item This is NOT globally non-negative: when u is large, it becomes negative.
 \item Hence DI\_Vect cannot discharge the inductive step over the whole
-  trajectory.
-\item However, the invariant \texttt{u >= 0} can only fail by \texttt{u} crossing zero.
-  At u = 0, the Lie derivative reduces to \texttt{alpha/(1+v\textasciicircum{}beta) >= 0}, so the
-  boundary is repelling.
+  trajectory y.
+\item However, the invariant \texttt{0 <= u} can only fail by \texttt{u} crossing zero.
+  At u = 0, the Lie derivative reduces to \texttt{alpha/(1+v\textasciicircum{}beta)}, which is
+  strictly positive when 0 < alpha and 0 <= v, so the boundary is repelling.
 \end{itemize}
 
   This is exactly the situation \texttt{DI\_boundary} is designed to handle.
 
   \textbf{THE KEY INSIGHT}\\
   A continuous function cannot change sign without passing through zero.
-  Hence, to prove \texttt{g(tau) >= 0} is invariant, it suffices to ensure that
-  whenever \texttt{g(tau) = 0}, the trajectory cannot "exit" into negative values.
+  Hence, to prove that \texttt{0 <= g(tau)} is invariant, it suffices to ensure that
+  whenever \texttt{g(tau) = 0}, the trajectory y cannot "exit" into negative values.
   This is enforced by requiring the time-derivative of \texttt{g} to be STRICTLY
   POSITIVE at every boundary point: strictly positive derivatives
   guarantee a right-neighborhood where the function is strictly positive.
 
   \textbf{RELATIONSHIP TO PRIOR WORK}\\
-  This corresponds to Platzer's "Differential Invariants" extension of
-  dDL, where boundary-aware induction is one of the standard refinements
-  of plain DI. The axiom is closely related to:
+  The rule is closely related to:
 \begin{itemize}
-\item "Strict differential induction" (DI>)
 \item Barrier certificate methods in control theory
 \item The viability theorem in differential inclusion theory
 \end{itemize}
+  Its first-hit-time proof below is the kind of argument that the real
+  induction principle captures, which Platzer and Tan use in their
+  axiomatization of ODE invariance \cite{PlatzerTan2020}.
 
   Our formalization makes the proof structure explicit and reusable in
   Isabelle/HOL, opening the path to verifying non-negativity for a broad
@@ -834,24 +864,24 @@ text \<open>
     certificate function invar : vec -> real, whose non-negative region
     \{v. 0 <= invar v\} is the invariant to be established, IF:
 \begin{enumerate}
-\item invar(y(0)) >= 0  (initial condition)
+\item 0 <= invar(y(0))  (initial condition)
 \item For every tau in [0,t] where invar(y(tau)) = 0, the Lie derivative
   is STRICTLY positive:
   EX Dinvar. (invar has\_derivative Dinvar) (at (y tau)) and
   0 < Dinvar (f tau (y tau))
-\item differentiability along the trajectory is what gives continuity
+\item differentiability along the trajectory y is what gives continuity
   of invar o y
 \end{enumerate}
-    THEN invar(y(t)) >= 0.
+    THEN 0 <= invar(y(t)).
 
   \textbf{PROOF STRATEGY:}\\
     By contradiction. Assume invar(y(t)) < 0.
     Define g(tau) = invar(y(tau)) and S = \{tau in [0,t] | g(tau) < 0\}.
     Since t in S, we have S /= \{\}, so tau* = inf S exists.
     By continuity of g and the inf property, g(tau*) = 0.
-    Apply boundary\_step at tau* to get strictly positive derivative l > 0
-    of g at tau* (via the chain rule).
-    Apply deriv\_pos\_right\_strict to get a right neighborhood where g > 0.
+    Apply boundary\_step at tau* to get a strictly positive derivative l,
+    with 0 < l, of g at tau* (via the chain rule).
+    Apply deriv\_pos\_right\_strict to get a right neighborhood where 0 < g.
     But this contradicts tau* = inf S (which would have points in S
     arbitrarily close to tau* from above, where g < 0).
 \<close>
@@ -1297,10 +1327,10 @@ subsection \<open>DI Convergence Rate\<close>
 text \<open>
   Finite-time convergence by accumulated rate.  A non-decreasing
   differentiable function whose rate is at least @{term \<delta>} while it stays
-  below the target @{term Ltarget} must exceed that target once
-  @{term T} outruns the initial gap.  Positivity of @{term \<epsilon>} is not
-  required: @{term \<epsilon>} enters only through the combination
-  @{term \<open>Ltarget\<close>}.\<close>
+  at or below the target @{term Ltarget} must exceed that target once
+  @{term T} outruns the initial gap.  The rule has no margin parameter, and
+  a margin, such as the epsilon of the min(x,y) CRN, enters only through the
+  choice of @{term Ltarget}.\<close>
 
 lemma convergence_rate_core:
   fixes u \<phi> :: \<open>real \<Rightarrow> real\<close>
@@ -1380,62 +1410,63 @@ proof (rule ccontr)
 qed
 
 text \<open>
-  \textbf{DI\_convergence\_rate: Finite-Time Convergence Axiom}\\
+  \textbf{DI\_convergence\_rate: Finite-Time Convergence Rule}\\
 
   \textbf{RESEARCH CONTRIBUTION}\\
-  This subsection formalizes a NEW dDL axiom for finite-time convergence of
-  monotonic invariants. It is the second novel dDL proof rule in our development
-  (after DI\_boundary), and it captures the proof pattern that gave us
-  the epsilon-convergence result for the min(x,y) CRN.
+  This subsection formalizes a proof rule for finite-time convergence of
+  monotonic quantities, and it captures the proof pattern of the
+  epsilon-convergence result for the min(x,y) CRN.  Its principle, a lower
+  bound on the rate that forces progress, is the idea of the differential
+  variants of dL \cite{Platzer2010}.  The rule states it for a given
+  trajectory y, with an explicit time, and with a rate bound that is
+  required only while the quantity has not exceeded the target level.
 
   \textbf{THE PATTERN BEING ABSTRACTED}\\
   Many computing CRNs work by monotonically accumulating an output value
   toward a target. For such systems, finite-time convergence proofs all
-  the following the same shape:
+  follow the same shape:
 
 \begin{enumerate}
 \item The output is monotonically non-decreasing.
-\item Whenever the output is still strictly below the target, the rate
-  of progress is bounded below by some delta > 0.
+\item Whenever the output has not exceeded the target, the rate
+  of progress is bounded below by some delta with 0 < delta.
 \item By the fundamental theorem of calculus, the integrated progress
   over time T is at least delta*T.
-\item Hence, after time T > (target - initial)/delta, the output exceeds
-  the target.
+\item Hence, after any time T with (target - initial)/delta < T, the output
+  exceeds the target.
 \end{enumerate}
 
-  The min(x,y), max(x,y), threshold detectors, and many other "monotonic
-  accumulator" CRNs all instantiate this pattern. With DI\_convergence\_rate
-  as a black-box axiom, each instance becomes a one-line application:
-  just plug in the rate bound delta (a function of epsilon) and the monotonicity
-  proof.
+  The min(x,y) CRN instantiates this pattern, and so can other CRNs whose
+  output accumulates monotonically.  With DI\_convergence\_rate as a
+  black-box rule, an instance reduces to the obligations of the rule, namely
+  the rate bound delta (a function of epsilon) and the monotonicity proof.
 
-  \textbf{RELATIONSHIP TO PRIOR AXIOMS}\\
+  \textbf{RELATIONSHIP TO THE OTHER RULES}\\
 \begin{itemize}
-\item DI (DI\_Generic, DI\_Vect): proves invariants over arbitrary trajectories
-\item DG: proves strict positivity by ghost-witnessing
+\item DI (DI\_Generic, DI\_Vect): proves invariants along any trajectory y
+\item DG: adds a ghost variable, for instance to prove strict positivity
 \item DC: lifts a proven invariant into a domain restriction
 \item DI\_boundary: proves non-negativity by checking only the boundary
-\item DI\_convergence\_rate (this rule): proves finite-time CONVERGENCE
-  rates for monotonic invariants
+\item DI\_convergence\_rate (this rule): proves finite-time CONVERGENCE,
+  namely that a monotone quantity exceeds a target level in finite time
 \end{itemize}
 
-  Each axiom captures a different proof strategy. Together they form
+  Each rule captures a different proof strategy. Together they form
   a compositional toolkit for reasoning about dynamical systems and
   biological computers.
 
-  \textbf{PROOF STRATEGY OF THE AXIOM}\\
+  \textbf{PROOF STRATEGY OF THE RULE}\\
   By contradiction. Suppose quant(y(T)) <= Ltarget. By monotonicity,
   quant(y(tau)) <= Ltarget for all tau in [0..T]. By the rate hypothesis,
-  the time derivative is >= delta throughout [0..T]. By FTC,
+  the time derivative is at least delta throughout [0..T]. By FTC,
 
 \begin{verbatim}
-    quant(y(T)) - quant(y(0))
-      = (integral over [0..T] of d/dtau quant(y(tau)))
-      >= delta*T.
+    delta*T <= (integral over [0..T] of d/dtau quant(y(tau)))
+            = quant(y(T)) - quant(y(0)).
 \end{verbatim}
 
-  So quant(y(T)) >= quant(y(0)) + delta*T > L - epsilon (using T > (Ltarget-quant(y(0)))/delta).
-  Contradiction.
+  So Ltarget < quant(y(0)) + delta*T <= quant(y(T)), using
+  (Ltarget - quant(y(0)))/delta < T, which contradicts quant(y(T)) <= Ltarget.
 \<close>
 
 lemma DI_convergence_rate:
@@ -1607,16 +1638,16 @@ text \<open>
   \textbf{EXAMPLE}\\
   For min(x,y) with ODE d[Z]/dt = k*X*Y, with margin epsilon:
 \begin{itemize}
-\item quant   = vec\_nth v 2  (Z component)
+\item quant   = (lambda v. vec\_nth v iZ)  (Z component)
 \item Ltarget = min(x0, y0) - epsilon
-\item delta       = k * epsilon\textasciicircum{}2  (when Z <= Ltarget, conservation gives X, Y >= epsilon,
-  so dZ/dt = k*X*Y >= k*epsilon\textasciicircum{}2)
-\item T\_large : T > (Ltarget - Z(0)) / (k * epsilon\textasciicircum{}2)
+\item delta       = k * epsilon\textasciicircum{}2  (when Z <= Ltarget, conservation gives epsilon <= X and
+  epsilon <= Y, so k*epsilon\textasciicircum{}2 <= k*X*Y = dZ/dt)
+\item T\_large : (Ltarget - Z(0)) / (k * epsilon\textasciicircum{}2) < T
 \end{itemize}
 
   Remark: the rule itself has no epsilon, only
   \texttt{Ltarget}.  Positivity of epsilon is needed here to establish the rate bound
-  (X, Y >= epsilon gives X*Y >= epsilon\textasciicircum{}2), not by the rule.
+  (epsilon <= X and epsilon <= Y give epsilon\textasciicircum{}2 <= X*Y), not by the rule.
 \<close>
 
 subsection \<open>Lyapunov reachability\<close>
@@ -1745,36 +1776,41 @@ text \<open>
   \textbf{REACH\_lyapunov: Lyapunov-based exponential decay reachability}\\
 
   \textbf{CONTEXT}\\
-  The other formalized dDL proof rules (DI\_Vect, DI\_boundary, DC, DG) handle invariance-style
-  reasoning: "once in a safe equilibrium, stay in a safe equilibrium."
-   Our earlier novel proof rule
-  (DI\_convergence\_rate) extend dDL toward convergence to safe equilibrium at a
-  guaranteed rate.  REACH\_lyapunov continues this line by extending dDL to
-  handle LYAPUNOV-BASED REACHABILITY: "a trajectory whose Lyapunov function
+  The other proof rules of BdL (DI\_Vect, DI\_boundary, DC, DG) handle invariance-style
+  reasoning: "once in a safe region, stay in it."  The rule
+  DI\_convergence\_rate extends them toward reaching a target level at a
+  guaranteed rate.  REACH\_lyapunov continues this line by extending dL to
+  handle LYAPUNOV-BASED REACHABILITY: "a trajectory y whose Lyapunov function
   decreases at a rate proportional to its current value reaches any target
   sublevel set in bounded time."
 
   This proof rule is specifically motivated by biological computing properties
   that involve "behavior outside the steady state": induced switching in
   toggle switches, convergence after perturbation, feedback loop settling
-  after a disturbance.  Classical Lyapunov stability theorems have exactly
-  this shape, and REACH\_lyapunov is the finite-horizon, dDL-compatible
-  packaging of the classical Lyapunov stability theorems.
+  after a disturbance.  The rate hypothesis and the exponential conclusion
+  coincide with those of the Lyapunov rule for exponential stability of Tan
+  and Platzer \cite{TanPlatzer2021}, and we claim no novelty for that
+  pairing.  What differs is the shape of the rule, in the sense that
+  REACH\_lyapunov concludes a bound along a given trajectory y over the time
+  horizon [0,T], with no equilibrium, no positive-definiteness requirement on
+  V, and no constraint on the sign of delta.
 
   \textbf{STATEMENT (informal)}\\
-  Given an ODE solution y on [0..T], a non-negative Lyapunov function V,
+  Given an ODE solution y on [0..T], a real-valued function V of the state
+  (no sign condition is needed),
   and a pointwise rate bound phi(tau) <= -delta * V(y(tau)) on the time derivative
   of V o y, the value V(y(T)) is bounded by V(y(0)) * exp(-delta * T).
 
   \textbf{PROOF STRATEGY}\\
   Define g(tau) = V(y(tau)) * exp(delta*tau).  Compute g's vderiv via the product
   rule: g'(tau) = (phi(tau) + delta*V(y(tau))) * exp(delta*tau).  From the rate hypothesis
-  phi(tau) + delta*V(y(tau)) <= 0, and since exp(delta*tau) > 0, we have g'(tau) <= 0 on
+  phi(tau) + delta*V(y(tau)) <= 0, and since 0 < exp(delta*tau), we have g'(tau) <= 0 on
   [0..T].  Integrating g' over [0..T] gives g(T) - g(0) <= 0, so g(T) <= g(0).
   Since g(0) = V(y(0)) and g(T) = V(y(T))*exp(delta*T), dividing yields
   V(y(T)) <= V(y(0))*exp(-delta*T).
 
-  This is classical Gronwall-type reasoning, packaged as a dDL axiom.
+  This is the Gr\"onwall-type comparison of gronwall\_comparison\_core,
+  packaged as a proof rule of BdL.
 \<close>
 lemma REACH_lyapunov:
   fixes y :: \<open>real \<Rightarrow> (real, 'a::finite) vec\<close>
@@ -1872,8 +1908,7 @@ qed
 
 
 text \<open>Domain-aware @{thm [source] REACH_lyapunov}. Only the rate-proportional
-     (Lie-derivative) condition is constrained by @{term \<open>y \<tau> \<in> Q\<close>}; nonnegativity
-     of @{term V} stays global.\<close>
+     (Lie-derivative) condition is constrained by @{term \<open>y \<tau> \<in> Q\<close>}.\<close>
 
 lemma REACH_lyapunov_dom:
   fixes y :: \<open>real \<Rightarrow> (real, 'a::finite) vec\<close>
@@ -1937,16 +1972,17 @@ text \<open>
   \textbf{USAGE EXAMPLE: Sublevel-set reachability as a corollary}\\
 
   The exponential decay form is the foundational statement.  For reachability
-  applications (e.g., "does the trajectory enter a target sublevel set?"),
+  applications (e.g., "does the trajectory y enter a target sublevel set?"),
   we derive the following corollary:
 
   If V(y(0)) * exp(-delta*T) <= L, then V(y(T)) <= L.
 
-  In particular, for any target level L > 0, the time
+  In particular, for any target level L and rate delta with 0 < L and
+  0 < delta, the time
 \begin{verbatim}
     T = (1/delta) * log(V(y(0))/L)
 \end{verbatim}
-  suffices (assuming V(y(0)) > L) to reach the sublevel set \{V <= L\}.
+  suffices (assuming L < V(y(0))) to reach the sublevel set \{V <= L\}.
 \<close>
 
 corollary REACH_lyapunov_sublevel:
@@ -1965,7 +2001,7 @@ corollary REACH_lyapunov_sublevel:
   using REACH_lyapunov[OF ODE T_nn induct_step] sublevel_reached
   by simp
 
-subsection \<open>DI Rectangle Box a.k.a DI Frame Rule\<close>
+subsection \<open>DI Rectangle Box a.k.a. DI Frame Rule\<close>
 
 lemma continuous_strictly_interior_neighborhood:
   fixes y :: \<open>real \<Rightarrow> (real, 'a::finite) vec\<close>
@@ -3328,6 +3364,27 @@ proof -
     by blast
 qed
 
+text \<open>
+  \textbf{DI\_Frame\_Rule\_partial: the frame rule for boxes}\\
+
+  The rule generalizes DI\_Rec\_Box by splitting the coordinates into an
+  active set, whose faces are checked against the vector field, and an
+  inactive set, whose bounds lo i <= vec\_nth (y tau) i <= hi i are
+  hypotheses about the trajectory y (inactive\_maintained).  The active
+  coordinates are the dynamical footprint of the proof, i.e., the part of
+  the state that the reasoning touches, and the inactive ones are its
+  dynamical frame, i.e., the part bounded by a separate argument, such as a
+  controller guarantee, a conservation law or another proof.  DI\_Rec\_Box is
+  the special case in which every coordinate is active.  This decomposition
+  is the continuous counterpart of the frame rule of separation logic
+  \cite{Reynolds2002} and of the frame rule we developed for discrete
+  behaviors of cyber-physical systems in previous work \cite{Nemouchi2023}.
+  Unlike the frame rules of the hybrid-program frameworks
+  \cite{Foster2021,Munive2024}, in which a variable is in the frame only if
+  the ODE does not change it, the split is chosen by the user, and the
+  inactive coordinates may evolve within their bounds.
+\<close>
+
 lemma DI_Frame_Rule_partial:
   fixes y :: \<open>real \<Rightarrow> (real, 'a::finite) vec\<close>
   fixes f :: \<open>real \<Rightarrow> (real, 'a) vec \<Rightarrow> (real, 'a) vec\<close>
@@ -3788,7 +3845,7 @@ text \<open>
 \item The final assembly attaches \texttt{y tau in Q}.
 \end{enumerate}
    \texttt{inactive\_maintained} stays unconstrained: it is the dynamical-frame condition
-   on the trajectory, not a Lie-derivative check, so Q does not gate it.
+   on the trajectory y, not a Lie-derivative check, so Q does not gate it.
 \<close>
 lemma DI_Frame_Rule_partial_dom:
   fixes y :: \<open>real \<Rightarrow> (real, 'a::finite) vec\<close>

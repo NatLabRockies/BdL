@@ -30,7 +30,7 @@ text \<open>
   with initial condition u(0) = 1.  The exact solution is u(tau) = exp(-2tau).
 
   Define the Lyapunov function V(v) = (vec\_nth v iU)\textasciicircum{}2 (squared component).
-  Along the trajectory:
+  Along the trajectory y:
 
 \begin{verbatim}
       V(y(tau)) = u(tau)^2 = exp(-4tau)
@@ -41,7 +41,7 @@ text \<open>
 \end{verbatim}
 
   REACH\_lyapunov asks for this decay pointwise, as a Lie derivative: at
-  every point y(tau) of the trajectory, V has a derivative DV with
+  every point y(tau) of the trajectory y, V has a derivative DV with
   DV(f(y(tau))) <= -delta*V(y(tau)).  Here DV is the linear map
   w |-> 2*u*(vec\_nth w iU), so DV(f(v)) = 2*u*(-2*u) = -4*V(v), and the
   condition holds with delta = 4.
@@ -52,7 +52,7 @@ text \<open>
       V(y(T)) <= V(y(0)) * exp(-4*T) = 1 * exp(-4*T) = exp(-4*T)
 \end{verbatim}
 
-  i.e., u(T)\textasciicircum{}2 <= exp(-4*T), which is TIGHT (the trajectory achieves equality).
+  i.e., u(T)\textasciicircum{}2 <= exp(-4*T), which is TIGHT (the trajectory y achieves equality).
 
   \textbf{PURPOSE}\\
   This sanity check validates two things:
@@ -64,12 +64,12 @@ text \<open>
   named \texttt{have} statement in the proof, following the "obligations on top,
   lemma on bottom" template.
 \item The obligation shapes generalize to higher-dimensional cases.  The
-  same template will be used for the Gardner toggle switch proof, just
-  with a 2D state space, a time-varying field, and a quadratic
+  same template is used for the Gardner toggle switch proof, just
+  with a 2D state space, the pulsed vector field, and a quadratic
   Lyapunov function centered at the pulse equilibrium.
 \end{enumerate}
 
-  This lemma also serves as a pedagogical example for the paper: the
+  This lemma also serves as a pedagogical example, namely the
   simplest possible demonstration of REACH\_lyapunov in action.
 \<close>
 
@@ -165,11 +165,13 @@ qed
 text \<open>
   \textbf{GARDNER TOGGLE SWITCH: INDUCED SWITCHING VIA PULSED DYNAMICS}\\
   This example formalizes "induced switching" for the symmetric Gardner
-  toggle switch.  Three-interval structure:
+  toggle switch \cite{Gardner2000}, a one-bit memory \cite{Hillenbrand2013}
+  that an inducer pulse writes.  Three-interval structure, with the
+  trajectories y1, y2 and y3 of the theorem induced\_switching:
 \begin{verbatim}
-    Interval 1: [0, t_start]     baseline dynamics, trajectory in R_A
-    Interval 2: [t_start, t_end] pulsed dynamics, trajectory moves to R_B
-    Interval 3: [t_end, T]       baseline dynamics, trajectory stays in R_B
+    Interval 1: [0, t_start]     baseline dynamics, y1 in R_A
+    Interval 2: [t_start, t_end] pulsed dynamics, y2 moves to R_B
+    Interval 3: [t_end, T]       baseline dynamics, y3 stays in R_B
 \end{verbatim}
 
   All definitions and lemmas live inside the appropriate locale's
@@ -2252,7 +2254,7 @@ proof -
 qed
 
 text \<open>
-  The first box.  A trajectory that starts in the box
+  The first box.  A trajectory y that starts in the box
   [ul0, uh0] x [vl0, vh0] with non-negative lower corner stays in the
   larger box [ul, uh] x [vl, vh] during the whole pulse, provided that the
   larger box contains the starting box, its upper corner lies above
@@ -2461,13 +2463,13 @@ proof -
 qed
 
 text \<open>
-  One step of the chain.  If the trajectory is in the box
+  One step of the chain.  If the trajectory y is in the box
   [ul, uh] x [vl, vh] from time S on, then it is in the box
-  [ul', uh'] x [vl', vh'] from time S' >= S + h on.  The new bounds only
+  [ul', uh'] x [vl', vh'] from any time S' with S + h <= S' on.  The new bounds only
   have to dominate the exponential approach estimates over a time step of
   length h, with exp(-h) <= rho.  For instance the new upper bound uh' of u
   must lie above alpha\_low/(1 + vl\textasciicircum{}2), the value that pulls
-  u while v >= vl, and above that value plus rho times the remaining gap
+  u while vl <= v, and above that value plus rho times the remaining gap
   to uh.
 \<close>
 
@@ -2617,9 +2619,9 @@ subsection \<open>Final induced switching theorem\<close>
 
 text \<open>
   The pulse is split into two phases.  During the approach phase
-  [0, T\_app] the trajectory travels from R\_A into the region where the
+  [0, T\_app] the trajectory y2 travels from R\_A into the region where the
   Lyapunov estimate holds; during the Lyapunov phase
-  [T\_app, t\_end - t\_start] V\_pulse decays until the trajectory lies in
+  [T\_app, t\_end - t\_start] V\_pulse decays until the trajectory y2 lies in
   the sublevel set where V\_pulse <= L\_target, which is inside R\_B.  The
   theorem takes the approach phase as a hypothesis about pulse trajectories
   that start in R\_A.  The concrete instance below discharges it with the
@@ -3190,10 +3192,12 @@ text \<open>
 \begin{itemize}
 \item V\_pulse v = (1/2)((u - 1/4)\textasciicircum{}2 + (v - 3)\textasciicircum{}2) <= 1/100
   gives (u - 1/4)\textasciicircum{}2 <= 1/50 and (v - 3)\textasciicircum{}2 <= 1/50.
-\item From x\textasciicircum{}2 <= 1/50, deduce |x| <= 1/7 (since (1/7)\textasciicircum{}2 = 1/49 > 1/50;
-  if |x| > 1/7 then x\textasciicircum{}2 > 1/49 > 1/50, contradiction).
-\item So u in [1/4 - 1/7, 1/4 + 1/7] = [3/28, 11/28] <= [1/10, 7/10].
-\item And v in [3 - 1/7, 3 + 1/7] = [20/7, 22/7] <= [2, 7/2].
+\item From x\textasciicircum{}2 <= 1/50, deduce |x| <= 1/7 (since 1/50 < 1/49 = (1/7)\textasciicircum{}2;
+  if 1/7 < |x| then 1/50 < 1/49 < x\textasciicircum{}2, contradiction).
+\item So u is in [1/4 - 1/7, 1/4 + 1/7] = [3/28, 11/28], which is
+  contained in [1/10, 7/10].
+\item And v is in [3 - 1/7, 3 + 1/7] = [20/7, 22/7], which is contained
+  in [2, 7/2].
 \end{itemize}
 \<close>
 
@@ -3393,7 +3397,7 @@ text \<open>
    the two pulse hypotheses of induced\_switching itself: the approach phase
    with a chain of shrinking boxes, and the Lyapunov phase with a bound on
    V\_pulse at the end of the chain.  Its only hypothesis on the pulse is
-   the length t\_end - t\_start >= T\_pulse = 57.
+   its length, T\_pulse = 57 <= t\_end - t\_start.
 \<close>
 
 

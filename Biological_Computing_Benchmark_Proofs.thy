@@ -24,10 +24,10 @@ text \<open>
   that exhibits oscillatory behavior - concentrations of chemical species
   rise and fall periodically over time, similar to a biological clock.
 
-  This particular oscillator appears in the DNA strand displacement
-  computing literature (Srinivas et al., 2015; Badelt et al., DNA 2017)
-  as a benchmark for compiling abstract chemical programs into physical
-  DNA-based implementations.
+  This particular oscillator, known as the rock-paper-scissors oscillator,
+  appears in the DNA strand displacement computing literature
+  \cite{Srinivas2017,Badelt2017} as a benchmark for compiling abstract
+  chemical programs into physical DNA-based implementations.
 
   \textbf{THE CHEMICAL REACTIONS}\\
   The system consists of three chemical species A, B, C undergoing three
@@ -72,35 +72,37 @@ text \<open>
   We formally prove the CONSERVATION LAW:
 
 \begin{verbatim}
-    [A](t) + [B](t) + [C](t) = [A](0) + [B](0) + [C](0)    for all t >= 0
+    [A](t) + [B](t) + [C](t) = [A](0) + [B](0) + [C](0)    for 0 <= t
 \end{verbatim}
 
   This states that the TOTAL concentration of all species is preserved
   over time. Although individual concentrations oscillate, their sum
   remains constant. Physically, this means no matter is created or
-  destroyed - every molecule of A consumed in a reaction produces exactly
-  one molecule of B (or C), maintaining the total count.
+  destroyed, since every reaction converts one molecule of one species
+  into one molecule of another, which maintains the total count.
 
   \textbf{WHY THIS MATTERS}\\
 \begin{enumerate}
 \item CORRECTNESS OF THE MODEL: Conservation of mass is a fundamental
-  physical law. If the ODE model violates it, the model is wrong.
-  Our proof certifies the model is physically consistent.
-\item COMPILATION VERIFICATION: When compiling this CRN to DNA strand
-  displacement circuits (as in the Nuskell compiler), the compiled
-  implementation should also satisfy conservation. Our proof
-  methodology can verify this.
-\item SAFETY PROPERTY: The conservation law implies that concentrations
-  stay bounded: no species can exceed the total initial concentration.
-  This is a safety property - the system cannot "blow up."
+  physical law. If the ODE model violates it, the ODE model is wrong.
+  Our proof certifies that the ODE model satisfies this law.
+\item COMPILATION VERIFICATION: When this CRN is compiled to DNA strand
+  displacement circuits (as in the Nuskell compiler \cite{Badelt2017}), the
+  compiled implementation has more species and its own conservation laws,
+  which our proof methodology can verify in the same way.
+\item SAFETY PROPERTY: Together with the non-negativity of the
+  concentrations, the conservation law implies that the concentrations stay
+  bounded, namely no species can exceed the total initial concentration.
+  This is a safety property, in the sense that the system cannot "blow up."
 \end{enumerate}
 
   \textbf{HOW WE VERIFY IT}\\
-  We use DIFFERENTIAL INDUCTION (DI), a proof technique from Andre
-  Platzer's Differential Dynamic Logic (dDL). The key idea:
+  We use DIFFERENTIAL INDUCTION (DI), a proof rule of differential dynamic
+  logic (dL) \cite{Platzer2008,Platzer2018}, which BdL \cite{BdL2026}
+  formalizes in Isabelle/HOL. The key idea:
 
-  Instead of solving the ODE (which is impossible in closed form for
-  this nonlinear system), we show that the DERIVATIVE of the invariant
+  Instead of solving the ODE (which, for a nonlinear system such as this
+  one, generally cannot be done in closed form), we show that the DERIVATIVE of the invariant
   quantity [A]+[B]+[C] along the vector field is ZERO:
 
 \begin{verbatim}
@@ -112,14 +114,14 @@ text \<open>
 
   Every term appears once with + and once with -, so they cancel perfectly.
   Since the derivative is zero and the quantity starts at total0, it
-  remains at total0 forever. This is proved WITHOUT solving the ODE.
+  remains at total0 at every time in [0,t]. This is proved WITHOUT solving the ODE.
 
   \textbf{ASSUMPTIONS}\\
   The proof assumes:
 \begin{enumerate}
 \item The solution y exists and satisfies the ODE on [0,t] (from solves\_ode)
 \item The initial condition: [A](0) + [B](0) + [C](0) = total0
-\item The time t >= 0
+\item The time t satisfies 0 <= t
 \item The rate constants k1, k2, k3 are arbitrary real numbers
   (the conservation law holds regardless of their values)
 \end{enumerate}
@@ -277,7 +279,7 @@ qed
 text \<open>
   We formally proved that the total concentration in an autocatalytic chemical oscillator
   is conserved, using differential induction, a technique that verifies properties of nonlinear
-  ODE systems without solving them. This is the first step toward formally certified
+  ODE systems without solving them. This is a step toward formally certified
   compilation of chemical reaction networks.
 
   \textbf{Chemical Reaction Network: Autocatalytic Oscillator}\\
@@ -299,7 +301,8 @@ text \<open>
     [A](t) + [B](t) + [C](t) = [A](0) + [B](0) + [C](0)
 \end{verbatim}
 
-  Proof method: DI\_Vect via antisymmetry (same structure as circular\_invariant).
+  Proof method: DI\_Vect via antisymmetry (same structure as the harmonic
+  oscillator example, circular\_invariant).
   The Lie derivative of [A]+[B]+[C] along the vector field is:
 \begin{verbatim}
     (-k1*A*B + k3*C*A) + (k1*A*B - k2*B*C) + (k2*B*C - k3*C*A) = 0
@@ -310,9 +313,10 @@ subsubsection \<open>Michaelis-Menten enzyme kinetics: conservation laws\<close>
 
 text \<open>
   \textbf{BIOLOGICAL CONTEXT}\\
-  Michaelis-Menten kinetics is the most fundamental model in enzymology,
+  Michaelis-Menten kinetics is a foundational model of enzymology,
   describing how enzymes catalyze biochemical reactions. Proposed by
-  Leonor Michaelis and Maud Menten in 1913, it is the foundation for
+  Leonor Michaelis and Maud Menten in 1913 \cite{MichaelisMenten1913}, it is
+  the foundation for
   understanding drug metabolism, cellular signaling, and metabolic pathways.
 
   \textbf{THE CHEMICAL REACTIONS}\\
@@ -353,14 +357,14 @@ text \<open>
   We formally prove TWO conservation laws:
 \begin{enumerate}
 \item ENZYME CONSERVATION:
-  [E](t) + [ES](t) = [E](0) + [ES](0)    for all t >= 0
+  [E](t) + [ES](t) = [E](0) + [ES](0)    for all t with 0 <= t
 
   The total enzyme (free + bound) is constant. The enzyme is a
   catalyst: it participates in the reaction but is never consumed
   or created. This is the fundamental property that makes enzymes
   reusable.
 \item SUBSTRATE CONSERVATION (mass balance):
-  [S](t) + [ES](t) + [P](t) = [S](0) + [ES](0) + [P](0)    for all t >= 0
+  [S](t) + [ES](t) + [P](t) = [S](0) + [ES](0) + [P](0)    for all t with 0 <= t
 
   The total amount of substrate-derived material is constant.
   Substrate is either free [S], bound in the complex [ES], or
@@ -372,11 +376,11 @@ text \<open>
 \item ENZYME CONSERVATION is the key assumption that enables deriving
   the Michaelis-Menten equation V = Vmax*[S]/(Km + [S]).
   Without it, the standard derivation is invalid.
-\item SUBSTRATE CONSERVATION ensures the model respects physical law
-  (conservation of mass). It also implies boundedness: no species
-  concentration can exceed the total initial amount.
-\item Both properties are assumed (often implicitly) in every textbook
-  treatment of enzyme kinetics. Here we PROVE them from the ODEs.
+\item SUBSTRATE CONSERVATION ensures that the ODE model respects physical
+  law (conservation of mass). Together with the non-negativity of the
+  concentrations, it also bounds [S], [ES] and [P] by S\_total.
+\item Both properties are assumed (often implicitly) in textbook
+  treatments of enzyme kinetics. Here we PROVE them from the ODEs.
 \end{enumerate}
 
   \textbf{HOW WE VERIFY IT}\\
@@ -403,7 +407,7 @@ text \<open>
 \item The initial condition: [E](0) + [ES](0) = E\_total for enzyme
   conservation, and [S](0) + [ES](0) + [P](0) = S\_total for substrate
   conservation
-\item The time t >= 0
+\item The time t satisfies 0 <= t
 \item The rate constants k1, km1, k2 are arbitrary real numbers
   (the conservation laws hold regardless of their values)
 \end{enumerate}
@@ -728,7 +732,8 @@ subsubsection \<open>SIR epidemic model: population conservation\<close>
 text \<open>
   \textbf{BIOLOGICAL CONTEXT}\\
   The SIR model is one of the most fundamental models in epidemiology,
-  proposed by Kermack and McKendrick in 1927. It divides a population
+  proposed by Kermack and McKendrick in 1927 \cite{KermackMcKendrick1927}.
+  It divides a population
   into three compartments:
 \begin{itemize}
 \item S = Susceptible (healthy, can become infected)
@@ -756,13 +761,13 @@ text \<open>
 \end{verbatim}
 
   \textbf{WHAT WE VERIFY}\\
-  Population conservation: [S](t) + [I](t) + [R](t) = N  for all t >= 0
+  Population conservation: [S](t) + [I](t) + [R](t) = N  for all t with 0 <= t
 
-  The total population is constant: species move between compartments
+  The total population is constant: individuals move between compartments
   but are neither created nor destroyed.
 
   \textbf{WHY THIS MATTERS}\\
-  Conservation is the basic consistency check of the model: the two
+  Conservation is the basic consistency check of the ODE model: the two
   reactions only move mass between S, I and R, so an ODE model that
   changed the total would be wrong.  The law also bounds each of [S], [I]
   and [R] by N while all three are non-negative, and it allows eliminating
@@ -783,7 +788,7 @@ text \<open>
 \begin{enumerate}
 \item The solution y exists and satisfies the ODE on [0,t] (from solves\_ode)
 \item The initial condition: [S](0) + [I](0) + [R](0) = N
-\item The time t >= 0
+\item The time t satisfies 0 <= t
 \item The rates beta, gamma are arbitrary real numbers
   (the conservation law holds regardless of their values)
 \end{enumerate}
@@ -961,7 +966,7 @@ text \<open>
   (free vs bound) but are never created or destroyed.
 
   \textbf{WHY THIS MATTERS}\\
-  Conserved moieties reduce the model: with [A] = A\_total - [C] and
+  Conserved moieties reduce the ODE model: with [A] = A\_total - [C] and
   [B] = B\_total - [C], the single equation for the complex [C] determines
   the whole system, which is the standard route to binding curves and
   dissociation constants.  The laws also bound each concentration by its
@@ -982,7 +987,7 @@ text \<open>
 \item The solution y exists and satisfies the ODE on [0,t] (from solves\_ode)
 \item The initial condition: [A](0) + [C](0) = A\_total for the first law,
   and [B](0) + [C](0) = B\_total for the second
-\item The time t >= 0
+\item The time t satisfies 0 <= t
 \item The rate constants k1, km1 are arbitrary real numbers
   (the conservation laws hold regardless of their values)
 \end{enumerate}
@@ -1276,7 +1281,7 @@ text \<open>
 \end{verbatim}
 
   \textbf{WHAT WE VERIFY}\\
-  Weighted conservation: [A](t) + 2*[A2](t) = total0  for all t >= 0
+  Weighted conservation: [A](t) + 2*[A2](t) = total0  for all t with 0 <= t
 
   Each dimer contains 2 monomers, so the total monomer count is
   [A] + 2*[A2]. The factor of 2 in the stoichiometry is crucial.
@@ -1287,7 +1292,7 @@ text \<open>
   quantity, and the proof confirms that this weighting matches the
   reactions.
   The law bounds the free monomer by the total, [A](t) <= total0 while
-  [A2](t) >= 0, and it reduces the model to a single equation for [A].
+  0 <= [A2](t), and it reduces the ODE model to a single equation for [A].
 
   \textbf{HOW WE VERIFY IT}\\
   We use Differential Induction (DI): the Lie derivative of [A] + 2*[A2]
@@ -1304,7 +1309,7 @@ text \<open>
 \begin{enumerate}
 \item The solution y exists and satisfies the ODE on [0,t] (from solves\_ode)
 \item The initial condition: [A](0) + 2*[A2](0) = total0
-\item The time t >= 0
+\item The time t satisfies 0 <= t
 \item The rate constants k1, km1 are arbitrary real numbers
   (the conservation law holds regardless of their values)
 \end{enumerate}
@@ -1461,10 +1466,11 @@ text \<open>
 \end{verbatim}
 
   \textbf{WHAT WE VERIFY}\\
-  If [A](0) > 0, then [A](t) > 0 for all t >= 0.
+  If 0 < [A](0), then 0 < [A](t) for all t with 0 <= t.
 
   The species decays but never reaches zero in finite time.
-  (The exact solution is [A](t) = [A](0)*e\textasciicircum{}\{-kt\} > 0.)
+  (The exact solution is [A](t) = [A](0)*e\textasciicircum{}\{-kt\}, which is
+  strictly positive.)
 
   \textbf{WHY THIS MATTERS}\\
   Positivity is the basic sanity property of a concentration model: a
@@ -1473,30 +1479,30 @@ text \<open>
   the DG proof pattern used later for the gene regulatory networks
   (negative autoregulation, the repressilator, the Gardner toggle switch).
 
-  This is exactly our exponential\_decay example with the ODE written in
-  CRN notation. We state it here for completeness of the benchmark suite.
+  This generalizes our exponential\_decay example, of rate 1, to any rate
+  k, with the ODE written in CRN notation. We state it here for completeness of the benchmark suite.
 
   \textbf{HOW WE VERIFY IT}\\
   DI alone fails: the Lie derivative of [A] along -k*[A] is -k*[A].
-  For [A] >= 0, DI needs -k*[A] >= 0, which requires [A] <= 0, the
-  opposite of what we want.
+  For 0 <= [A], DI needs 0 <= -k*[A], which requires [A] <= 0 (as 0 < k),
+  the opposite of what we want.
 
   Instead we use a Differential Ghost (DG):
 \begin{verbatim}
     Ghost: g' = (k/2)*g,  g(0) = 1/sqrt([A](0))
-    Invariant: [A]*g^2 = 1
+    Invariant: 1 <= [A]*g^2
     Lie derivative: (-k*A)*g^2 + A*2g*(k/2*g) = -kAg^2 + kAg^2 = 0
     Initial: A0*(1/sqrt(A0))^2 = 1
-    Conclude: A*g^2 >= 1 and g^2 >= 0 ==> A > 0
+    Conclude: 1 <= A*g^2 and 0 <= g^2 ==> 0 < A
 \end{verbatim}
 
   \textbf{ASSUMPTIONS}\\
   The proof assumes:
 \begin{enumerate}
 \item The solution x exists and satisfies the ODE on [0,t] (from solves\_ode)
-\item The initial condition: [A](0) > 0
-\item The time t >= 0
-\item The decay rate is positive: k > 0
+\item The initial condition: 0 < [A](0)
+\item The time t satisfies 0 <= t
+\item The decay rate is strictly positive: 0 < k
 \end{enumerate}
 
   \textbf{FORMALIZATION}\\
@@ -1513,8 +1519,8 @@ text \<open>
 \end{verbatim}
 
   The proof (crn\_simple\_decay\_positivity, below) applies DG to extend
-  the trajectory with the ghost at iG, then DI\_Vect to prove
-  [A]*g\textasciicircum{}2 >= 1 along the extended trajectory.
+  the trajectory x with the ghost at iG, then DI\_Vect to prove
+  1 <= [A]*g\textasciicircum{}2 along the extended trajectory.
 \<close>
 
 subsubsection \<open>CRN benchmark summary\<close>
@@ -1526,14 +1532,16 @@ text \<open>
   | 1  | CRN Oscillator      | A+B+C = const  | DI     | 3       |
   | 2  | Michaelis-Menten    | E+ES = const   | DI     | 4       |
   | 3  | Michaelis-Menten    | S+ES+P = const | DI     | 4       |
-  | 4  | Exponential decay   | x > 0          | DG+DI  | 1+ghost |
+  | 4  | Exponential decay   | 0 < x          | DG+DI  | 1+ghost |
   | 5  | Harmonic oscillator | x^2+y^2 = r0^2 | DI     | 2       |
   | 6  | SIR Epidemic        | S+I+R = N      | DI     | 3       |
   | 7a | Reversible binding  | A+C = A_total  | DI     | 3       |
   | 7b | Reversible binding  | B+C = B_total  | DI     | 3       |
   | 8  | Dimerization        | A+2*A2 = total | DI     | 2       |
-  | 9  | Simple decay A->{}  | [A] > 0        | DG+DI  | 1+ghost |
+  | 9  | Simple decay A->{}  | 0 < [A]        | DG+DI  | 1+ghost |
   |    | (CRN form of 4)     |                |        |         |
+  | 10 | min(x,y) CRN        | X+Z = x0       | DI     | 3       |
+  | 11 | min(x,y) CRN        | Y+Z = y0       | DI     | 3       |
 \end{verbatim}
 
   All properties verified WITHOUT solving the ODEs, purely from
@@ -1550,11 +1558,13 @@ text \<open>
 
   \textbf{General pattern:}\\
 \begin{itemize}
-\item Want to prove: [X](t) > 0
+\item Want to prove: 0 < [X](t)
 \item ODE has form: d[X]/dt = -k*[X] + (other terms)
-\item DI fails: Lie derivative of [X] >= 0 gives -k*[X] + ... which is not >= 0
-\item DG fix: Add ghost g' = (k/2)*g, prove [X]*g\textasciicircum{}2 >= 1 is invariant
-\item Conclude: [X]*g\textasciicircum{}2 >= 1 and g\textasciicircum{}2 >= 0 implies [X] > 0
+\item DI fails: proving 0 <= [X] needs 0 <= -k*[X] + (other terms) everywhere,
+  which fails in general
+\item DG fix: Add ghost g' = (k/2)*g, prove that 1 <= [X]*g\textasciicircum{}2 is
+  invariant, which holds when the other terms are non-negative
+\item Conclude: 1 <= [X]*g\textasciicircum{}2 and 0 <= g\textasciicircum{}2 imply 0 < [X]
 \end{itemize}
 \<close>
 
@@ -1563,8 +1573,8 @@ paragraph \<open>Simple decay: the DG proof\<close>
 
 text \<open>
   The DG proof of the simple decay example described above: the ghost
-  g' = (k/2)*g with g(0) = 1/sqrt([A](0)) makes [A]*g\textasciicircum{}2 >= 1
-  invariant, which forces [A] > 0.
+  g' = (k/2)*g with g(0) = 1/sqrt([A](0)) makes 1 <= [A]*g\textasciicircum{}2
+  invariant, which forces 0 < [A].
 \<close>
 lemma crn_simple_decay_positivity:
   fixes x :: \<open>real \<Rightarrow> (real, 'p::finite) vec\<close>
@@ -1745,8 +1755,10 @@ text \<open>
   This is the first example where we verify a property of a CRN that
   performs COMPUTATION - not just a natural biochemical process, but a
   deliberately designed chemical program.
-  The CRN computes the minimum of two non-negative integers x and y
-  (Bridger 2019, "Computing with chemical reaction networks: a tutorial").
+  The CRN computes the minimum of two non-negative inputs x and y, which
+  are integers (molecule counts) in the discrete model of CRNs and real
+  numbers (concentrations) in the continuous one \cite{Brijder2019,Chen2023};
+  we verify its mass-action ODE model.
   This is referenced in Section 2.1.1 of "A Survey of Existing Paradigms
   in Biological Computing" (Nag et al., 2026).
 
@@ -1757,8 +1769,8 @@ text \<open>
 
   Starting from initial concentrations [X](0) = x0 and [Y](0) = y0
   (with [Z](0) = 0), the reaction consumes equal amounts of X and Y
-  to produce Z. When the minority species is exhausted, the reaction
-  stops, and [Z] = min(x0, y0).
+  to produce Z. As the minority species is depleted, the reaction slows
+  down, and [Z] converges to min(x0, y0).
 
   \textbf{THE MASS-ACTION ODE MODEL}\\
 \begin{verbatim}
@@ -1768,31 +1780,34 @@ text \<open>
 \end{verbatim}
 
   \textbf{WHAT WE VERIFY}\\
-  Two conservation laws that together ensure computational correctness:
+  Two conservation laws, on which the correctness proofs of the
+  Programmable Biological Circuit section build:
 \begin{enumerate}
 \item INPUT-OUTPUT BALANCE FOR X:
-  [X](t) + [Z](t) = x0     for all t >= 0
+  [X](t) + [Z](t) = x0     for all t with 0 <= t
   Every molecule of X consumed produces exactly one molecule of Z.
-  At completion (when X or Y is exhausted):
+  In the limit, as X or Y is depleted:
   if x0 <= y0, then [X] -> 0, so [Z] -> x0;
-  if x0 > y0, then [X] -> x0 - y0, and [Z] -> y0.
+  if y0 < x0, then [X] -> x0 - y0, and [Z] -> y0.
 \item INPUT-OUTPUT BALANCE FOR Y:
-  [Y](t) + [Z](t) = y0     for all t >= 0
+  [Y](t) + [Z](t) = y0     for all t with 0 <= t
   Every molecule of Y consumed produces exactly one molecule of Z.
 \end{enumerate}
   Together these imply:
 \begin{itemize}
 \item{} [X](t) - [Y](t) = x0 - y0 (the difference is preserved)
 \item{} [Z](t) = x0 - [X](t) = y0 - [Y](t)
-\item At steady state: [Z] = min(x0, y0)
+\item At steady state, with non-negative concentrations: [Z] = min(x0, y0)
 \end{itemize}
 
   \textbf{WHY THIS MATTERS}\\
   This CRN is a PROGRAM - it takes inputs (initial concentrations of X, Y)
   and produces an output (final concentration of Z = min(x0, y0)).
-  Our conservation laws prove that the program is CORRECT in the sense
-  that it maintains the right "balance" throughout its execution:
-  no molecules are lost or created spuriously.
+  Our conservation laws prove a first part of its CORRECTNESS, in the sense
+  that it maintains the right "balance" throughout its execution, namely
+  no molecules are lost or created spuriously; the Programmable Biological
+  Circuit section adds further correctness properties, including an
+  epsilon-approximation of min(x0, y0) within an explicit time.
   This is analogous to proving loop invariants in software verification:
   the conservation laws are invariants of the chemical "loop" that hold
   at every time step.
@@ -1813,7 +1828,7 @@ text \<open>
 \begin{enumerate}
 \item The solution y exists and satisfies the ODE on [0,t] (from solves\_ode)
 \item The initial conditions: [X](0) + [Z](0) = x0 and [Y](0) + [Z](0) = y0
-\item The time t >= 0
+\item The time t satisfies 0 <= t
 \item The rate constant k is an arbitrary real number
   (the conservation laws hold regardless of its value)
 \end{enumerate}
@@ -2160,7 +2175,7 @@ subsubsection \<open>Simplified genetic toggle switch, mass-action form\<close>
 text \<open>
   \textbf{BIOLOGICAL CONTEXT}\\
   The genetic toggle switch was constructed by Gardner, Cantor, and
-  Collins in E. coli (Nature, 2000), the first synthetic, bistable
+  Collins in E. coli \cite{Gardner2000}, the first synthetic, bistable
   gene-regulatory network. It is referenced in Section 3.4.5 of the
   biological computing survey (Nag et al., 2026).
 
@@ -2175,7 +2190,7 @@ text \<open>
   Each protein represses the other through a bimolecular destruction
   reaction (beta*u*v term). This is the "annihilation" form of repression,
   often used in synthetic biology and specifically in antithetic feedback
-  controllers (Briat et al. 2016).
+  controllers \cite{Briat2016}.
 
   \textbf{THE MASS-ACTION ODE MODEL}\\
   The full Hill-function model used by Gardner et al.,
@@ -2187,7 +2202,8 @@ text \<open>
 
   involves rational functions and needs has\_derivative for Hill
   functions; it is treated in the next example. Here we formalize the
-  SIMPLIFIED LINEAR REPRESSION version:
+  SIMPLIFIED MASS-ACTION version, in which repression is the bimolecular
+  term beta*u*v:
 
 \begin{verbatim}
     du/dt = alpha1 - beta*u*v - delta*u
@@ -2213,9 +2229,9 @@ text \<open>
   \textbf{WHAT WE VERIFY}\\
 \begin{enumerate}
 \item DIFFERENCE CONSERVATION (toggle\_switch\_difference\_conservation):
-  u(t) - v(t) = u(0) - v(0) for all t >= 0.
+  u(t) - v(t) = u(0) - v(0) for all t with 0 <= t.
 \item DOMAIN STRENGTHENING BY DC (toggle\_switch\_DC\_strengthened\_domain):
-  if u(0) = v(0), the trajectory also solves the ODE on the evolution
+  if u(0) = v(0), the trajectory y also solves the ODE on the evolution
   domain strengthened to \{u = v\}.
 \end{enumerate}
 
@@ -2239,7 +2255,7 @@ text \<open>
   vanishes only when alpha1 = alpha2.
 
   DOMAIN STRENGTHENING is a Differential Cut (DC): when u(0) = v(0) the
-  conserved difference is 0, so u = v holds all along the trajectory, and
+  conserved difference is 0, so u = v holds all along the trajectory y, and
   DC adds this cut formula to the domain of solves\_ode.
 
   \textbf{ASSUMPTIONS}\\
@@ -2249,7 +2265,7 @@ text \<open>
   ODE on [0,t] (from solves\_ode)
 \item The initial condition: u(0) - v(0) = c for difference conservation,
   and u(0) = v(0) for the domain strengthening
-\item The time t >= 0
+\item The time t satisfies 0 <= t
 \item The rates alpha, beta are arbitrary real numbers
 \end{enumerate}
 
@@ -2271,28 +2287,27 @@ text \<open>
   strengthening uses DC with the cut formula u = v.
 
   \textbf{LIMITATIONS}\\
-  REGIONAL INVARIANCE is not proved for this model: if u(0) >= 0 and
-  v(0) >= 0 and the parameters are positive, then u(t) >= 0 and v(t) >= 0
-  for all t >= 0, i.e., protein concentrations stay non-negative.
+  REGIONAL INVARIANCE is not proved for this ODE model: if 0 <= u(0) and
+  0 <= v(0) and the parameters are positive, then 0 <= u(t) and 0 <= v(t)
+  for all t with 0 <= t, i.e., protein concentrations stay non-negative.
 
-  A direct DI proof of u >= 0 fails. The Lie derivative of u along the
+  A direct DI proof of 0 <= u fails. The Lie derivative of u along the
   field is alpha1 - beta*u*v - delta*u. Only the BOUNDARY u = 0 matters
-  for u >= 0, and there du/dt = alpha1 >= 0 (since alpha1 > 0), so the
-  boundary is repelling and u stays >= 0. But DI as we have formalized it
-  (DI\_Vect) checks the derivative EVERYWHERE along the trajectory, not
-  just at the boundary: it needs 0 <= alpha1 - beta*u*v - delta*u for ALL
-  reachable u, v, which fails when u is large. DC can build up the
-  invariant region step by step:
+  for 0 <= u, and there du/dt = alpha1, which is strictly positive
+  (0 < alpha1), so the boundary is repelling and u stays non-negative. But
+  DI as we have formalized it (DI\_Vect) checks the derivative EVERYWHERE
+  along the trajectory y, not just at the boundary: it needs
+  0 <= alpha1 - beta*u*v - delta*u for ALL reachable u, v, which fails when
+  u is large. DC can build up the invariant region step by step:
 \begin{enumerate}
-\item Prove u >= 0 is invariant (using DI on a strong assumption: we need
-  v >= 0 to be in the picture, but at u = 0 the argument works regardless
-  of v as long as alpha1 > 0)
-\item Cut: the domain becomes UNIV Int \{u >= 0\}
-\item Prove v >= 0 is invariant (symmetric)
-\item Cut again: the domain becomes \{u >= 0 and v >= 0\}
+\item Prove that 0 <= u is invariant (at u = 0, du/dt = alpha1, whatever
+  the value of v)
+\item Cut: the domain becomes UNIV Int \{0 <= u\}
+\item Prove that 0 <= v is invariant (symmetric)
+\item Cut again: the domain becomes \{0 <= u and 0 <= v\}
 \end{enumerate}
   DI\_boundary, which only needs a strictly positive derivative on the
-  boundary, would discharge steps 1 and 3 when alpha1 > 0 and alpha2 > 0
+  boundary, would discharge steps 1 and 3 when 0 < alpha1 and 0 < alpha2
   (at u = 0, du/dt = alpha1; at v = 0, dv/dt = alpha2); this is not done
   here. For the Hill model, the next example proves positivity with DG
   and DI\_boundary.
@@ -2548,8 +2563,8 @@ text \<open>
 
   We have:
 \begin{enumerate}
-\item Formalized the Differential Cut (DC) rule of dDL in Isabelle/HOL as a
-  provably verified lemma
+\item Applied the Differential Cut (DC) rule of dL, which BdL formalizes
+  as a lemma of Isabelle/HOL
 \item Demonstrated DC application on the symmetric toggle switch:
 \begin{itemize}
 \item Used DI to prove the conservation law u(t) - v(t) = c
@@ -2565,7 +2580,7 @@ subsubsection \<open>Gardner genetic toggle switch\<close>
 
 text \<open>
   \textbf{BIOLOGICAL CONTEXT}\\
-  The genetic toggle switch (Gardner, Cantor \& Collins, Nature 2000) is a
+  The genetic toggle switch of Gardner, Cantor and Collins \cite{Gardner2000} is a
   landmark device in synthetic biology: the first synthetic, bistable,
   gene-regulatory network constructed in a living organism (E. coli). It
   is referenced in Section 3.4.5 of our biological computing survey and
@@ -2581,7 +2596,8 @@ text \<open>
 \end{verbatim}
 
   \textbf{THE ODE MODEL}\\
-  Gardner et al. modeled the dynamics using Hill functions, which capture
+  Gardner et al. modeled the dynamics using Hill functions \cite{Hill1910},
+  which capture
   the cooperative nature of transcription-factor binding:
 
 \begin{verbatim}
@@ -2604,49 +2620,50 @@ text \<open>
   Three results, from the conditional one to the unconditional one:
 \begin{enumerate}
 \item CONDITIONAL POSITIVITY OF u (gardner\_toggle\_switch\_u\_positive):
-  if u(0) > 0, and the concentration v(tau) stays non-negative throughout
-  the time interval [0, t], then u(t) > 0.
+  if 0 < u(0), and the concentration v(tau) stays non-negative throughout
+  the time interval [0, t], then 0 < u(t).
 \item NON-NEGATIVITY OF v (gardner\_toggle\_switch\_v\_nonneg): if
-  v(0) >= 0, alpha2 > 0 and gamma is a positive even Hill coefficient,
-  then v(t) >= 0.
+  0 <= v(0), 0 < alpha2 and gamma is a positive even Hill coefficient,
+  then 0 <= v(t).
 \item UNCONDITIONAL POSITIVITY OF u
-  (gardner\_toggle\_switch\_u\_positive\_unconditional): if u(0) > 0 and
-  v(0) >= 0, then u(t) > 0. The non-negativity of v along the trajectory
+  (gardner\_toggle\_switch\_u\_positive\_unconditional): if 0 < u(0) and
+  0 <= v(0), then 0 < u(t). The non-negativity of v along the trajectory x
   is proved by the second result instead of assumed.
 \end{enumerate}
 
   In words: under mild assumptions, the concentration of protein u remains
-  strictly positive: it never vanishes. This is a fundamental SAFETY
-  PROPERTY of any chemical model: concentrations of existing species
-  cannot become negative or zero in finite time.
+  strictly positive, namely it never vanishes. This is a basic SAFETY
+  PROPERTY expected of a chemical ODE model, in which the concentration of
+  a species that is present cannot become negative or vanish in finite
+  time.
 
   \textbf{WHY THIS MATTERS}\\
 \begin{enumerate}
-\item MODEL VALIDITY: For the Hill function alpha1/(1+v\textasciicircum{}beta) to be well-defined
-  and well-behaved, we need v >= 0 (so that v\textasciicircum{}beta is non-negative and
-  the denominator stays strictly positive). Proving that u stays
-  positive given that v is non-negative is a building block for
-  proving that BOTH concentrations stay positive, which certifies
-  that the entire ODE model remains physically meaningful over time.
-\item CORRECTNESS OF THE CIRCUIT: In the toggle switch, the two proteins
-  represent two distinct stable states ("on" for u, "off" for v, or
-  vice versa). If either protein concentration could reach zero,
-  the circuit would lose information. Strict positivity means the
-  system retains its state indefinitely.
-\item FIRST FORMAL PROOF OF A HILL-FUNCTION PROPERTY: To the best of our
-  knowledge, this is the first formally verified property of the
-  Gardner et al. toggle switch using interactive theorem proving. It
-  demonstrates that our dDL tooling scales from simple mass-action CRN
-  examples to realistic gene regulatory network models involving
-  rational functions.
+\item MODEL VALIDITY: For the Hill function alpha1/(1+v\textasciicircum{}beta) to be
+  well-defined and well-behaved, we need 0 <= v, which keeps its denominator
+  at least 1, i.e., 1 <= 1 + v\textasciicircum{}beta, and the proof of the
+  positivity of u relies on this bound.
+\item CORRECTNESS OF THE CIRCUIT: The toggle switch implements a one-bit
+  memory, in which the stored bit is encoded by the domination of one of
+  the two proteins (u high and v low for one value of the bit, and the
+  other way around for the other value). And so the repressed protein may
+  be at a low concentration (even zero) without the memory losing its
+  state. The ODE model describes this memory only if both protein
+  concentrations never become negative, which is what the results above
+  guarantee. That the switch keeps its state, and that an inducer pulse
+  flips it, are proved for the symmetric toggle switch in the induced
+  switching case study of BdL.
+\item HILL FUNCTIONS: The proof handles the rational Hill functions of the
+  ODE model, which shows that the rules of BdL apply beyond polynomial
+  mass-action CRNs, to gene regulatory network models.
 \end{enumerate}
 
   \textbf{HOW WE VERIFY IT}\\
   \textbf{POSITIVITY OF u: DIFFERENTIAL GHOST (DG).}\\
-  We cannot prove u(t) > 0 by Differential Induction (DI) alone: the Lie
+  We cannot prove 0 < u(t) by Differential Induction (DI) alone: the Lie
   derivative of u along the vector field includes the -u term, which
   is negative when u is positive. DI requires this derivative to be
-  non-negative along the trajectory, which fails.
+  non-negative along the trajectory x, which fails.
 
   Instead, we use the DIFFERENTIAL GHOST technique. We introduce a ghost
   variable g satisfying the linear ODE:
@@ -2672,29 +2689,28 @@ text \<open>
             = alpha1/(1+v^beta) * g^2
 \end{verbatim}
 
-  The -u*g\textasciicircum{}2 from the ODE and the +u*g\textasciicircum{}2 from the ghost CANCEL
-  perfectly (this is DG magic!). The residual
-  alpha1/(1+v\textasciicircum{}beta) * g\textasciicircum{}2 is >= 0 provided:
+  The -u*g\textasciicircum{}2 from the ODE and the +u*g\textasciicircum{}2 from the ghost CANCEL.
+  The residual
+  alpha1/(1+v\textasciicircum{}beta) * g\textasciicircum{}2 is non-negative provided:
 \begin{enumerate}
-\item alpha1 >= 0 (the production rate is non-negative - physically natural)
-\item 1 + v\textasciicircum{}beta > 0 (the Hill denominator is positive)
-\item g\textasciicircum{}2 >= 0 (always true for real g)
+\item 0 <= alpha1 (the production rate is non-negative, as is physically natural)
+\item 0 < 1 + v\textasciicircum{}beta (the Hill denominator is strictly positive)
+\item 0 <= g\textasciicircum{}2 (always true for real g)
 \end{enumerate}
-  Condition 2 holds whenever v >= 0 and beta is a positive integer, which
+  Condition 2 holds whenever 0 <= v, since then 1 <= 1 + v\textasciicircum{}beta, which
   is exactly the assumption of the conditional result.
 
-  Given that dI/dt >= 0 and I(0) = u(0) * g(0)\textasciicircum{}2 = u(0) * (1/sqrt(u(0)))\textasciicircum{}2 = 1,
-  we conclude I(tau) >= 1 for all tau in [0, t]. Since g\textasciicircum{}2 >= 0, this means u*g\textasciicircum{}2 >= 1
-  forces u > 0 (because if u <= 0, the product u*g\textasciicircum{}2 could not be >= 1).
+  Given that 0 <= dI/dt and I(0) = u(0) * g(0)\textasciicircum{}2 = u(0) * (1/sqrt(u(0)))\textasciicircum{}2 = 1,
+  we conclude 1 <= I(tau) for all tau in [0, t]. Since 0 <= g\textasciicircum{}2, 1 <= u*g\textasciicircum{}2
+  forces 0 < u (because if u <= 0, then u*g\textasciicircum{}2 <= 0 < 1).
 
   \textbf{NON-NEGATIVITY OF v: DIFFERENTIAL INDUCTION WITH A BOUNDARY CONDITION
   (DI\_boundary).}\\
-  Our DI\_Generic (and its vector counterpart DI\_Vect)
-  faithfully formalizes, as a provably verified lemma, the STANDARD
-  differential induction rule of dDL, which requires the Lie derivative
-  of the candidate invariant to be >= 0 EVERYWHERE ALONG THE TRAJECTORY,
-  not just at the boundary. For the invariant v >= 0, the Lie derivative
-  is:
+  The rule DI\_Generic of BdL (and its vector counterpart DI\_Vect)
+  formalizes the STANDARD differential induction rule of dL, which
+  requires the Lie derivative of the candidate invariant to be non-negative
+  EVERYWHERE ALONG THE TRAJECTORY x, not just at the boundary. For the
+  invariant 0 <= v, the Lie derivative is:
 
 \begin{verbatim}
       d(v - 0)/dt = alpha2/(1+u^gamma) - v
@@ -2702,10 +2718,10 @@ text \<open>
 
   This expression is NOT globally non-negative: when v is large, it
   becomes negative. Hence, standard DI cannot discharge the inductive
-  step. The property v >= 0 is only at risk on the BOUNDARY v = 0,
+  step. The property 0 <= v is only at risk on the BOUNDARY v = 0,
   where the Lie derivative reduces to alpha2/(1+u\textasciicircum{}gamma), which
-  is strictly positive when alpha2 > 0 and gamma is even. This is a
-  well-known limitation in the original formulation of DI, not a defect
+  is strictly positive when 0 < alpha2 and gamma is even. This is a
+  well-known limitation of the original formulation of DI, not a defect
   of our formalization; DI\_boundary only requires a strictly positive
   derivative on the boundary.
 
@@ -2718,15 +2734,15 @@ text \<open>
   The unconditional theorem assumes:
 \begin{enumerate}
 \item The solution x exists and satisfies the ODE on [0,t] (from solves\_ode)
-\item The initial conditions: u(0) > 0 and v(0) >= 0
-\item The time t >= 0
-\item The production rates: alpha1 >= 0 and alpha2 > 0
+\item The initial conditions: 0 < u(0) and 0 <= v(0)
+\item The time t satisfies 0 <= t
+\item The production rates: 0 <= alpha1 and 0 < alpha2
 \item The Hill coefficients beta and gamma are natural numbers with
-  beta >= 1 and gamma >= 1, and gamma is even
+  1 <= beta and 1 <= gamma, and gamma is even
 \end{enumerate}
-  The conditional result needs only alpha1 >= 0 and beta >= 1 among the
-  parameter conditions, and assumes v(tau) >= 0 for all tau in [0, t]
-  instead of v(0) >= 0.
+  The conditional result needs only 0 <= alpha1 and 1 <= beta among the
+  parameter conditions, and assumes 0 <= v(tau) for all tau in [0, t]
+  instead of 0 <= v(0).
 
   \textbf{FORMALIZATION}\\
   We represent the two proteins and the ghost as components of a state
@@ -2743,8 +2759,8 @@ text \<open>
     vec_lambda ((lambda k. 0)(iU := du/dt, iV := dv/dt))
 \end{verbatim}
 
-  The positivity proofs apply DG to extend the trajectory with the ghost
-  at iG, then DI\_Vect to prove u*g\textasciicircum{}2 >= 1 along the extended
+  The positivity proofs apply DG to extend the trajectory x with the ghost
+  at iG, then DI\_Vect to prove 1 <= u*g\textasciicircum{}2 along the extended
   trajectory; the non-negativity of v uses DI\_boundary.
 \<close>
 lemma gardner_toggle_switch_u_positive:
@@ -3002,11 +3018,11 @@ qed
 text \<open>
   \textbf{WHAT WE HAVE ACCOMPLISHED}\\
 \begin{enumerate}
-\item First formally verified property of the Gardner et al. toggle switch:
+\item A provably verified property of the Gardner toggle switch, namely the
   strict positivity of protein u, conditional on v being non-negative.
 \item Successful integration of Hill function derivatives with DG and DI\_Vect,
-  demonstrating that our dDL tooling scales to realistic gene regulatory
-  network models.
+  demonstrating that the rules of BdL apply to gene regulatory network
+  models with rational Hill functions.
 \item The proof pattern is reusable: the same structure applies to the
   symmetric argument for v (swapping the roles of u and v, and the
   coefficients alpha1/beta with alpha2/gamma).
@@ -3014,14 +3030,14 @@ text \<open>
 \<close>
 text \<open>
   \textbf{PART B: Non-negativity of v for the Gardner toggle switch (via DI\_boundary)}\\
-  We prove: if v(0) >= 0, alpha2 > 0, and gamma is a positive even Hill coefficient,
-  then v(tau) >= 0 throughout the Gardner toggle switch trajectory.
+  We prove: if 0 <= v(0), 0 < alpha2, and gamma is a positive even Hill coefficient,
+  then 0 <= v(tau) throughout the trajectory x of the Gardner toggle switch.
 
   \textbf{PROOF METHOD: Differential Induction with Boundary Condition (DI\_boundary).}\\
   The candidate function is \texttt{invar(w) = vec\_nth w iV} (i.e., the v component).
 \begin{itemize}
 \item Differentiability assumption: invar is linear, so it's everywhere
-  Frechet-differentiable with Dinvar = (lambda w. vec\_nth w iV).
+  Fr\'echet-differentiable with Dinvar = (lambda w. vec\_nth w iV).
 \item Boundary condition: at every point where v = 0 (i.e., vec\_nth (y tau) iV = 0),
   we need 0 < Dinvar (f tau (y tau)) = vec\_nth (f tau (y tau)) iV.
 \end{itemize}
@@ -3034,7 +3050,7 @@ text \<open>
         = alpha2/(1 + u^gamma)
 \end{verbatim}
 
-    Since alpha2 > 0 and 1 + u\textasciicircum{}gamma > 0 (because gamma is even, so u\textasciicircum{}gamma >= 0),
+    Since 0 < alpha2 and 0 < 1 + u\textasciicircum{}gamma (because gamma is even, so 0 <= u\textasciicircum{}gamma),
     the quotient is strictly positive.
 \<close>
 
@@ -3181,24 +3197,24 @@ text \<open>
   \textbf{PART C: The unconditional Gardner toggle switch positivity theorem}\\
 
   This upgrades gardner\_toggle\_switch\_u\_positive from conditional
-  (assuming v(tau) >= 0 throughout) to UNCONDITIONAL (just assuming
-  v(0) >= 0 and the parameter assumptions).
+  (assuming 0 <= v(tau) throughout) to UNCONDITIONAL (just assuming
+  0 <= v(0) and the parameter assumptions).
 
   \textbf{PROOF STRATEGY:}\\
 \begin{enumerate}
 \item Use gardner\_toggle\_switch\_v\_nonneg (from Part B) to establish
-  v(tau) >= 0 for all tau in [0..t]. This requires:
+  0 <= v(tau) for all tau in [0..t]. This requires:
 \begin{itemize}
-\item alpha2 > 0
+\item 0 < alpha2
 \item gamma even
-\item gamma >= 1
-\item v(0) >= 0
+\item 1 <= gamma
+\item 0 <= v(0)
 \end{itemize}
 \item Feed this as the v\_nn assumption to gardner\_toggle\_switch\_u\_positive.
-\item Conclude u(t) > 0 unconditionally.
+\item Conclude 0 < u(t) unconditionally.
 \end{enumerate}
 
-  The key observation: once we can prove v >= 0 via DI\_boundary, we have
+  The key observation: once we can prove 0 <= v via DI\_boundary, we have
   exactly what the conditional theorem needed. No DC required for this
   composition: we just apply the conditional theorem with the proven
   non-negativity.
@@ -3252,7 +3268,7 @@ text \<open>
 
     \textbf{THEOREM (Unconditional Strict Positivity for the Gardner Toggle Switch):}\\
 
-    For the Gardner et al. (Nature 2000) toggle switch ODE
+    For the toggle switch ODE of Gardner et al. \cite{Gardner2000}
 
 \begin{verbatim}
         du/dt = alpha1 / (1 + v^beta) - u
@@ -3261,31 +3277,29 @@ text \<open>
 
     if:
 \begin{itemize}
-\item u(0) > 0  (protein u initially present)
-\item v(0) >= 0  (protein v non-negative initially)
-\item alpha1 >= 0  (non-negative production rate for u)
-\item alpha2 > 0  (strictly positive production rate for v - required by the
+\item 0 < u(0)  (protein u initially present)
+\item 0 <= v(0)  (protein v non-negative initially)
+\item 0 <= alpha1  (non-negative production rate for u)
+\item 0 < alpha2  (strictly positive production rate for v, required by the
   boundary argument)
-\item beta >= 1, gamma >= 1  (positive Hill coefficients)
-\item gamma is even  (standard for dimerizing repressors - matches Gardner
-  et al.'s experimental parameters beta = gamma = 2)
+\item 1 <= beta, 1 <= gamma  (positive Hill coefficients)
+\item gamma is even  (as for the Hill coefficient 2 commonly used to model
+  dimerizing repressors)
 \end{itemize}
 
-    then u(t) > 0 for all t >= 0.
+    then 0 < u(t) for all t with 0 <= t.
 
   \textbf{TECHNICAL CONTRIBUTIONS DEMONSTRATED:}\\
 \begin{enumerate}
 \item DI\_boundary (boundary-aware differential induction) enables the
-  unconditional non-negativity proof. This is the first Isabelle/HOL
-  formalization of a strengthened DI rule in the style of Platzer's
-  barrier-certificate variants.
+  unconditional non-negativity proof.
 \item Hill function derivatives for EVEN Hill coefficients (without sign
   assumption on the regulator) provide the analytic machinery needed
   for gene regulatory network formalization.
 \item The composition of DI\_boundary + the existing conditional theorem
-  (via DG) shows that our dDL tooling supports MODULAR proof strategies:
+  (via DG) shows that BdL supports MODULAR proof strategies:
   each rule handles a specific kind of argument, and they compose
-  cleanly via shared trajectory objects.
+  cleanly via the shared trajectory x.
 \end{enumerate}
 \<close>
 
@@ -3320,15 +3334,16 @@ text \<open>
   where alpha1, alpha2 :: real => real are functions of time.
 
   \textbf{WHAT WE VERIFY}\\
-  Conditional positivity of u under time-varying rates: if u(0) > 0,
-  alpha1(tau) >= 0 for all tau in [0, t], and v(tau) stays non-negative
-  throughout [0, t], then u(t) > 0.
+  Conditional positivity of u under time-varying rates: if 0 < u(0),
+  0 <= alpha1(tau) for all tau in [0, t], and v(tau) stays non-negative
+  throughout [0, t], then 0 < u(t).
 
   \textbf{WHY THIS MATTERS}\\
-  Positivity is a safety property: it says the system doesn't
-  collapse regardless of how the rates are varied. It is a necessary
-  precondition for any meaningful switching behavior, and it holds under
-  genuinely time-varying rates.
+  Positivity is a safety property: it says that the concentration of u
+  does not collapse to zero or below, however the rates vary, as long as
+  alpha1 stays non-negative. It is a precondition for analyzing the
+  switching behavior in the ODE model, and it holds under genuinely
+  time-varying rates.
 
   To model an "induced switching experiment", instantiate alpha1 and alpha2
   with smooth time profiles. For example, a transient inducer pulse
@@ -3344,32 +3359,34 @@ text \<open>
   [t\_start, t\_end] and close to 1 inside. Piecewise-constant inducer
   signals (exact step functions) are not directly modeled here: a single
   solution x cannot cross a jump of alpha1, because u' would have to jump
-  there and a derivative cannot have a jump discontinuity. They naturally
-  fit the compositional Hoare-logic approach instead.
+  there and a derivative cannot have a jump discontinuity. They fit a
+  composition of solutions instead, one for each interval on which the
+  rates are constant, which is how the induced switching case study of BdL
+  handles its inducer pulse.
 
   \textbf{HOW WE VERIFY IT}\\
   Little changes from the constant-rate version. The DG reasoning for
   u-positivity used the cancellation
 
 \begin{verbatim}
-      d(u*y^2)/dt = (alpha1/(1+v^beta) - u)*y^2 + u*2y*(y/2)
-                  = alpha1/(1+v^beta)*y^2 - u*y^2 + u*y^2
-                  = alpha1/(1+v^beta)*y^2
+      d(u*g^2)/dt = (alpha1/(1+v^beta) - u)*g^2 + u*2g*(g/2)
+                  = alpha1/(1+v^beta)*g^2 - u*g^2 + u*g^2
+                  = alpha1/(1+v^beta)*g^2
 \end{verbatim}
 
   which remains valid when alpha1 is replaced by alpha1(tau), giving
-  alpha1(tau)/(1+v\textasciicircum{}beta)*y\textasciicircum{}2, still non-negative provided alpha1(tau) >= 0 pointwise.
+  alpha1(tau)/(1+v\textasciicircum{}beta)*g\textasciicircum{}2, still non-negative provided 0 <= alpha1(tau) pointwise.
 
   \textbf{ASSUMPTIONS}\\
   The proof assumes:
 \begin{enumerate}
 \item The solution x exists and satisfies the ODE on [0,t] (from solves\_ode)
-\item The initial condition: u(0) > 0
-\item The time t >= 0
+\item The initial condition: 0 < u(0)
+\item The time t satisfies 0 <= t
 \item The production rate for u is non-negative pointwise:
-  alpha1(tau) >= 0 for all tau in [0, t]
-\item The Hill coefficient beta is a natural number with beta >= 1
-\item Protein v stays non-negative: v(tau) >= 0 for all tau in [0, t]
+  0 <= alpha1(tau) for all tau in [0, t]
+\item The Hill coefficient beta is a natural number with 1 <= beta
+\item Protein v stays non-negative: 0 <= v(tau) for all tau in [0, t]
 \end{enumerate}
   Continuity of alpha1 and alpha2 is not among the assumptions, because
   the theorem assumes the solution x. Continuity is what the classical
@@ -3385,7 +3402,7 @@ text \<open>
 \begin{itemize}
 \item Coordinate iU: concentration of protein u
 \item Coordinate iV: concentration of protein v
-\item Coordinate iG: a spare coordinate that holds the ghost y
+\item Coordinate iG: a spare coordinate that holds the ghost g
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
@@ -3394,19 +3411,19 @@ text \<open>
 \end{verbatim}
 
   As in the constant-rate version, the proof applies DG to extend the
-  trajectory with the ghost at iG, then DI\_Vect to prove
-  u*y\textasciicircum{}2 >= 1 along the extended trajectory.
+  trajectory x with the ghost g at iG, then DI\_Vect to prove
+  1 <= u*g\textasciicircum{}2 along the extended trajectory.
 
   \textbf{LIMITATIONS}\\
   Non-negativity of v is assumed here. The DI\_boundary argument of the
-  constant-rate version would only need alpha2(tau) > 0 AT THE SPECIFIC
+  constant-rate version would only need 0 < alpha2(tau) AT THE SPECIFIC
   TIMES tau where v(tau) = 0 (the boundary-crossing times); the cleanest
-  sufficient condition is alpha2(tau) > 0 for all tau in [0..t].
+  sufficient condition is 0 < alpha2(tau) for all tau in [0..t].
 
   Positivity does NOT prove that changing alpha1(tau) actually causes the
-  switch to flip to a different stable state; that would require
-  basin-of-attraction analysis and Lyapunov stability reasoning (see the
-  other proof leveraging the Lyapunov reachability rule).
+  switch to flip to a different stable state; that requires trapping
+  regions and Lyapunov reasoning, as in the induced switching case study of
+  BdL, which uses the Lyapunov reachability rule REACH\_lyapunov.
 \<close>
 
 lemma gardner_toggle_switch_u_positive_time_dependent:
@@ -3645,15 +3662,14 @@ text \<open>
   \textbf{BIOLOGICAL CONTEXT}\\
   Negative autoregulation is the simplest gene regulatory motif: a gene
   whose protein product represses its own expression. This is the
-  foundational feedback loop in biology, appearing in \textasciitilde{}40\% of all known
-  transcription networks.
+  foundational feedback loop in biology, appearing in over 40\% of the
+  known transcription factors of E. coli \cite{Rosenfeld2002}.
 
-  Reference: Uri Alon, "An Introduction to Systems Biology: Design
-  Principles of Biological Circuits" (2006), Chapter 3.
+  Reference: \cite[Chapter~3]{Alon2006}.
 
   Negative autoregulation is used by cells to:
 \begin{itemize}
-\item Speed up response times (homeostasis)
+\item Speed up response times
 \item Reduce cell-to-cell variability in protein levels
 \item Provide robustness against fluctuations in alpha
 \end{itemize}
@@ -3683,14 +3699,14 @@ text \<open>
   degradation beta*u continues. The system converges to a unique steady state.
 
   \textbf{WHAT WE VERIFY}\\
-    If u(0) > 0, alpha >= 0, beta > 0, and n is a positive even integer,
-    then u(t) > 0 for all t >= 0.
+    If 0 < u(0), 0 <= alpha, 0 < beta, and n is a positive even integer,
+    then 0 < u(t) for all t with 0 <= t.
 
   In words: protein concentration remains strictly positive forever,
   provided the initial condition is positive.
 
   \textbf{WHY THIS MATTERS}\\
-  Positivity certifies that the model stays physically meaningful: a
+  Positivity certifies that the ODE model stays physically meaningful: a
   protein concentration that vanished or became negative in finite time
   would signal a modeling error. Negative autoregulation is also the
   smallest feedback loop in the benchmark, and its positivity proof is the
@@ -3701,28 +3717,28 @@ text \<open>
   DIFFERENTIAL GHOST (DG). This is the same proof pattern as the simple
   decay example in the CRN benchmark (crn\_simple\_decay\_positivity), with
   the non-negative production term alpha/(1+u\textasciicircum{}n) added. That term
-  is always >= 0 (since alpha >= 0 and u\textasciicircum{}n >= 0 for even n), so
+  is always non-negative (since 0 <= alpha and 0 <= u\textasciicircum{}n for even n), so
   the argument carries through unchanged.
 
 \begin{verbatim}
   Ghost: g' = (beta/2)*g,  g(0) = 1/sqrt(u(0))
-  Invariant: u * g^2 >= 1
+  Invariant: 1 <= u * g^2
   Lie derivative:
     d(u*g^2)/dt = (du/dt)*g^2 + u*2g*(dg/dt)
                 = (alpha/(1+u^n) - beta*u)*g^2 + u*2g*(beta/2*g)
                 = alpha/(1+u^n)*g^2 - beta*u*g^2 + beta*u*g^2
                 = alpha/(1+u^n)*g^2
-                >= 0   (since alpha >= 0, 1+u^n > 0, g^2 >= 0)
+  and 0 <= alpha/(1+u^n)*g^2, since 0 <= alpha, 0 < 1+u^n and 0 <= g^2
 \end{verbatim}
 
-  The beta*u*g\textasciicircum{}2 terms cancel (DG magic). The residual alpha/(1+u\textasciicircum{}n)*g\textasciicircum{}2 is
-  non-negative. Hence u*g\textasciicircum{}2 >= 1 is invariant, which implies u > 0.
+  The beta*u*g\textasciicircum{}2 terms cancel. The residual alpha/(1+u\textasciicircum{}n)*g\textasciicircum{}2 is
+  non-negative. Hence 1 <= u*g\textasciicircum{}2 is invariant, which implies 0 < u.
 
   DI\_boundary is NOT needed here, because the ODE has the clean -beta*u
-  decay term that DG handles directly. DI\_boundary becomes necessary only
-  when the decay structure is absent, non-uniform, or when we need
+  decay term that DG handles directly. DI\_boundary is useful when the
+  decay structure is absent or non-uniform, or when we need
   non-negativity without strict positivity. This illustrates a design
-  principle: our dDL proof rules offer multiple proof strategies, and the
+  principle: the proof rules of BdL offer multiple proof strategies, and the
   choice of how to apply them depends on the ODE structure. DG is the
   shorter path for systems with uniform linear decay; DI\_boundary is the
   right tool for boundary-only invariants.
@@ -3731,11 +3747,11 @@ text \<open>
   The proof assumes:
 \begin{enumerate}
 \item The solution x exists and satisfies the ODE on [0,t] (from solves\_ode)
-\item The initial condition: u(0) > 0
-\item The time t >= 0
-\item The production rate is non-negative: alpha >= 0
-\item The degradation rate is positive: beta > 0
-\item The Hill coefficient n is a natural number with n >= 1, and n is even
+\item The initial condition: 0 < u(0)
+\item The time t satisfies 0 <= t
+\item The production rate is non-negative: 0 <= alpha
+\item The degradation rate is strictly positive: 0 < beta
+\item The Hill coefficient n is a natural number with 1 <= n, and n is even
 \end{enumerate}
 
   \textbf{FORMALIZATION}\\
@@ -3751,8 +3767,8 @@ text \<open>
     vec_lambda ((lambda k. 0)(iU := du/dt))
 \end{verbatim}
 
-  The proof applies DG to extend the trajectory with the ghost at iG,
-  then DI\_Vect to prove u*g\textasciicircum{}2 >= 1 along the extended
+  The proof applies DG to extend the trajectory x with the ghost at iG,
+  then DI\_Vect to prove 1 <= u*g\textasciicircum{}2 along the extended
   trajectory.
 \<close>
 
@@ -3989,18 +4005,18 @@ subsubsection \<open>The repressilator (Elowitz \& Leibler 2000)\<close>
 
 text \<open>
   \textbf{BIOLOGICAL CONTEXT}\\
-  The repressilator is the first synthetic biological clock: a
+  The repressilator \cite{Elowitz2000} is the first synthetic biological clock: a
   three-gene ring oscillator where each gene represses the next,
   forming a negative feedback cycle that produces sustained oscillations.
 
   Elowitz \& Leibler built and characterized this in E. coli in 2000,
-  alongside Gardner et al.'s toggle switch in the same year (Nature 403).
+  alongside the toggle switch of Gardner et al. \cite{Gardner2000}, in the
+  same volume of Nature.
   Together these two constructs launched synthetic biology as a
   discipline: they demonstrated that simple mathematical models could
   predict and engineer non-trivial dynamical behavior in living cells.
 
-  Reference: Elowitz, M.B. \& Leibler, S. "A synthetic oscillatory network
-  of transcriptional regulators." Nature 403, 335-338 (2000).
+  Reference: \cite{Elowitz2000}.
 
   Referenced in Section 3.4.5 of our biological computing survey
   (Nag et al., 2026).
@@ -4031,14 +4047,16 @@ text \<open>
     u, v, w  are the three protein concentrations
 \end{verbatim}
 
-  For simplicity we use a symmetric model (same alpha and n for all three
-  genes). The original Elowitz-Leibler paper uses this symmetric form
-  for their theoretical analysis.
+  For simplicity we use a symmetric ODE model (same alpha and n for all
+  three genes). The original paper of Elowitz and Leibler analyzes a
+  symmetric model as well, with an mRNA and a protein concentration for
+  each gene; the three-variable form above is its common protein-only
+  simplification.
 
   \textbf{WHAT WE VERIFY}\\
   \textbf{STRICT POSITIVITY OF ALL THREE PROTEINS:}\\
-    If u(0) > 0, v(0) > 0, w(0) > 0, alpha >= 0, and n is a positive even
-    integer, then u(t) > 0, v(t) > 0, w(t) > 0 for all t >= 0.
+    If 0 < u(0), 0 < v(0), 0 < w(0), 0 <= alpha, and n is a positive even
+    integer, then 0 < u(t), 0 < v(t) and 0 < w(t) for all t with 0 <= t.
 
   In words: once all three proteins are present, they all remain
   strictly positive forever. The repressilator never "turns off" any
@@ -4046,7 +4064,8 @@ text \<open>
 
   \textbf{WHY THIS MATTERS}\\
   Strict positivity is a simpler but still meaningful safety property:
-  it certifies that the ODE model remains physically meaningful forever.
+  it certifies that no protein concentration of the ODE model vanishes or
+  becomes negative.
   It is also a precondition for the oscillation analysis, which needs
   machinery beyond our current tooling (see LIMITATIONS).
 
@@ -4060,17 +4079,18 @@ text \<open>
   \textbf{For u-positivity:}\\
 \begin{verbatim}
     Ghost: g' = g/2,  g(0) = 1/sqrt(u(0))
-    Invariant: u*g^2 >= 1
+    Invariant: 1 <= u*g^2
     Lie derivative:
       d(u*g^2)/dt = (du/dt)*g^2 + u*2g*(dg/dt)
                   = (alpha/(1+w^n) - u)*g^2 + u*2g*(g/2)
                   = alpha/(1+w^n)*g^2 - u*g^2 + u*g^2
                   = alpha/(1+w^n)*g^2
-                  >= 0   (since alpha >= 0, w^n >= 0 for even n, g^2 >= 0)
+    and 0 <= alpha/(1+w^n)*g^2, since 0 <= alpha, 0 <= w^n for even n,
+    and 0 <= g^2
 \end{verbatim}
 
   CRUCIALLY: the Hill term alpha/(1+w\textasciicircum{}n) is always non-negative for even n,
-  regardless of the sign of w. So we do NOT need to prove w >= 0 first.
+  regardless of the sign of w. So we do NOT need to prove 0 <= w first.
   This is the same reason negative autoregulation works with DG alone.
 
   The proofs for v and w are symmetric.
@@ -4079,10 +4099,10 @@ text \<open>
   The proof assumes:
 \begin{enumerate}
 \item The solution x exists and satisfies the ODE on [0,t] (from solves\_ode)
-\item The initial conditions: u(0) > 0, v(0) > 0 and w(0) > 0
-\item The time t >= 0
-\item The production rate is non-negative: alpha >= 0
-\item The Hill coefficient n is a natural number with n >= 1, and n is even
+\item The initial conditions: 0 < u(0), 0 < v(0) and 0 < w(0)
+\item The time t satisfies 0 <= t
+\item The production rate is non-negative: 0 <= alpha
+\item The Hill coefficient n is a natural number with 1 <= n, and n is even
 \end{enumerate}
 
   \textbf{FORMALIZATION}\\
@@ -4102,7 +4122,7 @@ text \<open>
 \end{verbatim}
 
   Each of repressilator\_u\_positive, repressilator\_v\_positive and
-  repressilator\_w\_positive applies DG to extend the trajectory with the
+  repressilator\_w\_positive applies DG to extend the trajectory x with the
   ghost at iG, then DI\_Vect along the extended trajectory;
   repressilator\_all\_positive combines the three.
 
@@ -4907,18 +4927,15 @@ text \<open>
   The antithetic integral feedback (AIF) motif is a biomolecular
   control scheme that implements integral feedback at the molecular
   level using a pair of species that annihilate each other. It was
-  introduced by Briat, Gupta \& Khammash (Cell Systems, 2016) as the
-  first rationally designed integral feedback control system for
-  living cells.
+  introduced by Briat, Gupta and Khammash \cite{Briat2016} as a design of
+  integral feedback control for living cells.
 
   AIF is the molecular analog of integral feedback in control engineering:
   it provides ROBUST PERFECT ADAPTATION (RPA), the ability of a
-  biological system to return to a precise setpoint regardless of
-  disturbances, and robustly to parameter variations.
+  biological system to return to a precise reference level regardless of
+  constant disturbances, and robustly to parameter variations.
 
-  Reference: Briat, C., Gupta, A. \& Khammash, M. "Antithetic Integral
-  Feedback Ensures Robust Perfect Adaptation in Noisy Biomolecular
-  Networks." Cell Systems 2, 15-26 (2016).
+  Reference: \cite{Briat2016}.
 
   This motif is referenced in Section 3.4.6 of our biological
   computing survey (Nag et al., 2026).
@@ -4929,12 +4946,13 @@ text \<open>
   the controlled variable:
 
 \begin{verbatim}
-      {}       ->(mu)     Z1        (constant production of Z1 - setpoint)
+      {}       ->(mu)     Z1        (constant production, sets X_ref)
       X        ->(theta)  Z2 + X    (Z2 produced at rate proportional to X)
       Z1 + Z2  ->(eta)    {}        (stoichiometric annihilation)
 \end{verbatim}
 
-  Plus some dynamics for X (which we leave abstract as d*X terms).
+  Plus some dynamics for X, which the formal ODE model below replaces by
+  dX/dt = 0.
 
   \textbf{THE MASS-ACTION ODE MODEL}\\
   In the symmetric formulation:
@@ -4952,27 +4970,27 @@ text \<open>
       d(Z1 - Z2)/dt = (mu - eta*Z1*Z2) - (theta*X - eta*Z1*Z2)
                     = mu - theta*X
                     = theta * (mu/theta - X)
-                    = theta * (X_setpoint - X)
+                    = theta * (X_ref - X)
 \end{verbatim}
 
   The eta*Z1*Z2 annihilation terms CANCEL, leaving the tracking error.
-  So Z1 - Z2 acts as the integrator of the error X\_setpoint - X.
+  So Z1 - Z2 acts as the integrator of the error X\_ref - X.
 
   At steady state (when dZ1/dt = dZ2/dt = 0), the tracking error must
-  be zero, forcing X = X\_setpoint = mu/theta. This is the ROBUST PERFECT
+  be zero, forcing X = X\_ref = mu/theta. This is the ROBUST PERFECT
   ADAPTATION property.
 
   \textbf{WHAT WE VERIFY}\\
-  We verify the fundamental conservation-law property that makes AIF
-  work: when the system IS at the setpoint X = mu/theta, the difference
+  We verify the conservation law behind the integral action of AIF:
+  when the system IS at the reference level X = mu/theta, the difference
   Z1 - Z2 is CONSERVED:
 
 \begin{verbatim}
-    Z1(t) - Z2(t) = Z1(0) - Z2(0)   for all t >= 0.
+    Z1(t) - Z2(t) = Z1(0) - Z2(0)   for all t with 0 <= t.
 \end{verbatim}
 
   \textbf{INTERPRETATION}\\
-  At the setpoint, the controller's "integral state"
+  At the reference level, the controller's "integral state"
   (Z1 - Z2) is frozen - no further correction is needed because the
   tracking error is zero. This is precisely the behavior we'd expect
   from a perfect integral controller: it accumulates error when there
@@ -4983,17 +5001,17 @@ text \<open>
 \item CONTROL-THEORETIC GRN PRIMITIVE: Unlike the toggle switch and
   repressilator (which use Hill-function gene regulation),
   antithetic integral feedback uses POLYNOMIAL dynamics with
-  bimolecular annihilation. This demonstrates that our dDL tooling
+  bimolecular annihilation. This demonstrates that BdL
   handles a QUALITATIVELY DIFFERENT class of GRN primitives.
-\item BIOMOLECULAR IMPLEMENTATION OF CLASSICAL CONTROL: AIF is the
-  first experimentally realized integral feedback control system
-  in a living cell (by Aoki et al., Nature 2019, based on Briat
-  et al.'s theoretical design). Our formal verification connects
-  dDL reasoning to the control-theoretic analysis of synthetic
-  biology.
+\item BIOMOLECULAR IMPLEMENTATION OF CLASSICAL CONTROL: AIF has been
+  realized experimentally as a synthetic integral feedback controller in
+  living cells by Aoki et al. \cite{Aoki2019}, based on Briat et al.'s
+  theoretical design. Our formal verification connects dL reasoning to the
+  control-theoretic analysis of synthetic biology.
 \item SIMPLEST NON-TRIVIAL AIF INVARIANT: The conservation of Z1 - Z2
-  at setpoint is the foundational lemma for proving set-point
-  tracking and robust perfect adaptation.
+  at the reference level is the special case, at X = mu/theta, of the
+  integral identity d(Z1 - Z2)/dt = mu - theta*X, on which proofs of
+  reference tracking and robust perfect adaptation rest.
 \end{enumerate}
 
   \textbf{HOW WE VERIFY IT}\\
@@ -5006,11 +5024,11 @@ text \<open>
                     = mu - theta*X
 \end{verbatim}
 
-  At the setpoint X = mu/theta, this becomes mu - theta*(mu/theta) = 0, so
+  At the reference level X = mu/theta, this becomes mu - theta*(mu/theta) = 0, so
   Z1 - Z2 is conserved.
 
-  In the formal model X does not change (dX/dt = 0) and starts at the
-  setpoint, so the proof first shows, again with DI, that X stays at
+  In the formal ODE model X does not change (dX/dt = 0) and starts at the
+  reference level, so the proof first shows, again with DI, that X stays at
   mu/theta; this fact then enters the DI\_Vect inductive step for Z1 - Z2.
 
   \textbf{ASSUMPTIONS}\\
@@ -5019,9 +5037,9 @@ text \<open>
 \item The solution x exists and satisfies the ODE on [0,t] (from
   solves\_ode), in which X is held constant (dX/dt = 0)
 \item The initial conditions: Z1(0) - Z2(0) = c, and X(0) = mu/theta
-  (X starts at the setpoint)
-\item The time t >= 0
-\item The rate theta is positive: theta > 0
+  (X starts at the reference level)
+\item The time t satisfies 0 <= t
+\item The rate theta is strictly positive: 0 < theta
 \end{enumerate}
 
   \textbf{FORMALIZATION}\\
@@ -5030,7 +5048,7 @@ text \<open>
 \begin{itemize}
 \item Coordinate iZ1: controller species Z1 (constant production)
 \item Coordinate iZ2: controller species Z2 (X-proportional production)
-\item Coordinate iX: process species X (held at the setpoint)
+\item Coordinate iX: process species X (held at the reference level)
 \end{itemize}
 
   The ODE system is encoded using Isabelle's vec\_lambda and fun\_upd:
@@ -5043,10 +5061,13 @@ text \<open>
   mu1/theta, and twice more for the conservation of Z1 - Z2.
 
   \textbf{LIMITATIONS}\\
-  The process species X is held at the setpoint in the formal model.
-  More ambitious properties (convergence to the setpoint, disturbance
-  rejection) would require Lyapunov or LaSalle machinery beyond our
-  current tooling, but they BUILD ON this conservation-law foundation.
+  The process species X is held at the reference level in the formal ODE
+  model. More ambitious properties (convergence to the reference level,
+  disturbance rejection) need the closed-loop ODE model, in which X follows
+  its own dynamics, together with a stability argument for that ODE model,
+  which we leave for future work. They BUILD ON the integral identity
+  d(Z1 - Z2)/dt = mu - theta*X, of which this conservation law is the
+  special case at X = mu/theta.
 \<close>
 
 lemma antithetic_integral_feedback_conservation:
@@ -5336,26 +5357,30 @@ text \<open>
 \begin{verbatim}
   | # | System                        | Property          | Method         |
   |---|-------------------------------|-------------------|----------------|
-  | 1 | Gardner toggle switch (cond)  | u(t) > 0          | DG + Hill      |
-  | 2 | Gardner toggle switch (uncon) | u(t) > 0          | DG+DI_bnd+Hill |
-  | 3 | Negative autoregulation       | u(t) > 0          | DG + Hill-even |
-  | 4 | Repressilator                 | u,v,w > 0         | DG + Hill-even |
-  | 5 | Antithetic integral feedback  | Z1 - Z2 conserved | DI (setpoint)  |
+  | 1 | Toggle switch (mass-action)   | u - v conserved   | DI + DC        |
+  | 2 | Gardner toggle switch (cond)  | 0 < u(t)          | DG + Hill      |
+  | 3 | Gardner toggle switch (uncon) | 0 < u(t)          | DG+DI_bnd+Hill |
+  | 4 | Gardner, time-varying rates   | 0 < u(t)          | DG + Hill      |
+  | 5 | Negative autoregulation       | 0 < u(t)          | DG + Hill-even |
+  | 6 | Repressilator                 | 0 < u,v,w         | DG + Hill-even |
+  | 7 | Antithetic integral feedback  | Z1 - Z2 conserved | DI (at X_ref)  |
 \end{verbatim}
 
-  \textbf{TAKING STOCK: WHAT WE HAVE}\\
-  \textbf{CORE dDL RULES (PROVABLY VERIFIED LEMMAS):}\\
+  \textbf{CORE RULES OF BdL (LEMMAS OF ISABELLE/HOL):}\\
 \begin{itemize}
 \item DI\_Generic, DI\_Vect       (standard differential induction)
 \item DG, DG\_backward, DG\_elim  (differential ghost + derived rules)
 \item DC                        (differential cut)
-\item DI\_boundary              (boundary-aware DI; novel contribution)
+\item DI\_boundary              (boundary-aware DI)
 \item linear\_ode\_solution       (FTC-based ghost trajectory construction)
+\item DI\_convergence\_rate      (finite-time progress toward a target level)
+\item REACH\_lyapunov           (Lyapunov reachability)
+\item DI\_Frame\_Rule\_partial    (frame rule for boxes)
 \end{itemize}
 
   \textbf{HILL FUNCTION LIBRARY:}\\
 \begin{itemize}
-\item Scalar/Fr\'{e}chet/vector versions for x >= 0 (general Hill)
+\item Scalar/Fr\'{e}chet/vector versions for 0 <= x (general Hill)
 \item Scalar/Fr\'{e}chet/vector versions for even n (unconditional)
 \end{itemize}
 
@@ -5370,20 +5395,21 @@ text \<open>
   \textbf{CRN BENCHMARK (12 examples):}\\
     Conservation laws, strict positivity via DG
 
-  \textbf{GRN BENCHMARK (5 examples):}\\
-    Gene regulatory motifs from Gardner (toggle switch), Elowitz
-    (repressilator), Alon (negative autoregulation), Briat et al.
-    (antithetic integral feedback).
+  \textbf{GRN BENCHMARK (7 examples):}\\
+    Gene regulatory motifs from Gardner et al. (toggle switch, in a
+    simplified mass-action form and in its Hill form, with constant and
+    time-varying rates), Elowitz and Leibler (repressilator), Alon
+    (negative autoregulation), Briat et al. (antithetic integral feedback).
 \<close>
 
 subsection \<open>Benchmark on Programmable Biological Circuit\<close>
 text \<open>
   \textbf{Programmable Biological Circuit: Correctness of the min(x,y) CRN
-  via DIRECT use of the provably verified dDL lemmas DI\_Vect, DC and
+  via DIRECT use of the proof rules of BdL, namely DI\_Vect, DC and
   DI\_convergence\_rate}\\
 
   \textbf{BIOLOGICAL CONTEXT}\\
-  This part demonstrates that the provably verified dDL lemmas can be used
+  This part demonstrates that the proof rules of BdL can be used
   DIRECTLY to reason about the CORRECTNESS of computing chemical reaction
   networks. We take the min(x,y) CRN of the CRN benchmark, a chemical
   program whose output [Z] computes the minimum of its two inputs, and
@@ -5403,25 +5429,26 @@ text \<open>
 
   \textbf{WHAT WE VERIFY}\\
 \begin{enumerate}
-\item MONOTONIC PROGRESS: [Z](t) >= [Z](0) for all t >= 0.
+\item MONOTONIC PROGRESS: [Z](0) <= [Z](t) for all t with 0 <= t.
   Interpretation: the output Z never decreases. This is the fundamental
   correctness property of any monotonic computation: once part of the
   answer has been computed, it is never lost.
-\item BOUNDED OUTPUT: [Z](t) <= min(x0, y0) for all t >= 0.
+\item BOUNDED OUTPUT: [Z](t) <= min(x0, y0) for all t with 0 <= t.
   Interpretation: the output never overshoots the correct answer.
-\item COMMITMENT: if [Z](0) >= c, then we can strengthen the ODE's domain
-  to enforce [Z] >= c throughout the trajectory.
+\item COMMITMENT: if c <= [Z](0), then we can strengthen the ODE's domain
+  to enforce c <= [Z] throughout the trajectory y.
   Interpretation: the output is COMMITTED: once Z has reached value c,
   it cannot fall back below c. This is the analog of write-once memory.
 \item EQUILIBRIUM CORRECTNESS: if at time t the system is at no-reaction
   equilibrium ([X]*[Y] = 0), then [Z](t) = min(x0, y0).
-  Interpretation: IF the trajectory ever reaches a state where no more
+  Interpretation: IF the trajectory y ever reaches a state where no more
   reactions can fire, THEN at that state the answer is exactly correct.
   Combined with the trajectory bounds (Properties 1-3), this gives:
-  "the trajectory is consistent with computing min, and at any
+  "the trajectory y is consistent with computing min, and at any
   equilibrium it returns the correct value."
-\item EPSILON-CONVERGENCE: for any epsilon > 0, [Z](T) > min(x0, y0) - epsilon
-  as soon as T > (min(x0, y0) - epsilon - [Z](0)) / (k*epsilon\textasciicircum{}2).
+\item EPSILON-CONVERGENCE: for any epsilon with 0 < epsilon,
+  min(x0, y0) - epsilon < [Z](T) as soon as
+  (min(x0, y0) - epsilon - [Z](0)) / (k*epsilon\textasciicircum{}2) < T.
   Interpretation: the output comes within epsilon of the correct answer
   within an explicit, computable time.
 \item COMBINED SPECIFICATION: crn\_min\_correctness\_specification bundles
@@ -5438,28 +5465,28 @@ text \<open>
   written.
 
   \textbf{HOW WE VERIFY IT}\\
-  Properties 1, 3 and 5 apply a provably verified dDL lemma directly in
+  Properties 1, 3 and 5 apply a proof rule of BdL directly in
   the correctness layer (not just transitively through pre-proved
   invariants); Properties 2 and 4 are algebra on the conservation laws,
   and Property 6 bundles the others:
 \begin{enumerate}
 \item MONOTONIC PROGRESS (uses DI\_Vect DIRECTLY): a fresh DI\_Vect
   application with the invariant pair (h, g) = (constant Z(0), current
-  Z value). The Lie derivative is d[Z]/dt = k*X*Y, which is >= 0 when
-  k >= 0 and X, Y >= 0.
+  Z value). The Lie derivative is d[Z]/dt = k*X*Y, which is non-negative when
+  0 <= k, 0 <= X and 0 <= Y.
 \item BOUNDED OUTPUT (uses conservation laws via DI\_Vect): algebraic
   consequence of crn\_min\_X\_conservation and crn\_min\_Y\_conservation
   (each proved with DI\_Vect).
 \item COMMITMENT (uses DC DIRECTLY): PROPERTY 1 gives monotonic progress,
-  then DC strengthens the domain by adding the \{v. vec\_nth v iZ >= c\}
-  constraint. This is a direct application of the provably verified DC
-  lemma in the correctness layer.
+  then DC strengthens the domain by adding the \{v. c <= vec\_nth v iZ\}
+  constraint. This is a direct application of the DC rule of BdL in the
+  correctness layer.
 \item EQUILIBRIUM CORRECTNESS (algebraic on conservation laws): case
   analysis on X = 0 or Y = 0, with each case discharged by linarith on the
   conservation laws and non-negativity.
 \item EPSILON-CONVERGENCE (uses DI\_convergence\_rate DIRECTLY):
   DI\_convergence\_rate, with the rate k*epsilon\textasciicircum{}2 as a lower
-  bound on d[Z]/dt while [Z] is still below min(x0, y0) - epsilon.
+  bound on d[Z]/dt while [Z] is at most min(x0, y0) - epsilon.
 \item COMBINED SPECIFICATION: the conjunction of the lemmas above.
 \end{enumerate}
 
@@ -5470,14 +5497,14 @@ text \<open>
   solves\_ode); Properties 5 and 6 use the time T instead of t
 \item The initial conditions [X](0) + [Z](0) = x0 and [Y](0) + [Z](0) = y0,
   in the properties that mention x0 and y0
-\item The time t >= 0 (T >= 0 for Properties 5 and 6)
-\item The rate constant is non-negative, k >= 0 (Properties 1 and 3), or
-  positive, k > 0 (Properties 5 and 6)
-\item{} [X] and [Y] stay non-negative along the trajectory (Properties 1, 3,
+\item The time t satisfies 0 <= t (0 <= T for Properties 5 and 6)
+\item The rate constant is non-negative, 0 <= k (Properties 1 and 3), or
+  strictly positive, 0 < k (Properties 5 and 6)
+\item{} [X] and [Y] stay non-negative along the trajectory y (Properties 1, 3,
   5 and 6), or at the final time (Properties 2 and 4)
 \end{enumerate}
-  In addition, Property 3 assumes [Z](0) >= c, Property 4 assumes the
-  equilibrium [X](t)*[Y](t) = 0, and Properties 5 and 6 assume epsilon > 0
+  In addition, Property 3 assumes c <= [Z](0), Property 4 assumes the
+  equilibrium [X](t)*[Y](t) = 0, and Properties 5 and 6 assume 0 < epsilon
   and the lower bound on T.
 
   \textbf{FORMALIZATION}\\
@@ -5502,10 +5529,14 @@ text \<open>
 \item CONVERGENCE AS A LIMIT: lim\_\{t->infinity\} [Z](t) = min(x0, y0).
   Property 5 gives the epsilon-version with an explicit time bound; the
   limit itself needs solves\_ode on the half-line [0, infinity).
-\item NON-NEGATIVITY ALONG THE TRAJECTORY is assumed. For the min(x,y)
+\item NON-NEGATIVITY ALONG THE TRAJECTORY y is assumed. For the min(x,y)
   CRN, the boundary condition for DI\_boundary at X = 0 is non-strict
-  (Lie derivative = 0), so DI\_boundary doesn't apply. A non-strict
-  variant of DI\_boundary would close this gap.
+  (Lie derivative = 0), so DI\_boundary does not apply. The rules of BdL
+  can discharge the assumption nonetheless, by DG with the time-dependent
+  coefficient a(tau) = k*[Y](tau), which makes [X]*z constant for the
+  ghost z, and a second ghost that proves z strictly positive, each at a
+  spare coordinate, and symmetrically for [Y]; we leave this proof for
+  future work.
 \end{enumerate}
 \<close>
 
@@ -5513,7 +5544,7 @@ text \<open>
 subsubsection \<open>Property 1: monotonic progress (direct use of DI\_Vect)\<close>
 
 text \<open>
-  We prove [Z](t) >= [Z](0) by a FRESH DI\_Vect application with:
+  We prove [Z](0) <= [Z](t) by a FRESH DI\_Vect application with:
 \begin{verbatim}
     h(v) = vec_nth (y 0) iZ    (constant: the initial value of Z)
     g(v) = vec_nth v iZ        (current value of Z)
@@ -5525,12 +5556,13 @@ text \<open>
     Dh(field) = 0
     Dg(field) = field[iZ] = k*X*Y
 \end{verbatim}
-  Need: 0 <= k*X*Y, which holds when k >= 0 and X(tau), Y(tau) >= 0.
+  Need: 0 <= k*X*Y, which holds when 0 <= k, 0 <= X(tau) and 0 <= Y(tau).
 
-  Limitation: the non-negativity of X and Y along the trajectory
+  Limitation: the non-negativity of X and Y along the trajectory y
   (assumptions X\_nn\_along and Y\_nn\_along) is assumed here.
-  Discharging it requires a non-strict variant of DI\_boundary,
-  which is left for future work.
+  DI\_boundary cannot discharge it, because the Lie derivative of X
+  vanishes at X = 0; DG with a time-dependent coefficient can (see the
+  LIMITATIONS above), which is left for future work.
 \<close>
 
 lemma crn_min_Z_monotonic:
@@ -5617,7 +5649,7 @@ qed
 text \<open>
   \textbf{HELPER: Generalized monotonicity -- Z(t1) <= Z(t2) for any t1 <= t2}\\
 
-  Generalizes crn\_min\_Z\_monotonic from "Z(t) >= Z(0)" to "Z(t1) <= Z(t2)
+  Generalizes crn\_min\_Z\_monotonic from "Z(0) <= Z(t)" to "Z(t1) <= Z(t2)
   for any 0 <= t1 <= t2 <= T".
 \<close>
 
@@ -5763,10 +5795,10 @@ qed
 subsubsection \<open>Property 3: commitment (direct use of DC)\<close>
 
 text \<open>
-  Once Z(0) >= c, we use DC to strengthen the ODE's domain so that the
-  trajectory is constrained to \{v. vec\_nth v iZ >= c\}. This is the
-  WRITE-ONCE / COMMITTED property: once the output crosses a threshold,
-  it stays above that threshold, the computational analog of
+  Once c <= Z(0), we use DC to strengthen the ODE's domain so that the
+  trajectory y is constrained to \{v. c <= vec\_nth v iZ\}. This is the
+  WRITE-ONCE / COMMITTED property: once the output reaches a threshold,
+  it never falls below that threshold, the computational analog of
   write-once memory.
 
   \textbf{STANDALONE LEMMA}\\
@@ -5775,13 +5807,13 @@ text \<open>
   It is not bundled into crn\_min\_correctness\_full because its conclusion
   is a domain-restricted solves\_ode predicate (not a scalar inequality),
   which doesn't fit the conjunction shape of the bundled theorem. The
-  scalar-trajectory consequence "for any c <= Z(0), every Z(tau) >= c on
-  [0..T]" IS bundled into crn\_min\_correctness\_full as Property 3.
+  scalar-trajectory consequence "for any c <= Z(0), c <= Z(tau) at every
+  tau in [0..T]" IS bundled into crn\_min\_correctness\_full as Property 3.
 
   \textbf{PROOF STRATEGY:}\\
 \begin{enumerate}
 \item Use PROPERTY 1 (monotonicity) at every tau in [0..t] to get
-  Z(tau) >= Z(0) >= c.
+  c <= Z(0) <= Z(tau).
 \item Apply DC to lift this trajectory-pointwise invariant into
   a domain restriction on the ODE solution.
 \end{enumerate}
@@ -5841,11 +5873,11 @@ qed
 subsubsection \<open>Property 4: equilibrium correctness\<close>
 
 text \<open>
-  This is the conditional steady-state result. It says: IF the trajectory
+  This is the conditional steady-state result. It says: IF the trajectory y
   ever reaches a state where no more reactions can fire (i.e., X*Y = 0),
   THEN at that state, the value of Z is exactly min(x0, y0).
 
-  Note that this lemma does NOT prove the trajectory actually reaches
+  Note that this lemma does NOT prove the trajectory y actually reaches
   equilibrium - that's the convergence question, which Property 5 below
   answers in its epsilon form.
   But it does close the "what is the answer at equilibrium?" question
@@ -5856,7 +5888,7 @@ text \<open>
     The conservation laws give X + Z = x0 and Y + Z = y0.
     From X*Y = 0, either X = 0 or Y = 0:
       Case X = 0: Z = x0 from X+Z=x0; Y = y0-x0 from Y+Z=y0.
-                  Y >= 0 forces x0 <= y0, so min(x0,y0) = x0 = Z.
+                  0 <= Y forces x0 <= y0, so min(x0,y0) = x0 = Z.
       Case Y = 0: symmetric, gives min(x0,y0) = y0 = Z.
 \end{verbatim}
 
@@ -5866,10 +5898,10 @@ text \<open>
 \item linarith and case analysis
 \end{itemize}
 
-  This is pure algebra on the conservation laws - dDL appears only
-  transitively. The lemma's value is in providing the steady-state
-  characterization that complements the trajectory-level properties
-  (1, 2, 3) which use dDL directly.
+  This is pure algebra on the conservation laws, and the rules of BdL
+  appear only transitively. The lemma's value is in providing the
+  steady-state characterization that complements the trajectory-level
+  properties 1, 2 and 3, of which 1 and 3 use the rules of BdL directly.
 \<close>
 
 lemma crn_min_Z_equilibrium_correct:
@@ -5931,7 +5963,7 @@ qed
 
 text \<open>
   \textbf{WHAT THIS DEMONSTRATES - A PROOF MAP}\\
-  Each correctness property is proved using dDL rules, either directly in
+  Each correctness property is proved using the rules of BdL, either directly in
   the correctness layer or through the conservation laws:
 
 \begin{verbatim}
@@ -5959,10 +5991,10 @@ text \<open>
 \item CONVERGENCE AS A LIMIT: lim\_\{t->infinity\} Z(t) = min(x0, y0).
   Property 5 below gives the epsilon-version with an explicit time bound;
   the limit itself needs solves\_ode on the half-line [0, infinity).
-\item NON-NEGATIVITY ALONG THE TRAJECTORY: currently assumed. For the
-  min(x,y) CRN, the boundary condition for DI\_boundary at X=0 is
-  non-strict (Lie derivative = 0), so DI\_boundary doesn't apply.
-  A non-strict variant of DI\_boundary would close this gap.
+\item NON-NEGATIVITY ALONG THE TRAJECTORY y: currently assumed.
+  DI\_boundary does not apply, because at X = 0 the Lie derivative of X
+  is 0, not strictly positive; DG with a time-dependent coefficient can
+  discharge it (see the LIMITATIONS above).
 \end{enumerate}
 \<close>
 
@@ -5970,10 +6002,11 @@ subsubsection \<open>Property 5: asymptotic epsilon-convergence\<close>
 
 text \<open>
   This example extends our correctness proof for the min(x,y) CRN with an
-  epsilon-convergence theorem: for any epsilon > 0, the trajectory becomes epsilon-close
-  to the correct answer min(x0, y0) within an explicit, computable time
-  bound. This provides a finite-time convergence rate, strictly stronger
-  than the conditional equilibrium correctness.
+  epsilon-convergence theorem: for any epsilon with 0 < epsilon, the output
+  [Z] of the trajectory y becomes epsilon-close to the correct answer
+  min(x0, y0) within an explicit, computable time bound. This provides a
+  finite-time convergence rate, which the conditional equilibrium
+  correctness does not give.
 
   \textbf{CONTRIBUTION}\\
   Together with the trajectory-level properties (monotonicity, upper bound,
@@ -5983,9 +6016,9 @@ text \<open>
 \begin{verbatim}
      The output Z is monotonically non-decreasing   (PROPERTY 1, DI)
      The output Z is bounded above by min(x0, y0)   (PROPERTY 2, DI)
-     Once Z reaches a value, it stays               (PROPERTY 3, DC)
+     Once Z reaches c, it never falls below c       (PROPERTY 3, DC)
      At any equilibrium, Z = min(x0, y0)            (PROPERTY 4, algebra)
-     For any epsilon > 0, Z reaches within epsilon  (PROPERTY 5,
+     For any 0 < epsilon, Z reaches within epsilon  (PROPERTY 5,
        of min in finite time                         DI_convergence_rate)
        T(epsilon) = (min(x0,y0) - epsilon - Z(0)) / (k*epsilon^2)
 \end{verbatim}
@@ -6001,24 +6034,24 @@ text \<open>
   By monotonicity (PROPERTY 1), Z(tau) <= Z(T) <= min(x0, y0) - epsilon for all
   tau in \{0..T\}.
 
-  By the conservation laws, X(tau) = x0 - Z(tau) >= x0 - (min(x0, y0) - epsilon) >= epsilon
-  and Y(tau) >= epsilon.
+  By the conservation laws, epsilon <= x0 - (min(x0, y0) - epsilon) <= x0 - Z(tau) = X(tau),
+  and likewise epsilon <= Y(tau).
 
-  So the rate dZ/dtau = k*X*Y >= k*epsilon\textasciicircum{}2 uniformly on \{0..T\}.
+  So the rate satisfies k*epsilon\textasciicircum{}2 <= k*X*Y = dZ/dtau uniformly on \{0..T\}.
 
   By the fundamental theorem of calculus:
 \begin{verbatim}
-    Z(T) - Z(0) = (integral over [0..T] of dZ/dtau) >= k*epsilon^2*T
+    k*epsilon^2*T <= (integral over [0..T] of dZ/dtau) = Z(T) - Z(0)
 \end{verbatim}
 
-  So Z(T) >= Z(0) + k*epsilon\textasciicircum{}2*T.
+  So Z(0) + k*epsilon\textasciicircum{}2*T <= Z(T).
 
-  If T is large enough (specifically, T > (min(x0, y0) - epsilon - Z(0))/(k*epsilon\textasciicircum{}2)),
-  then Z(0) + k*epsilon\textasciicircum{}2*T > min(x0, y0) - epsilon, contradicting Z(T) <= min(x0, y0) - epsilon.
+  If T is large enough (specifically, (min(x0, y0) - epsilon - Z(0))/(k*epsilon\textasciicircum{}2) < T),
+  then min(x0, y0) - epsilon < Z(0) + k*epsilon\textasciicircum{}2*T <= Z(T), contradicting Z(T) <= min(x0, y0) - epsilon.
 
   \textbf{TOOLING USED}\\
 \begin{itemize}
-\item DI\_convergence\_rate, the provably verified dDL lemma for finite-time
+\item DI\_convergence\_rate, the proof rule of BdL for finite-time
   convergence. It carries out the integration argument above (the
   fundamental theorem of calculus) once and for all; the proof of
   Property 5 only discharges its premises.
@@ -6026,7 +6059,7 @@ text \<open>
   DI) for the premise below\_final: Z(tau) <= Z(T) for all tau in \{0..T\}.
 \item The conservation laws (crn\_min\_X\_conservation and
   crn\_min\_Y\_conservation, via DI), restricted to \{0..tau\} with
-  solves\_ode\_subset\_ivl, for the rate bound k*X*Y >= k*epsilon\textasciicircum{}2
+  solves\_ode\_subset\_ivl, for the rate bound k*epsilon\textasciicircum{}2 <= k*X*Y
   while Z <= min(x0, y0) - epsilon.
 \item has\_derivative\_vec\_nth for the derivative of the measure
   v |-> vec\_nth v iZ.
@@ -6034,10 +6067,12 @@ text \<open>
 
   \textbf{WHAT THIS DOES NOT PROVE}\\
   The strict statement "lim\_\{t -> infinity\} Z(t) = min(x0, y0)" requires
-  reformulating solves\_ode for the half-line [0, infinity), which is a separate
-  piece of work. The epsilon-convergence proved here is mathematically equivalent
-  for any practical purpose: it gives an explicit finite-time bound rather
-  than an infinite-limit statement.
+  a solution on the half-line [0, infinity), which is a separate piece of
+  work. For such a solution, Properties 2 and 5, applied at every time T
+  under their assumptions, give min(x0, y0) - epsilon < Z(T) <= min(x0, y0)
+  for every T past the bound, which is the limit statement; the
+  epsilon-convergence moreover gives an explicit time bound, which a limit
+  statement does not.
 \<close>
 
 
@@ -6166,15 +6201,15 @@ text \<open>
   following formal sense:
 
 \begin{verbatim}
-     MONOTONIC PROGRESS:   Z(t) >= Z(0)
+     MONOTONIC PROGRESS:   Z(0) <= Z(t)
                            (PROPERTY 1, via DI)
      BOUNDED OUTPUT:       Z(t) <= min(x0, y0)
                            (PROPERTY 2, via DI conservation)
-     COMMITTED OUTPUT:     Z(0) >= c ==> Z(t) >= c
+     COMMITTED OUTPUT:     c <= Z(0) ==> c <= Z(t)
                            (PROPERTY 3, via DI + DC; not bundled here)
      EQUILIBRIUM CORRECT:  X*Y = 0 ==> Z = min(x0,y0)
                            (PROPERTY 4, algebra)
-     epsilon-CONVERGENCE:  T large ==> Z(T) > min - epsilon
+     epsilon-CONVERGENCE:  T large ==> min - epsilon < Z(T)
                            (PROPERTY 5, FTC via DI_convergence_rate)
 \end{verbatim}
 
@@ -6184,7 +6219,7 @@ text \<open>
   separate lemma crn\_min\_Z\_committed\_via\_DC.
 
   This bundled specification gives a near-complete correctness story for
-  the min(x,y) CRN: the trajectory is monotonic, bounded by the correct
+  the min(x,y) CRN: the output Z of the trajectory y is monotonic, bounded by the correct
   answer, equals the correct answer at any equilibrium, and provably
   converges to within epsilon of the correct answer in finite time.
 \<close>
@@ -6248,26 +6283,26 @@ text \<open>
 
   This theorem bundles ALL FIVE correctness properties of the min(x,y) CRN
   into a single statement. Unlike the scalar-only crn\_min\_correctness\_specification,
-  this version also includes Property 3 (commitment), a predicate-level fact
-  about the ODE solution's domain restriction.
+  this version also includes Property 3 (commitment), in its
+  scalar-trajectory form.
 
   \textbf{Properties bundled:}\\
 \begin{verbatim}
-     1: MONOTONIC PROGRESS    Z(T) >= Z(0)
+     1: MONOTONIC PROGRESS    Z(0) <= Z(T)
                               (DI)
      2: BOUNDED OUTPUT        Z(T) <= min(x0, y0)
                               (DI conservation)
-     3: COMMITTED OUTPUT      ALL c. Z(0) >= c ==>
-                                (ALL tau in [0..T]. Z(tau) >= c)
+     3: COMMITTED OUTPUT      ALL c. c <= Z(0) ==>
+                                (ALL tau in [0..T]. c <= Z(tau))
                               (DI + DC)
      4: EQUILIBRIUM CORRECT   X(T)*Y(T) = 0 ==> Z(T) = min
                               (algebra)
-     5: epsilon-CONVERGENCE   T large ==> Z(T) > min - epsilon
+     5: epsilon-CONVERGENCE   T large ==> min - epsilon < Z(T)
                               (DI_convergence_rate)
 \end{verbatim}
 
   Note that Property 3 here is stated in its scalar-trajectory form
-  "the value Z(tau) stays >= c at every point in [0..T]". The full
+  "the value Z(tau) is at least c at every point in [0..T]". The full
   domain-restriction form (the strengthened solves\_ode predicate)
   remains available as the separate lemma crn\_min\_Z\_committed\_via\_DC.
 \<close>
@@ -6352,7 +6387,7 @@ qed
 
 
 text \<open>
-  Two entries at concrete state spaces: the min(x, y) network in R\textasciicircum{}3,
+  Two instances at concrete state spaces: the min(x, y) CRN in R\textasciicircum{}3,
   with X, Y and Z at the coordinates 0, 1 and 2, and the repressilator in
   R\textasciicircum{}4, with u, v and w at the coordinates 0, 1 and 2 and its ghost at 3.
   The distinctness assumptions are discharged once for each space.
